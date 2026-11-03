@@ -1,0 +1,49 @@
+/* DESIGN §11 empty states, canvas layout (No projects yet / No active sprint / No match). */
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-150);
+  padding: 64px var(--space-300);
+  border-radius: var(--radius-xlarge);
+  text-align: center;
+}
+
+.sunken {
+  background: var(--surface-sunken);
+}
+
+.dashed {
+  gap: var(--space-100);
+  padding-block: 48px;
+  border: 1px dashed var(--border);
+}
+
+.icon {
+  color: var(--text-subtlest);
+}
+
+.title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.dashed .title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.description {
+  max-inline-size: 380px;
+  color: var(--text-subtle);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-100);
+  margin-block-start: var(--space-050);
+}

@@ -1,0 +1,59 @@
+/* DESIGN §7 Stat tile */
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+  min-inline-size: 0;
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+  transition:
+    transform 150ms var(--ease-practical),
+    background-color 150ms var(--ease-practical);
+}
+
+.tile:hover {
+  transform: translateY(-2px);
+  background: var(--surface-hovered);
+}
+
+.md {
+  padding: 14px var(--space-200);
+}
+
+.sm {
+  gap: 0;
+  padding: var(--space-150);
+}
+
+.label {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.value {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.md .value {
+  font-size: 28px;
+  line-height: 32px;
+}
+
+.sm .value {
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.success {
+  color: var(--success);
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.default {
+  color: var(--text);
+}

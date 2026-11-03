@@ -1,11 +1,19 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { useAnnouncer } from '@/stores/announcer';
 import { useSession } from '@/stores/session';
 import { useToast } from '@/stores/toast';
 import { server } from './server';
+
+// jsdom has no ResizeObserver; Radix popper content (menus) measures itself with one.
+class ResizeObserverStub implements ResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+globalThis.ResizeObserver = ResizeObserverStub;
 
 // Any request without a handler fails the test instead of hitting the network.
 beforeAll(() => {

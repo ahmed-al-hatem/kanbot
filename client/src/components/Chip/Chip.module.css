@@ -1,0 +1,97 @@
+/* DESIGN §7 Chip / pill */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  block-size: 22px;
+  padding-inline: var(--space-075);
+  border-radius: var(--radius-small);
+  background: var(--neutral);
+  color: var(--text-subtle);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.chip > svg {
+  flex: none;
+}
+
+.neutral {
+  background: var(--neutral);
+  color: var(--text-subtle);
+}
+
+.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.blue {
+  background: var(--lz-blue-bg);
+  color: var(--lz-blue-fg);
+}
+
+.purple {
+  background: var(--lz-purple-bg);
+  color: var(--lz-purple-fg);
+}
+
+.green {
+  background: var(--lz-green-bg);
+  color: var(--lz-green-fg);
+}
+
+.orange {
+  background: var(--lz-orange-bg);
+  color: var(--lz-orange-fg);
+}
+
+.teal {
+  background: var(--lz-teal-bg);
+  color: var(--lz-teal-fg);
+}
+
+.magenta {
+  background: var(--lz-magenta-bg);
+  color: var(--lz-magenta-fg);
+}
+
+.gray {
+  background: var(--lz-gray-bg);
+  color: var(--lz-gray-fg);
+}
+
+.remove {
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 16px;
+  margin-inline-end: -2px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: inherit;
+  transition: background-color 150ms var(--ease-practical);
+}
+
+.remove:hover {
+  background: var(--neutral-hover);
+}
+
+.pill {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: 7px;
+  border-radius: var(--radius-full);
+  background: var(--neutral);
+  color: var(--text-subtle);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}

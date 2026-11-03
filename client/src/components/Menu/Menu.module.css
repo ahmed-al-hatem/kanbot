@@ -1,0 +1,89 @@
+/* DESIGN §7 Menu (popover), §8.2 kbPop 150ms. */
+.menu {
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-025);
+  min-inline-size: 200px;
+  max-inline-size: min(320px, calc(100vw - 16px));
+  padding: var(--space-075);
+  border-radius: var(--radius-large);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+  color: var(--text);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+}
+
+.menu[data-state='open'] {
+  animation: kbPop 150ms var(--ease-practical);
+}
+
+.menu[data-state='closed'] {
+  animation: kbFadeOut 100ms var(--ease-in) forwards;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 36px;
+  padding-inline: 10px;
+  border-radius: var(--radius-medium);
+  font-size: 13px;
+  line-height: 16px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+  transition: background-color 50ms linear;
+}
+
+.item[data-highlighted] {
+  background: var(--neutral);
+}
+
+.item:active {
+  background: var(--neutral-hover);
+}
+
+/* Keyboard users still get the ring (base.css hides it only for non-:focus-visible). */
+.item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.item[data-disabled] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.danger {
+  color: var(--danger);
+}
+
+.icon {
+  flex: none;
+}
+
+.text {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.separator {
+  block-size: 1px;
+  margin: var(--space-050) var(--space-025);
+  background: var(--border);
+}
+
+.label {
+  padding: var(--space-050) 10px var(--space-025);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+}

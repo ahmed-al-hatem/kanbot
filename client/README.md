@@ -5,7 +5,7 @@
 > React app for Kanbot, a sprint board with an AI teammate. Built phase by phase from
 > [`docs/FRONTEND-PLAN.en.md`](../docs/FRONTEND-PLAN.en.md); the API in [`server/`](../server/) is the contract.
 
-**Status:** Phase 0 — tooling and foundations. No product screens yet; `/` shows a placeholder that exercises tokens, fonts, icons and the theme store.
+**Status:** Phase 1 — design system components. No product screens yet; `/` shows the phase-0 placeholder, and in dev `/__ui` shows every component and state in both themes.
 
 ---
 
@@ -75,9 +75,10 @@ src/
 ├── api/                # client.ts (request<T>), errors.ts (ApiError), auth/projects/todos/sprints/ai.ts
 ├── hooks/              # queryKeys.ts (one key factory); query/mutation hooks per phase
 ├── stores/             # Zustand UI state: session, theme, toast, announcer
-├── components/         # design system (Icon, Logo; the rest in phase 1)
+├── components/         # design system, one folder per component (see §6)
+├── dev/                # UiPage: the /__ui catalogue, dev server only
 ├── features/           # one folder per area; todos/TypeIcon so far
-├── lib/                # storage.ts (localStorage that never throws)
+├── lib/                # storage.ts (localStorage that never throws), cx.ts (class names)
 ├── styles/             # tokens.css, base.css, motion.css
 ├── test/               # setup.ts, MSW server
 └── types/api.ts        # verbatim copy of server/src/types/api.ts — never edited by hand
@@ -104,22 +105,41 @@ The endpoint modules unwrap the response envelopes (`{ project }` → `ProjectWi
 - Icons: `scripts/extract-icons.mjs` copies the paths of the 34 icons in DESIGN §5.2, plus `priority-highest` for `urgent`, from `@atlaskit/icon@38.0.2` / `icon-lab@7.11.0` into `icons.ts`. `<Icon>` is `aria-hidden` unless given a `label`. `TypeIcon` (Task/Story from §5.3, Bug from the package) is always labelled when alone.
 - `Logo`: the inline mark from §5.4, colored with `--logo-*` tokens (same in both themes).
 
+### Components (phase 1)
+
+CSS Modules + tokens only; every one is in `/__ui` (run `npm run dev`, open http://localhost:5173/__ui).
+
+| Component | Notes |
+|---|---|
+| `Button`, `ButtonLink`, `IconButton` | Variants primary / neutral / subtle / ai / danger, sizes sm 28 · md 32 · lg 40. `loading` + `loadingText` ("Saving…"): idle and loading labels share one grid cell, so the width never jumps; the button stays focusable (`aria-disabled` + `aria-busy`) and swallows clicks, including the implicit Enter submit. `IconButton` requires `aria-label` in its type. `ButtonLink` = router `Link` styled as a button |
+| `Field` + `Input`, `Textarea`, `Select`, `DateInput`, `TagInput` | `Field` gives the control its id (label `htmlFor`), `aria-describedby` (error, else help), `aria-invalid` and `aria-required` through context; explicit props win. Error = 12px status-error icon + `kb-shake` + `role="alert"`. Select/Date draw the chevron/calendar icon at inline-end 10px; the date picker indicator is invisible but still clickable under it |
+| `Checkbox` | Native 16px, `accent-color: var(--brand)`, optional description linked by `aria-describedby` |
+| `TagInput` | Enter or `,` adds, Backspace on empty removes the last, × per chip ("Remove label x"), case-insensitive dedupe, `maxTags` 10 / `maxTagLength` 30 (server limits), changes announced through `stores/announcer`, a typed tag is kept on blur |
+| `Dialog` | Radix Dialog, fully controlled (a parent can veto closing for unsaved changes). Widths from §3.5 by name (`session` … `plan`). Focus goes to `[data-autofocus]` or the panel; trap, Esc and `aria-hidden` on the rest of the page come from Radix; `aria-modal` and focus restore to the opener are ours (`useReturnFocus`). Blanket and panel play `kbFade`/`kbModalIn` and exit with `kbFadeOut`/`kbModalOut` on `data-state="closed"` (Radix keeps them mounted until the animation ends) |
+| `ConfirmDialog` | Radix AlertDialog, 420px: Cancel focused on open, no blanket dismiss, `pending` keeps it open with a "Deleting…" spinner |
+| `Menu`, `MenuItem`, `MenuSeparator`, `MenuLabel` | Radix DropdownMenu: `role="menu"`, ↑ ↓ Home End + typeahead, wraps, Esc/outside click refocuses the trigger. The first item is focused on open with mouse too (§10.3). `kbPop` on open |
+| `Lozenge`, `Chip`, `PointsPill`, `Avatar` | Lozenge hues + pulsing `live` dot (Active). Chip tones (neutral, danger, label hues) with optional × button. PointsPill reads "3 story points" / "Not estimated". Avatar initials, `--av-1…4` by index or name hash, spring hover, dashed "unassigned" |
+| `ProgressBar`, `StatTile` | `role="progressbar"` with label and `aria-valuetext`; 4/6/8px; width eases 500ms; `over` turns it `--danger-icon`. StatTile md (28/32) and sm (22/28), hover lift, mount stagger by `index` |
+| `Skeleton`, `SkeletonRegion`, `Spinner` | Shimmering blocks (always `aria-hidden`) inside a `role="status" aria-busy` region with "Loading <page>". Spinner 14/20/24, decorative unless given a `label` |
+| `EmptyState`, `PageError`, `Banner`, `VisuallyHidden` | EmptyState `sunken` (nothing yet) or `dashed` (no match). PageError = S04: "We couldn't load <page>", Try again (spins while retrying), Back to Projects, and a small code from the `ApiError`. Banner warning (`role="status"`) / danger (`role="alert"`), page or inline layout, action inherits the banner color |
+
 **Deviations from the design:** see [plan §2](../docs/FRONTEND-PLAN.en.md#2-design-vs-api-conflicts-decide-before-building); additions below in Decisions.
 
 ## 7. Progress
 
 | ID | Status | Notes |
 |---|---|---|
-| NFR-1 | ⚠️ | React 19 + TS strict + Vite in place; `no-explicit-any` is an error. Pending your `lint` / `build` run |
+| NFR-1 | ✅ | React 19 + TS strict + Vite; `no-explicit-any` is an error; `lint`, `typecheck`, `test` (69) and `build` pass (phase 1) |
 | NFR-7 | ⚠️ | Only the JWT is persisted (`partialize`), `no-console` is an error, Authorization never logged. Markdown without raw HTML comes with the AI UI (phase 7) |
 | NFR-8 | ✅ | Folder structure per plan §4; API layer in `src/api/` typed from `types/api.ts`; `fetch` banned outside `src/api/` by ESLint |
+| NFR-5 | ⚠️ | Component level done: labelled fields with `aria-describedby`/`aria-invalid`, visible `:focus-visible` rings, dialogs with focus trap / Esc / restore (Radix), keyboard menus, icon-only buttons named by type, priority/type chips carry text or an icon, contrast from the DESIGN token table; axe clean in unit tests. Still per screen: landmarks and headings (phase 3+), DnD keyboard alternative (phases 5–6), Lighthouse ≥ 95 audit (phase 8) |
 | AUTH-1…6 | ⏳ | Phase 2 (`expire()` on 401 is ready) |
 | PRJ-1…5 | ⏳ | Phase 3 |
 | BL-1…4, BL-6 | ⏳ | Phase 4 |
 | BL-5, BL-7, SPR-1…3 | ⏳ | Phase 5 |
 | SPR-4…7 | ⏳ | Phase 6 |
 | AI-1…5 | ⏳ | Phase 7 |
-| NFR-2…6, NFR-9 | ⏳ | Built per phase, audited in phase 8 |
+| NFR-2…4, NFR-6, NFR-9 | ⏳ | Built per phase, audited in phase 8. Phase 1 ships the pieces for NFR-2 (Skeleton, EmptyState, PageError) and NFR-3 (button loading, Banner, ConfirmDialog) |
 
 ## 8. Decisions
 
@@ -136,22 +156,34 @@ The endpoint modules unwrap the response envelopes (`{ project }` → `ProjectWi
 | 2026-11-03 | Logo colors are tokens (`--logo-bg/fg/accent`) | Keeps hex colors in `tokens.css` only |
 | 2026-11-03 | Hex and logical-property checks for CSS run as `scripts/check-css.mjs` inside `npm run lint` | No stylelint dependency. A Vitest `?raw` import returns CSS Modules as class maps, so a plain Node script is the reliable place |
 | 2026-11-03 | `.gitattributes` at the repo root (`* text=auto eol=lf`) | Stops LF/CRLF churn on Windows for the whole repo |
+| 2026-11-03 | Dialog header and footer follow the **canvas** (16 24 padding with a divider line) rather than DESIGN §7's "24 24 0 / 16 24 24" | Every dialog artboard (New project, Sprint form, Todo details) draws them that way; the canvas is the reference for look |
+| 2026-11-03 | `ConfirmDialog` is 420px (the Session-expired width) and confirms with the `danger` button variant | The design has no confirm dialog (it used Undo, see plan §2 #6); reusing an existing width and variant avoids inventing new ones |
+| 2026-11-03 | A loading button uses `aria-disabled`, not `disabled` | A natively disabled button drops keyboard focus to `<body>` mid-save; `aria-disabled` keeps focus and the click handler is skipped instead |
+| 2026-11-03 | Menus focus their first item on mouse open too | DESIGN §10.3 says "focus the first item on open"; Radix does it only for keyboard opens and keeps `onOpenAutoFocus` private on DropdownMenu, so the first focus of the panel after opening is forwarded to the first enabled item |
+| 2026-11-03 | Dialogs remember the focused element on open and refocus it on close (`useReturnFocus`), and set `aria-modal="true"` themselves | Radix modal dialogs return focus only to a `Dialog.Trigger` (to `<body>` without one) and don't set `aria-modal`; our dialogs are controlled and usually have no Trigger |
+| 2026-11-03 | Added a `sm` (28px) Button size | The canvas uses 28px buttons in banners, composers and the save-error bar |
+| 2026-11-03 | `Field` wires controls through context, not a render prop | `<Field label error><Input {...register('x')} /></Field>` stays one line with react-hook-form; explicit `id`/`aria-*` on the control still win |
+| 2026-11-03 | `/__ui` exists only under `import.meta.env.DEV` | Vite replaces the flag with `false` in `vite build`, so the route and its lazy chunk are dropped from production |
+| 2026-11-03 | axe in unit tests runs with `color-contrast` and `region` off | jsdom has no layout/canvas to measure color, and a lone component is not a page. Contrast comes from the DESIGN token table and is checked again with Lighthouse in phase 8 |
 
 ## 9. Enhancements
 
-_Filled in as they land (tests, CI, a11y checks…)._ So far: CI (`.github/workflows/client.yml`), unit tests for the API layer and stores with MSW.
+_Filled in as they land (tests, CI, a11y checks…)._ So far: CI (`.github/workflows/client.yml`), unit tests for the API layer and stores with MSW, component tests with axe checks, and the dev-only `/__ui` component catalogue in both themes.
 
 ## 10. Testing & CI
 
 - Unit: Vitest + Testing Library + MSW (`src/test/setup.ts` fails any unhandled request). Covered now: `request()` (token, body, query, 204, ApiError, 401 → expire, login 401, network error, proxy 5xx, timeout, cancel), `fieldErrors`, stores (session, toast, announcer, theme), `Icon` / `TypeIcon` a11y.
+- Components (phase 1): Button loading/disabled (name, `aria-busy`, focus kept, clicks and implicit submit blocked, width-keeping layers), IconButton name and its type-level `aria-label`; Field wiring of `aria-describedby` / `aria-invalid` / `aria-required` for every control; TagInput keys and announcements; Dialog autofocus, Tab trap, Esc and × with focus restore, controlled veto; ConfirmDialog Cancel focus and pending lock; Menu ↑ ↓ Home End, disabled skip, wrap, Enter, Esc with focus back on the trigger. Each runs `vitest-axe` (`src/test/axe.ts`).
 - CI: `.github/workflows/client.yml` runs `npm ci → lint → typecheck → test → build` on every PR and on `main`. E2E job joins in phase 9.
 
 ## 11. Known issues
 
 - `npm audit` reports 13 moderate advisories in dev dependencies after install; not reviewed yet.
 - `/` is a phase-0 placeholder; every route renders it until phase 2.
-- `vitest-axe` is installed but unused until component tests in phase 1+.
 - The theme does not follow OS changes after load (only the initial default does).
+- In `/__ui`, dialogs and menus portal to `<body>`, so they follow the global theme (header toggle), not the pane they were opened from.
+- `vitest-axe@0.1.0` ships type augmentations for an old Vitest, so its `toHaveNoViolations` matcher isn't used; `expectNoAxeViolations()` asserts on the violations list instead.
+- Toast host (Flag), LiveRegion host and the unsaved-changes confirm bar are not built yet: they come with auth and the shell (phases 2–3) and Todo details (phase 4).
 
 ## 12. Demo
 

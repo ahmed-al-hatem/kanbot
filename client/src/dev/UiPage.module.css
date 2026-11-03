@@ -1,0 +1,117 @@
+/* Dev-only /__ui catalogue layout. */
+.page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-150);
+  min-block-size: var(--size-page-header);
+  padding: var(--space-150) var(--space-400);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+.segmented {
+  display: flex;
+  gap: var(--space-025);
+}
+
+.meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.panes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(560px, 100%), 1fr));
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-400);
+  min-inline-size: 0;
+  padding: var(--space-300) var(--space-400) 64px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.pane + .pane {
+  border-inline-start: 1px solid var(--border);
+}
+
+.paneTitle {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-150);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+.rowLabel {
+  inline-size: 72px;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-150);
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-150);
+}
+
+.skeletonColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  padding: var(--space-100);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+}
+
+@media (max-width: 760px) {
+  .header,
+  .pane {
+    padding-inline: var(--space-200);
+  }
+
+  .grid2,
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
