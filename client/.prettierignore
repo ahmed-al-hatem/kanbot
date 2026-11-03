@@ -1,0 +1,10 @@
+dist
+coverage
+node_modules
+package-lock.json
+stats.html
+# Verbatim copies / generated files
+src/types/api.ts
+src/components/Icon/icons.ts
+src/styles/tokens.css
+src/styles/motion.css
