@@ -5,6 +5,8 @@
 >
 > **قاعدة الأولوية عند التعارض:** عقد الـ API (`server/src/types/api.ts` + zod schemas) ← ثم الـ Requirements (معايير القبول AC) ← ثم التصميم.
 > الـ backend ممنوع تعديله، والتقييم يختبر الـ AC (40%)، لذلك أي شيء في التصميم لا يدعمه الـ API نعدّله أو نؤجله ونوثّقه في README.
+>
+> النسخة الإنجليزية: [FRONTEND-PLAN.en.md](FRONTEND-PLAN.en.md).
 
 ---
 
@@ -96,9 +98,9 @@
 | Server state | TanStack Query v5 | cache، optimistic، retry، online manager |
 | Client state | **Zustand** (+ `persist` middleware) | حالة الواجهة فقط (session، theme، toast، announcer، محادثة الـ AI، حالة الـ drawer). subscriptions بـ selectors بدل إعادة render لكل الشجرة كما في Context، ويمكن استدعاؤه خارج React (مثلاً `api/client.ts` عند 401). **ممنوع** وضع بيانات السيرفر فيه (plan §3.4) |
 | Forms | `react-hook-form` + `zod` + `@hookform/resolvers` | `mode: 'onTouched'` = validate on blur ثم on change (يطابق §10.5) |
-| DnD | `@dnd-kit/core` + `sortable` (موجود) | keyboard sensor + announcements |
-| Markdown | `react-markdown` (موجود) — **lazy** | بدون `rehype-raw` (NFR-7)، ويُحمَّل فقط عند فتح الـ AI |
-| Dates | `Intl.DateTimeFormat` (موجود في `format.ts`) | لا حاجة لـ date-fns |
+| DnD | `@dnd-kit/core` + `sortable` | keyboard sensor + announcements |
+| Markdown | `react-markdown` — **lazy** | بدون `rehype-raw` (NFR-7)، ويُحمَّل فقط عند فتح الـ AI |
+| Dates | `Intl.DateTimeFormat` | لا حاجة لـ date-fns |
 | Animation | CSS keyframes من DESIGN §8.3 فقط | لا Framer Motion (~40KB). exit animations عبر Radix `data-state=closed` |
 | Fonts | `@fontsource-variable/inter` self-hosted + preload | يلغي اتصال Google Fonts (أسرع LCP، لا FOIT). IBM Plex Arabic نتركه عبر Google Fonts بـ `unicode-range` (لا يُحمّل إلا عند وجود عربي) أو نحذفه لأن المشروع English only |
 | Lint/Format | ESLint 9 flat: `typescript-eslint` (type-checked) + `react-hooks` + `react-refresh` + `jsx-a11y` · Prettier | NFR-1 |
@@ -115,7 +117,7 @@ client/src/
 ├── router.tsx                # createBrowserRouter + lazy routes
 ├── app/                      # QueryClientProvider + RouterProvider + الـ hosts (Toaster, LiveRegion, SessionExpiredDialog)
 ├── stores/                   # Zustand: session.ts, theme.ts, toast.ts, announcer.ts, assistant.ts
-├── api/                      # client.ts + index.ts (موجود) — لا fetch خارج هذا المجلد
+├── api/                      # client.ts + auth/projects/todos/sprints/ai.ts — لا fetch خارج هذا المجلد
 ├── hooks/                    # queries/mutations: useProjects, useBacklog, useBoard, useMoveTodo...
 │   └── queryKeys.ts          # مصنع مفاتيح موحّد: qk.project(id), qk.todos(pid, filters)...
 ├── components/               # design system: Button, IconButton, Field, Input, Select, Textarea,
@@ -235,7 +237,7 @@ qk = {
 - `styles/tokens.css` (نسخ §3.2 حرفياً + spacing/radius/easing كـ variables)، `base.css`، `motion.css` (§8.3 + reduced-motion).
 - `Icon.tsx` + `icons.ts` (سكربت `scripts/extract-icons.mjs` ينسخ الـ paths من `@atlaskit/icon`) + `TypeIcon` (Task/Story SVG من §5.3) + `Logo`.
 - `main.tsx` (QueryClient: `staleTime: 30s`, `retry` ذكي لا يعيد 4xx، `refetchOnWindowFocus` مفعّل)، `router.tsx` بهيكل فارغ.
-- إصلاح ملاحظات §1.
+- `.gitattributes` بـ `* text=auto eol=lf` (يوقف تحذيرات LF/CRLF على Windows).
 - `api/client.ts`: `request<T>(method, path, { body, signal, timeoutMs })` — يضيف `Authorization` و `Content-Type`، يعيد `undefined` لـ 204، يرمي `ApiError` لغير 2xx، `NETWORK_ERROR` عند فشل الشبكة، `TIMEOUT` عند انتهاء المهلة (ويتجاهل `AbortError` الناتج عن إلغاء TanStack Query)، ويستدعي `useSession.getState().expire()` عند 401 (إلا `/auth/login`). مع unit tests بـ MSW لكل حالة.
 - `api/auth.ts`, `projects.ts`, `todos.ts`, `sprints.ts`, `ai.ts`: دوال typed من `api.ts` تمرّر `signal`. الـ AI بـ `timeoutMs: 45_000`.
 - stores الـ Zustand (`session`, `theme`, `toast`, `announcer`) كما في §5.1b. الـ `user` يبقى query `['me']` عبر hook `useCurrentUser()`.
@@ -271,7 +273,7 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 - commit: `feat(board): active sprint board, complete sprint and sprints history`
 
 ### المرحلة 7 — AI (AI-1…5)
-`useAiStatus` (مرة واحدة، `staleTime: Infinity`) → Mock badge. AssistantDrawer (Radix Dialog جانبي، chat state في context على مستوى المشروع يُصفّر عند تغيير `projectId`، Enter/Shift+Enter، thinking dots، Markdown بدون raw HTML، quick prompts، Copy). GenerateTodosDialog (drafts قابلة للتعديل، select all، bulk save، skeleton، AI error panel). PlanSprintDialog (capacity bar، over-capacity، goal قابل للتعديل، يربط `todoIds` بكاش الـ backlog). SprintSummaryCard (saved + Regenerate + وقت التوليد). خيار "Generate AI summary" في Complete. Disclaimer في كل سطح AI. 429/502 → رسالة + Try again.
+`useAiStatus` (مرة واحدة، `staleTime: Infinity`) → Mock badge. AssistantDrawer (Radix Dialog جانبي، المحادثة في `stores/assistant.ts` مفهرسة بـ `projectId`، Enter/Shift+Enter، thinking dots، Markdown بدون raw HTML، quick prompts، Copy). GenerateTodosDialog (drafts قابلة للتعديل، select all، bulk save، skeleton، AI error panel). PlanSprintDialog (capacity bar، over-capacity، goal قابل للتعديل، يربط `todoIds` بكاش الـ backlog). SprintSummaryCard (saved + Regenerate + وقت التوليد). خيار "Generate AI summary" في Complete. Disclaimer في كل سطح AI. 429/502 → رسالة + Try again.
 - commit: `feat(ai): assistant drawer, generate todos, plan sprint and summaries`
 
 ### المرحلة 8 — Polish + جودة
