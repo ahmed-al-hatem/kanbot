@@ -1,0 +1,39 @@
+/* DESIGN §6 page header (canvas: min 64px, padding 12 32, gap 12, wraps). */
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-150);
+  min-block-size: var(--size-page-header);
+  padding: var(--space-150) var(--space-400);
+  border-block-end: 1px solid var(--border);
+}
+
+.title:focus {
+  outline: none;
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  min-inline-size: 0;
+  color: var(--text-subtlest);
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+@media (max-width: 760px) {
+  .header {
+    padding-inline: var(--space-200);
+  }
+}

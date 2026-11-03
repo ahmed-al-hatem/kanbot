@@ -3,6 +3,8 @@ import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { useAnnouncer } from '@/stores/announcer';
+import { useAssistant } from '@/stores/assistant';
+import { useHighlight } from '@/stores/highlight';
 import { useSession } from '@/stores/session';
 import { useToast } from '@/stores/toast';
 import { server } from './server';
@@ -15,6 +17,9 @@ class ResizeObserverStub implements ResizeObserver {
 }
 globalThis.ResizeObserver = ResizeObserverStub;
 
+// jsdom doesn't implement scrolling; React Router's ScrollRestoration calls it on navigation.
+window.scrollTo = vi.fn() as typeof window.scrollTo;
+
 // Any request without a handler fails the test instead of hitting the network.
 beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
@@ -25,6 +30,8 @@ beforeEach(() => {
   useSession.setState({ token: null, sessionExpired: false, signedOut: false });
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
+  useAssistant.setState({ open: false });
+  useHighlight.setState({ projectId: null });
 });
 
 afterEach(() => {

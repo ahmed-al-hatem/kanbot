@@ -1,0 +1,59 @@
+/* DESIGN §6 / canvas: rounded square with the project's first letter. */
+.avatar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  transition: background-color 200ms var(--ease-practical);
+}
+
+.s22 {
+  inline-size: 22px;
+  block-size: 22px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+
+.s24 {
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: var(--radius-medium);
+  font-size: 11px;
+}
+
+.s40 {
+  inline-size: 40px;
+  block-size: 40px;
+  border-radius: var(--radius-large);
+  font-size: 16px;
+}
+
+.purple {
+  background: var(--lz-purple-bg);
+  color: var(--lz-purple-fg);
+}
+
+.teal {
+  background: var(--lz-teal-bg);
+  color: var(--lz-teal-fg);
+}
+
+.green {
+  background: var(--lz-green-bg);
+  color: var(--lz-green-fg);
+}
+
+.orange {
+  background: var(--lz-orange-bg);
+  color: var(--lz-orange-fg);
+}
+
+.magenta {
+  background: var(--lz-magenta-bg);
+  color: var(--lz-magenta-fg);
+}
+
+.blue {
+  background: var(--lz-blue-bg);
+  color: var(--lz-blue-fg);
+}

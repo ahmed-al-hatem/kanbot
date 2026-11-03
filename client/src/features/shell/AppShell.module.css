@@ -1,0 +1,430 @@
+/* DESIGN §6 shell, §13 responsive. Canvas: sidebar 240 · padding 16 12 · nav items 36. */
+.shell {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+}
+
+.body {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: stretch;
+  min-block-size: 0;
+}
+
+.main {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+}
+
+.main:focus {
+  outline: none;
+}
+
+/* ---------- Skip link (DESIGN §6 Top, §10.1) ---------- */
+.skip {
+  position: absolute;
+  inset-block-start: -56px;
+  inset-inline-start: var(--space-150);
+  z-index: 60;
+  padding: var(--space-100) var(--space-150);
+  border-radius: var(--radius-medium);
+  background: var(--brand);
+  color: var(--text-inverse);
+  font-weight: 600;
+  text-decoration: none;
+  transition: inset-block-start 150ms var(--ease-practical);
+}
+
+.skip:focus {
+  inset-block-start: var(--space-150);
+  color: var(--text-inverse);
+}
+
+/* ---------- Mobile top bar (DESIGN §13, artboards M02/M03) ---------- */
+.topBar {
+  display: none;
+  align-items: center;
+  gap: var(--space-100);
+  block-size: var(--size-mobile-bar);
+  padding-inline: var(--space-150);
+  border-block-end: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.topBarSpacer {
+  flex: 1 1 0;
+}
+
+/* ---------- Sidebar ---------- */
+.nav {
+  position: sticky;
+  inset-block-start: 0;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+  inline-size: var(--size-sidebar);
+  block-size: 100dvh;
+  overflow-y: auto;
+  padding: var(--space-200) var(--space-150);
+  background: var(--surface);
+  border-inline-end: 1px solid var(--border);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 var(--space-075) var(--space-150);
+}
+
+.wordmark {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+
+.navHeading {
+  margin: var(--space-200) 10px var(--space-050);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--text-subtlest);
+}
+
+.navList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  block-size: 36px;
+  padding-inline: 10px;
+  border-radius: var(--radius-medium);
+  color: var(--text-subtle);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 50ms linear,
+    color 150ms var(--ease-practical);
+}
+
+.navIcon {
+  flex: none;
+  transition: transform 150ms var(--ease-practical);
+}
+
+.navItem:hover {
+  background: var(--neutral);
+  color: var(--text);
+}
+
+.navItem:hover .navIcon {
+  transform: translateX(1px);
+}
+
+.navItem:active {
+  background: var(--neutral-hover);
+}
+
+.navItemActive,
+.navItemActive:hover {
+  background: var(--selected);
+  color: var(--text-selected);
+  font-weight: 600;
+}
+
+.navItemActive:hover {
+  background: var(--selected-hover);
+}
+
+/* The 3px brand bar on the inline-start edge, scaling in (DESIGN §8.2 "Nav active bar"). */
+.navItemActive::before {
+  content: '';
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  border-start-end-radius: 3px;
+  border-end-end-radius: 3px;
+  background: var(--brand);
+  animation: global(kbBar) 250ms var(--ease-bold) backwards;
+}
+
+.navLabel {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navDivider {
+  block-size: 1px;
+  margin: var(--space-150) var(--space-050);
+  background: var(--border);
+}
+
+.navFooter {
+  margin-block-start: auto;
+  padding-block-start: var(--space-150);
+  border-block-start: 1px solid var(--border);
+}
+
+/* ---------- Project switcher ---------- */
+.switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  inline-size: 100%;
+  block-size: 44px;
+  padding-inline: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+  background: var(--surface);
+  color: var(--text);
+  text-align: start;
+  transition:
+    background-color 150ms,
+    border-color 150ms;
+}
+
+.switcher:hover,
+.switcher[aria-expanded='true'] {
+  background: var(--surface-hovered);
+  border-color: var(--border-input);
+}
+
+.switcherIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: var(--radius-medium);
+  background: var(--neutral);
+  color: var(--text-subtle);
+}
+
+.switcherText {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 16px;
+}
+
+.switcherName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.switcherKey {
+  font-size: 11px;
+  color: var(--text-subtlest);
+}
+
+.switcherChevron {
+  flex: none;
+  color: var(--text-subtle);
+  transition: transform 200ms var(--ease-inout);
+}
+
+.switcher[aria-expanded='true'] .switcherChevron {
+  transform: rotate(180deg);
+}
+
+.switcherMenu {
+  min-inline-size: 216px;
+}
+
+.menuProject {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-inline-size: 0;
+}
+
+.menuProjectName {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.menuCurrent {
+  flex: none;
+  color: var(--text-selected);
+}
+
+/* ---------- Profile ---------- */
+.profile {
+  display: flex;
+  align-items: center;
+  gap: var(--space-050);
+}
+
+.profileButton {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-050);
+  border: none;
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text);
+  text-align: start;
+  transition: background-color 50ms linear;
+}
+
+.profileButton:hover,
+.profileButton[aria-expanded='true'] {
+  background: var(--neutral);
+}
+
+.profileText {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 16px;
+}
+
+.profileName,
+.profileEmail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.profileEmail {
+  font-size: 12px;
+  color: var(--text-subtlest);
+}
+
+.profileChevron {
+  flex: none;
+  color: var(--text-subtle);
+}
+
+.themeToggle {
+  flex: none;
+}
+
+/* ---------- Tablet (761–1023px, NFR-4): the sidebar collapses to a 64px icon rail ---------- */
+@media (min-width: 761px) and (max-width: 1023px) {
+  .nav {
+    inline-size: 64px;
+    padding-inline: var(--space-100);
+    align-items: center;
+  }
+
+  .brand {
+    padding-inline: 0;
+  }
+
+  .wordmark,
+  .navHeading,
+  .switcherText,
+  .switcherChevron,
+  .profileText,
+  .profileChevron {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .navLabel {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .switcher {
+    justify-content: center;
+    inline-size: 44px;
+    padding: 0;
+  }
+
+  .navList,
+  .navFooter {
+    inline-size: 100%;
+  }
+
+  .navItem {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .navHeading {
+    margin: var(--space-100) 0 0;
+  }
+
+  .profile {
+    flex-direction: column;
+  }
+
+  .profileButton {
+    flex: none;
+    padding: 2px;
+    border-radius: var(--radius-full);
+  }
+}
+
+/* ---------- Mobile (≤ 760px, DESIGN §13): top bar + hamburger panel ---------- */
+@media (max-width: 760px) {
+  .topBar {
+    display: flex;
+  }
+
+  .nav {
+    display: none;
+  }
+
+  .navOpen {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    display: flex;
+    inline-size: auto;
+    block-size: auto;
+    min-block-size: calc(100dvh - var(--size-mobile-bar));
+    border-inline-end: none;
+    box-shadow: var(--shadow-overlay);
+    animation: global(kbPop) 150ms var(--ease-practical) backwards;
+  }
+
+  .navOpen .brand {
+    display: none;
+  }
+}

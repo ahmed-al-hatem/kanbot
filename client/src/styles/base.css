@@ -170,6 +170,20 @@ kbd {
   border: 0;
 }
 
+/* Page content under the PageHeader (DESIGN §6: padding 24 32 32; 16px gutters on mobile). */
+.page-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-250);
+  padding: var(--space-300) var(--space-400) var(--space-400);
+}
+
+@media (max-width: 760px) {
+  .page-body {
+    padding-inline: var(--space-200);
+  }
+}
+
 /* Theme switch cross-fade: the theme store adds `theming` to <html> for 300ms. */
 .theming,
 .theming * {

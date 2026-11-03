@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { FullPageLoader } from '@/components/FullPageLoader/FullPageLoader';
 import { GuestRoute } from '@/features/auth/GuestRoute';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { pageChunks } from '@/routeChunks';
 
 /**
  * Dev-only design-system catalogue. `import.meta.env.DEV` is replaced by `false` in
@@ -20,9 +21,10 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
   : [];
 
 /**
- * Guest pages, then the private layout (plan §4, IMPLEMENTATION-PLAN §3.1). Every page is
- * lazy-loaded (plan §5.4); the guards are tiny and load with the app.
- * Until phase 3 every private path renders the placeholder with Log out.
+ * Guest pages, then the private layout (plan §4, IMPLEMENTATION-PLAN §3.1): the guard, the
+ * app shell, then Projects and the project pages. Every page is lazy-loaded (plan §5.4); the
+ * guards are tiny and load with the app. Backlog, Board and Sprints are placeholders until
+ * phases 4–6.
  */
 export const routes: RouteObject[] = [
   {
@@ -59,13 +61,34 @@ export const routes: RouteObject[] = [
       {
         Component: ProtectedRoute,
         children: [
-          { path: '/', element: <Navigate to="/projects" replace /> },
           {
-            path: '/projects/*',
-            lazy: async () => {
-              const { PrivatePlaceholder } = await import('@/features/shell/PrivatePlaceholder');
-              return { Component: PrivatePlaceholder };
-            },
+            lazy: async () => ({ Component: (await pageChunks.shell()).AppShell }),
+            children: [
+              { path: '/', element: <Navigate to="/projects" replace /> },
+              {
+                path: '/projects',
+                lazy: async () => ({ Component: (await pageChunks.projects()).ProjectsPage }),
+              },
+              {
+                path: '/projects/:projectId',
+                lazy: async () => ({ Component: (await pageChunks.project()).ProjectLayout }),
+                children: [
+                  { index: true, element: <Navigate to="backlog" replace /> },
+                  {
+                    path: 'backlog',
+                    lazy: async () => ({ Component: (await pageChunks.backlog()).BacklogPage }),
+                  },
+                  {
+                    path: 'board',
+                    lazy: async () => ({ Component: (await pageChunks.board()).BoardPage }),
+                  },
+                  {
+                    path: 'sprints/:sprintId?',
+                    lazy: async () => ({ Component: (await pageChunks.sprints()).SprintsPage }),
+                  },
+                ],
+              },
+            ],
           },
         ],
       },

@@ -1,0 +1,241 @@
+/* DESIGN §9 03 Projects, §7 Project tile, §9 12 New project (canvas layout). */
+
+/* ---------- Search ---------- */
+.search {
+  position: relative;
+  max-inline-size: 320px;
+}
+
+.searchIcon {
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  color: var(--text-subtlest);
+}
+
+/* Two classes, so it beats the Field control padding whatever order the CSS chunks load in. */
+.search .searchInput {
+  padding-inline-start: 34px;
+}
+
+/* ---------- Grid ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-200);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-250);
+}
+
+.skeletonSearch {
+  max-inline-size: 100%;
+}
+
+/* ---------- Tile ---------- */
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-150);
+  padding: var(--space-200);
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+  color: var(--text);
+  transition:
+    transform 150ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical);
+}
+
+.tile:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-overlay);
+}
+
+.tile:active {
+  transform: scale(0.99);
+}
+
+/* Keyboard focus on the name link rings the whole tile. */
+.tile:has(.stretch:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Menu open: stay put so the menu doesn't drift with the lift. */
+.tile:has([aria-expanded='true']) {
+  z-index: 1;
+  transform: none;
+}
+
+.tileHead {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-150);
+}
+
+.tileTitle {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-050);
+}
+
+.tileName {
+  max-inline-size: 100%;
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 600;
+}
+
+.stretch {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.stretch:hover {
+  color: var(--text-brand);
+  text-decoration: underline;
+}
+
+.stretch:focus-visible {
+  outline: none;
+}
+
+/* The stretched link: the whole tile is the click target (DESIGN §7). */
+.stretch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-xlarge);
+}
+
+.tileKey {
+  flex: none;
+}
+
+/* Above the stretched link. */
+.over {
+  position: relative;
+  z-index: 1;
+  flex: none;
+}
+
+.tileDescription {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  color: var(--text-subtle);
+}
+
+.tileDescriptionEmpty {
+  color: var(--text-subtlest);
+}
+
+.tileFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-100);
+  margin-block-start: auto;
+  padding-block-start: var(--space-150);
+  border-block-start: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+/* ---------- New-project tile ---------- */
+.newTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-100);
+  min-block-size: 176px;
+  border: 1px dashed var(--border-input);
+  border-radius: var(--radius-xlarge);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 14px;
+  font-weight: 500;
+  animation: global(kbRise) 300ms var(--ease-bold) backwards;
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    color 150ms,
+    transform 150ms var(--ease-practical);
+}
+
+.newTile:hover {
+  background: var(--selected);
+  border-color: var(--border-selected);
+  color: var(--text-selected);
+}
+
+.newTile:active {
+  transform: scale(0.98);
+}
+
+.newTileIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: var(--radius-full);
+  background: var(--neutral);
+}
+
+/* ---------- Project form ---------- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-150);
+  padding: var(--space-150);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+}
+
+.previewText {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.previewName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.form .keyInput {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.keyInput::placeholder {
+  font-weight: 400;
+}

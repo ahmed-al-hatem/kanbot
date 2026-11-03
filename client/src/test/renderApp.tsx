@@ -6,7 +6,25 @@ import { LiveRegion } from '@/app/LiveRegion';
 import { queryClient } from '@/app/queryClient';
 import { Toaster } from '@/app/Toaster';
 import { routes } from '@/router';
+import { pageChunks } from '@/routeChunks';
 import type { User } from '@/types/api';
+
+/**
+ * Imports every lazy page once, for a `beforeAll`. A route's first, cold import (transforming
+ * Radix, react-hook-form, zod…) can outlast `findBy*`'s 1s timeout, which fails whichever
+ * test happens to hit that route first.
+ */
+export async function preloadPages() {
+  await Promise.all([
+    ...Object.values(pageChunks).map((load) => load()),
+    import('@/features/auth/LoginPage'),
+    import('@/features/auth/RegisterPage'),
+    import('@/features/auth/ForgotPasswordPage'),
+    import('@/features/auth/SessionExpiredDialog'),
+    import('@/components/PageError/PageError'),
+    import('@/features/ai/AssistantDrawer'),
+  ]);
+}
 
 /** The whole app (real routes, guards and hosts) on a memory router starting at `path`. */
 export function renderApp(path: string) {

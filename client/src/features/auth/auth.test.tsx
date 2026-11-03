@@ -1,12 +1,13 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { qk } from '@/hooks/queryKeys';
 import { STORAGE_KEYS } from '@/lib/storage';
 import { useSession } from '@/stores/session';
-import { errorBody, renderApp, TEST_USER } from '@/test/renderApp';
+import { projectHandlers } from '@/test/projects';
+import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
 
 const TOKEN = 'test.jwt.token';
@@ -32,6 +33,13 @@ function savedToken(): unknown {
   return raw ? (JSON.parse(raw) as { state: { token: unknown } }).state.token : undefined;
 }
 
+beforeAll(preloadPages, 30_000);
+
+// Private pages render the app shell, which loads the projects.
+beforeEach(() => {
+  server.use(...projectHandlers());
+});
+
 const currentPath = (router: ReturnType<typeof renderApp>['router']) =>
   `${router.state.location.pathname}${router.state.location.search}`;
 
@@ -46,10 +54,10 @@ describe('guards (AUTH-5)', () => {
 
   it('sends a signed-in user away from /login, to ?redirect= when present', async () => {
     signedIn();
-    const { router } = renderApp('/login?redirect=%2Fprojects%2Fp9');
+    const { router } = renderApp('/login?redirect=%2Fprojects%2Fp1%2Fboard');
 
-    expect(await screen.findByRole('heading', { name: 'Projects' })).toBeInTheDocument();
-    expect(currentPath(router)).toBe('/projects/p9');
+    expect(await screen.findByRole('heading', { name: 'Active Sprint' })).toBeInTheDocument();
+    expect(currentPath(router)).toBe('/projects/p1/board');
   });
 
   it('sends a signed-in user away from /register to Projects', async () => {
@@ -305,7 +313,9 @@ describe('log out (AUTH-4)', () => {
     signedIn();
     const { router } = renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Log out' }));
+    // AUTH-4: Log out lives in the profile menu at the bottom of the sidebar.
+    await user.click(await screen.findByRole('button', { name: new RegExp(TEST_USER.name) }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Log out' }));
 
     expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
     expect(currentPath(router)).toBe('/login');
