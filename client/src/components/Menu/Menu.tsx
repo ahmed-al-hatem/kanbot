@@ -14,6 +14,11 @@ interface MenuProps {
   align?: 'start' | 'end';
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * Runs as the menu hands focus back to its trigger. An item that opens a dialog sets it
+   * open here, so the dialog opens after the menu is gone and returns focus to the trigger.
+   */
+  onCloseAutoFocus?: (event: Event) => void;
   className?: string;
 }
 
@@ -22,7 +27,16 @@ interface MenuProps {
  * ↑ ↓ Home End and typeahead between items, Esc or an outside click closes and refocuses
  * the trigger. The trigger gets `aria-haspopup` / `aria-expanded` / `aria-controls`.
  */
-export function Menu({ trigger, label, children, align = 'end', open, onOpenChange, className }: MenuProps) {
+export function Menu({
+  trigger,
+  label,
+  children,
+  align = 'end',
+  open,
+  onOpenChange,
+  onCloseAutoFocus,
+  className,
+}: MenuProps) {
   // Set on open, consumed by the first focus of the panel (see onFocus below).
   const justOpened = useRef(false);
 
@@ -45,6 +59,7 @@ export function Menu({ trigger, label, children, align = 'end', open, onOpenChan
           collisionPadding={8}
           loop
           className={cx(styles.menu, className)}
+          onCloseAutoFocus={onCloseAutoFocus}
           onFocus={(event) => {
             // Radix focuses the panel on open and only moves to the first item for keyboard
             // opens; DESIGN §10.3 wants it always. Only the first panel focus after opening
@@ -68,14 +83,17 @@ interface MenuItemProps {
   /** `danger` turns the text red (Delete). */
   tone?: 'default' | 'danger';
   disabled?: boolean;
+  /** Also fires on pointer hover: Radix focuses the item under the pointer. Used to prefetch. */
+  onFocus?: () => void;
 }
 
-export function MenuItem({ children, onSelect, icon, tone = 'default', disabled }: MenuItemProps) {
+export function MenuItem({ children, onSelect, icon, tone = 'default', disabled, onFocus }: MenuItemProps) {
   return (
     <DropdownMenu.Item
       className={cx(styles.item, tone === 'danger' && styles.danger)}
       onSelect={onSelect}
       disabled={disabled}
+      onFocus={onFocus}
     >
       {icon && <Icon name={icon} className={styles.icon} />}
       <span className={styles.text}>{children}</span>
