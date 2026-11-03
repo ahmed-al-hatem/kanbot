@@ -1,0 +1,28 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+.mark {
+  flex: none;
+}
+
+.bg {
+  fill: var(--logo-bg);
+}
+
+.fg {
+  fill: var(--logo-fg);
+}
+
+.accent {
+  fill: var(--logo-accent);
+}
+
+.wordmark {
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+  color: var(--text);
+}
