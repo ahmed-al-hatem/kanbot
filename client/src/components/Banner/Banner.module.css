@@ -1,0 +1,57 @@
+/* DESIGN §7 Banner and confirm bar */
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.page {
+  padding: var(--space-100) var(--space-200);
+}
+
+.inline {
+  padding: 10px var(--space-150);
+  border-radius: var(--radius-large);
+}
+
+.warning {
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.warning .icon {
+  color: var(--warning-icon);
+}
+
+.danger {
+  background: var(--danger-bg);
+  color: var(--danger);
+}
+
+.danger .icon {
+  color: var(--danger-icon);
+}
+
+.icon {
+  flex: none;
+}
+
+.message {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+}
+
+.action {
+  flex: none;
+  display: flex;
+  gap: var(--space-100);
+}
+
+/* Buttons in a banner take its text color (canvas: `color: inherit`), at rest and on hover. */
+.banner .action :is(button, a),
+.banner .action :is(button, a):hover {
+  color: inherit;
+}

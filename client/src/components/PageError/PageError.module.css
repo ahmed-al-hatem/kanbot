@@ -1,0 +1,46 @@
+/* DESIGN §11 Page load error, canvas artboard S04. */
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-150);
+  padding: 64px var(--space-300);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xlarge);
+  text-align: center;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--radius-full);
+  background: var(--danger-bg);
+  color: var(--danger-icon);
+}
+
+.title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.text {
+  max-inline-size: 440px;
+  color: var(--text-subtle);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-100);
+  margin-block-start: var(--space-050);
+}
+
+.code {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
