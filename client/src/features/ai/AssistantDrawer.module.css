@@ -1,0 +1,86 @@
+/* DESIGN §7 AI drawer, §8.2 Drawer / Blanket motion, §13 full width on mobile. */
+.blanket {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: var(--blanket);
+}
+
+.blanket[data-state='open'] {
+  animation: global(kbFade) 250ms linear;
+}
+
+.blanket[data-state='closed'] {
+  animation: global(kbFadeOut) 200ms linear forwards;
+}
+
+.drawer {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  inline-size: min(var(--size-drawer), 100%);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+  color: var(--text);
+}
+
+.drawer:focus {
+  outline: none;
+}
+
+.drawer[data-state='open'] {
+  animation: global(kbDrawerIn) 250ms var(--ease-bold);
+}
+
+.drawer[data-state='closed'] {
+  animation: global(kbDrawerOut) 200ms var(--ease-bold) forwards;
+}
+
+.drawer:dir(rtl)[data-state='open'] {
+  animation-name: global(kbDrawerInRtl);
+}
+
+.drawer:dir(rtl)[data-state='closed'] {
+  animation-name: global(kbDrawerOutRtl);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-200) var(--space-300);
+  border-block-end: 1px solid var(--border);
+}
+
+.sparkle {
+  flex: none;
+  color: var(--ai-icon);
+}
+
+.heading {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.title {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--space-300);
+}

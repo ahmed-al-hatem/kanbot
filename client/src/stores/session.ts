@@ -3,6 +3,8 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import { queryClient } from '@/app/queryClient';
 import { safeStorage, STORAGE_KEYS } from '@/lib/storage';
 import { useAnnouncer } from './announcer';
+import { useAssistant } from './assistant';
+import { useHighlight } from './highlight';
 import { useToast } from './toast';
 
 interface SessionState {
@@ -40,6 +42,8 @@ export const useSession = create<SessionState>()(
         set({ ...initialState, signedOut: true });
         useToast.getState().reset();
         useAnnouncer.getState().reset();
+        useAssistant.getState().reset();
+        useHighlight.getState().reset();
         queryClient.clear();
       },
       reset: () => {
