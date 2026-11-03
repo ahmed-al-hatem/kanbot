@@ -1,35 +1,68 @@
 # Kanbot — خطة بناء الـ Frontend (AR)
 
 > مرجع العمل لبناء `client/`. يجمع بين ثلاثة مصادر:
-> [REQUIREMENTS](REQUIREMENTS.en.md) (ما سيُختبر) · [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.en.md) (العقد مع الـ API) · [DESIGN.md](../design/DESIGN.md) + الـ prototype `Main.dc.html` (الشكل والسلوك).
+> [REQUIREMENTS](REQUIREMENTS.en.md) (ما سيُختبر) · [IMPLEMENTATION-PLAN](IMPLEMENTATION-PLAN.en.md) (العقد مع الـ API) · **التصميم: [Kanbot design canvas](https://claude.ai/code/artifact/efe99d87-baac-4bb7-96e1-235363299397)** + مواصفاته المكتوبة [DESIGN.md](../design/DESIGN.md).
 >
-> **قاعدة الأولوية عند التعارض:** عقد الـ API (`server/src/types/api.ts` + zod schemas) ← ثم الـ Requirements (معايير القبول AC) ← ثم DESIGN.md.
+> **قاعدة الأولوية عند التعارض:** عقد الـ API (`server/src/types/api.ts` + zod schemas) ← ثم الـ Requirements (معايير القبول AC) ← ثم التصميم.
 > الـ backend ممنوع تعديله، والتقييم يختبر الـ AC (40%)، لذلك أي شيء في التصميم لا يدعمه الـ API نعدّله أو نؤجله ونوثّقه في README.
+>
+> النسخة الإنجليزية: [FRONTEND-PLAN.en.md](FRONTEND-PLAN.en.md).
+
+---
+
+## 0. مصدر التصميم
+
+**المرجع البصري والسلوكي:** https://claude.ai/code/artifact/efe99d87-baac-4bb7-96e1-235363299397
+
+- الـ canvas فيه **56 artboard** (54 شاشة/حالة + `H00 Handoff spec` + `H01 User flow`)، بالثيمين light و dark وبعرض 1440 (desktop) و 390 (mobile).
+- كل الـ artboards تعرض **prototype واحداً تفاعلياً** هو `project/Main.dc.html`، وكل artboard يمرّر له ثلاثة props فقط: `screen` و `mode` (`light` | `dark`) و `variant` (الحالة). أي: عند تنفيذ شاشة نراجع `Main.dc.html` بالـ `screen` المناسب، وليس ملفات الـ artboards الصغيرة.
+- `H00 Handoff spec` = نفس محتوى [DESIGN.md](../design/DESIGN.md) (tokens، components، motion، keyboard، states). **DESIGN.md هو النسخة النصية المعتمدة** للقيم؛ الـ canvas هو المرجع للشكل والتفاعل الفعلي.
+- `H01 User flow` = نفس مخطط DESIGN.md §6b.
+- الوصول للملفات: Claude يقرأها عبر أداة الـ Artifact (`read` بالمسار، مثلاً `project/Main.dc.html`). الـ wireframes في `design/wireframes/` أقدم ورمادية: للمحتوى فقط، والـ canvas يتقدّم عليها.
+
+### 0.1 خريطة الشاشات ← الـ routes ← المراحل
+
+| `screen` في Main.dc.html | Artboards | Route / سطح | المرحلة |
+|---|---|---|---|
+| `login` | L/D 01، M01 (mobile) | `/login` | 2 |
+| `forgot` | S02 | `/forgot-password` (واجهة فقط، §10) | 2 |
+| `register` | L/D 02 | `/register` | 2 |
+| `projects` · `projects-empty` | L/D 03، 03b | `/projects` | 3 |
+| `newProject` | L/D 12 | Dialog فوق Projects | 3 |
+| `backlog` | L/D 04، M02 | `/projects/:projectId/backlog` | 4–5 |
+| `todo` | L/D 06 | Dialog `?todo=<id>` | 4 |
+| `sprintForm` | L/D 13 | Dialog (create / edit / start) | 5 |
+| `board` | L/D 05، M03 | `/projects/:projectId/board` | 6 |
+| `complete` | L/D 11 | Dialog فوق Board | 6 |
+| `sprints` | L/D 10 | `/projects/:projectId/sprints/:sprintId?` | 6 |
+| `drawer` | L/D 07 | AI drawer على كل الصفحات | 7 |
+| `generate` | L/D 08 | Dialog فوق Backlog | 7 |
+| `plan` | L/D 09 | Dialog فوق Backlog | 7 |
+| `notfound` | S09، M04 | `*` و 404 للمشروع/todo | 8 |
+
+| `variant` | Artboard | أين يُنفَّذ | المرحلة |
+|---|---|---|---|
+| `login-error` | S01 | بانر 401 في Login | 2 |
+| `session` | S05 | SessionExpiredDialog | 2 |
+| `offline` | S06 | OfflineBanner في الـ shell | 3 |
+| `loading` | S03 | Skeleton لكل صفحة (بنفس شكلها) | 1 (المكوّن) + كل مرحلة |
+| `error` | S04 | PageError لكل صفحة | 1 (المكوّن) + كل مرحلة |
+| `save-error` | S08 | شريط الخطأ في Todo details | 4 |
+| `ai-error` | S07 | لوحة الخطأ في Generate todos (والـ AI عموماً) | 7 |
+
+**قاعدة العمل في كل مرحلة:** قبل تنفيذ شاشة نراجع الـ `screen` والـ `variant` الخاصة بها في الـ canvas بالثيمين (والـ mobile إن وُجد)، ثم نقارن النتيجة بها قبل الـ commit.
 
 ---
 
 ## 1. الوضع الحالي لـ `client/`
 
-| موجود ✅ | ملاحظات |
-|---|---|
-| `package.json`, `vite.config.ts`, `tsconfig.json` (strict), `index.html` (سكربت الثيم قبل أول paint ✔) | لا يوجد ESLint/Prettier/Vitest، ولا سكربت `lint` (مطلوب في NFR-1) |
-| `src/types/api.ts` | مطابق تماماً لنسخة السيرفر ✔ |
-| `src/api/client.ts` + `src/api/index.ts` | طبقة API جيدة: `ApiError`، `fieldErrors`، معالجة 401، `NETWORK_ERROR` |
-| `src/app/auth.tsx`, `theme.tsx`, `toast.tsx`, `announcer.tsx` | Providers أساسية جاهزة |
-| `src/lib/format.ts` | تنسيق التواريخ، labels، ألوان المشاريع |
+**`client/` غير موجود؛ نبدأ من الصفر.** (حُذفت نسخة سابقة غير مكتملة وغير موثّقة في 2026-11-03.)
 
-| ناقص ❌ | الأثر |
-|---|---|
-| `src/main.tsx`, `router.tsx` | التطبيق لا يعمل أصلاً |
-| `src/components/Icon.tsx` | `toast.tsx` يستورده → **الـ build مكسور حالياً** |
-| `src/styles/*` (tokens, reset, keyframes) | لا يوجد أي CSS |
-| `src/hooks/*`، كل الـ features، كل الـ components | — |
-| `client/README.md` | من الـ deliverables |
-
-ملاحظات صغيرة على الكود الموجود (نصلحها في المرحلة 0):
-- `api/client.ts`: قراءة/كتابة `localStorage` بدون `try/catch` (تنكسر في بعض أوضاع الخصوصية).
-- `api/client.ts`: يفضّل دعم `AbortSignal` (TanStack Query يمرّر `signal` لإلغاء الطلبات عند تغيّر الصفحة/البحث).
-- `announcer.tsx`: `setTimeout` بدون تنظيف.
+نقاط يجب أن تغطيها طبقة الـ API الجديدة من البداية:
+- `ApiError` بـ `status`, `code`, `message`, `details` + `fieldErrors(err)` + كود `NETWORK_ERROR` (plan §3.3).
+- قراءة/كتابة `localStorage` داخل `try/catch` (تنكسر في بعض أوضاع الخصوصية).
+- دعم `AbortSignal` (TanStack Query يمرّر `signal` لإلغاء الطلبات عند تغيّر الصفحة/البحث).
+- `index.html` يضع class الثيم قبل أول paint (منع الوميض).
 
 ---
 
@@ -41,8 +74,8 @@
 | 2 | Story points | رقم 0–40 | `1,2,3,5,8,13` أو `null` | `<select>` بقيم فيبوناتشي + "None" |
 | 3 | Project key | 2–5 `[A-Z0-9]`، غير قابل للتعديل | `^[A-Z]{2,6}$`، قابل للتعديل (PRJ-3) | نتبع الـ API + hint "تغيير المفتاح لا يغيّر مفاتيح الـ todos" |
 | 4 | Assignee / Reporter | موجود في الكرت والـ dialog وفلتر الـ backlog | غير موجود (single-user) | **نحذفه** من كل الواجهات والفلاتر |
-| 5 | Forgot password | شاشة 01b | لا يوجد endpoint (وخارج النطاق) | إما نحذفها، أو نبنيها UI-only مع توضيح في README. **التوصية: UI-only** (تُظهر جودة التصميم بدون كذب وظيفي، مع ملاحظة واضحة) |
-| 6 | الحذف | فوري + Undo toast | PRJ-4 و BL-4: **تأكيد** إلزامي | Project: `ConfirmDialog` يذكر الاسم ويحذّر من حذف الـ todos والـ sprints. Todo: `ConfirmDialog` أيضاً (AC). Undo نضيفه كتحسين فقط للـ **move** |
+| 5 | Forgot password | شاشة 01b | لا يوجد endpoint (وخارج النطاق) | **واجهة فقط** مع ملاحظة "Demo only" وتوثيق في README (§10) |
+| 6 | الحذف | فوري + Undo toast | PRJ-4 و BL-4: **تأكيد** إلزامي | Project: `ConfirmDialog` يذكر الاسم ويحذّر من حذف الـ todos والـ sprints. Todo: `ConfirmDialog` أيضاً (AC). Undo فقط للـ **move** (§10) |
 | 7 | Session expired | Dialog غير قابل للإغلاق | AUTH-6: redirect إلى `/login?redirect=` + رسالة | ندمجهما: الـ Dialog ← "Log in again" ← `/login?redirect=<current>` مع رسالة "Your session has expired…" |
 | 8 | الروابط | `/projects/:key/...` و `?todo=KAN-18` | الـ API يعمل بالـ `id` فقط | `/projects/:projectId/...` و `?todo=<todoId>` (deep-link بدون طلب إضافي للبحث عن الـ key) |
 | 9 | Start sprint | يبدأ مباشرة | SPR-3: dialog بتاريخ بداية (اليوم) ونهاية (+14) | dialog صغير بنفس ستايل "Create sprint" |
@@ -61,12 +94,13 @@
 | Styling | **CSS Modules + `tokens.css` عام** (بدون Tailwind / UI kit) | التصميم مبني بالكامل على CSS variables؛ CSS Modules = صفر runtime، scoping، وتطابق 1:1 مع DESIGN.md. سهل التبرير أمام المقيّم |
 | Primitives | **Radix UI**: `react-dialog`, `react-alert-dialog`, `react-dropdown-menu` (+ `react-visually-hidden` اختياري) | focus trap، restore focus، Esc، `aria-*`، roving focus في القوائم — كلها مطلوبة في §10. نكتبها بأنفسنا = خطر أخطاء a11y. Radix unstyled ويدعم exit animation عبر `data-state` |
 | Icons | **مكوّن `<Icon name>` خاص + map للـ paths** (الطريقة (b) في DESIGN §5.1) | `@atlaskit/icon` يسحب `@atlaskit/tokens` و emotion → وزن كبير. ننسخ الـ paths مرة واحدة بسكربت من `node_modules` (devDependency) إلى `icons.ts` |
-| Server state | TanStack Query v5 (موجود) | cache، optimistic، retry، online manager |
+| HTTP client | **`fetch` الأصلي** داخل wrapper واحد `request<T>()` في `api/client.ts` (لا axios) | صفر KB بدل ~14KB gz. الـ interceptors (token، 401) داخل الـ wrapper، والـ retry والإلغاء من TanStack Query (`signal`)، والـ timeout عبر `AbortSignal.any([signal, AbortSignal.timeout(ms)])` (15s عادي، 45s للـ AI). axios لا يضيف شيئاً يحتاجه المشروع (لا upload progress) |
+| Server state | TanStack Query v5 | cache، optimistic، retry، online manager |
 | Client state | **Zustand** (+ `persist` middleware) | حالة الواجهة فقط (session، theme، toast، announcer، محادثة الـ AI، حالة الـ drawer). subscriptions بـ selectors بدل إعادة render لكل الشجرة كما في Context، ويمكن استدعاؤه خارج React (مثلاً `api/client.ts` عند 401). **ممنوع** وضع بيانات السيرفر فيه (plan §3.4) |
 | Forms | `react-hook-form` + `zod` + `@hookform/resolvers` | `mode: 'onTouched'` = validate on blur ثم on change (يطابق §10.5) |
-| DnD | `@dnd-kit/core` + `sortable` (موجود) | keyboard sensor + announcements |
-| Markdown | `react-markdown` (موجود) — **lazy** | بدون `rehype-raw` (NFR-7)، ويُحمَّل فقط عند فتح الـ AI |
-| Dates | `Intl.DateTimeFormat` (موجود في `format.ts`) | لا حاجة لـ date-fns |
+| DnD | `@dnd-kit/core` + `sortable` | keyboard sensor + announcements |
+| Markdown | `react-markdown` — **lazy** | بدون `rehype-raw` (NFR-7)، ويُحمَّل فقط عند فتح الـ AI |
+| Dates | `Intl.DateTimeFormat` | لا حاجة لـ date-fns |
 | Animation | CSS keyframes من DESIGN §8.3 فقط | لا Framer Motion (~40KB). exit animations عبر Radix `data-state=closed` |
 | Fonts | `@fontsource-variable/inter` self-hosted + preload | يلغي اتصال Google Fonts (أسرع LCP، لا FOIT). IBM Plex Arabic نتركه عبر Google Fonts بـ `unicode-range` (لا يُحمّل إلا عند وجود عربي) أو نحذفه لأن المشروع English only |
 | Lint/Format | ESLint 9 flat: `typescript-eslint` (type-checked) + `react-hooks` + `react-refresh` + `jsx-a11y` · Prettier | NFR-1 |
@@ -83,7 +117,7 @@ client/src/
 ├── router.tsx                # createBrowserRouter + lazy routes
 ├── app/                      # QueryClientProvider + RouterProvider + الـ hosts (Toaster, LiveRegion, SessionExpiredDialog)
 ├── stores/                   # Zustand: session.ts, theme.ts, toast.ts, announcer.ts, assistant.ts
-├── api/                      # client.ts + index.ts (موجود) — لا fetch خارج هذا المجلد
+├── api/                      # client.ts + auth/projects/todos/sprints/ai.ts — لا fetch خارج هذا المجلد
 ├── hooks/                    # queries/mutations: useProjects, useBacklog, useBoard, useMoveTodo...
 │   └── queryKeys.ts          # مصنع مفاتيح موحّد: qk.project(id), qk.todos(pid, filters)...
 ├── components/               # design system: Button, IconButton, Field, Input, Select, Textarea,
@@ -182,8 +216,15 @@ qk = {
 كل مرحلة تنتهي بتطبيق يعمل + `npm run lint && npm run typecheck && npm run build` نظيفة.
 
 ### المرحلة 0 — Tooling والأساسات
-- تثبيت الحزم الناقصة من `package.json` (أنت تنفّذ):
+- إنشاء المشروع ونسخ عقد الـ API (أنت تنفّذ، من جذر `kanbot/`):
   ```bash
+  npm create vite@latest client -- --template react-ts
+  cd client
+  cp ../server/src/types/api.ts src/types/api.ts
+  ```
+- تثبيت الحزم (أنت تنفّذ):
+  ```bash
+  npm i react-router @tanstack/react-query @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities react-markdown
   npm i react-hook-form zod @hookform/resolvers zustand @radix-ui/react-dialog @radix-ui/react-alert-dialog @radix-ui/react-dropdown-menu @fontsource-variable/inter
   npm i -D eslint @eslint/js typescript-eslint eslint-plugin-react-hooks eslint-plugin-react-refresh eslint-plugin-jsx-a11y globals prettier vitest jsdom @testing-library/react @testing-library/user-event @testing-library/jest-dom msw @atlaskit/icon @atlaskit/icon-lab rollup-plugin-visualizer
   ```
@@ -192,14 +233,17 @@ qk = {
 - alias `@/` → `src/` في `tsconfig` و `vite.config.ts`.
 - Vite proxy: `server.proxy` و `preview.proxy` لـ `/api` → `http://localhost:4000`، و `VITE_API_URL=/api`، و `strictPort: true` (انظر §9.1).
 - ESLint 9 + Prettier + `.editorconfig` + سكربتات `lint`, `format`, `test`, `e2e`.
+- CI من أول يوم: `.github/workflows/client.yml` (job `verify`: `npm ci` ← `lint` ← `typecheck` ← `test` ← `build`) و `.github/pull_request_template.md`، كما في [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 - Vitest + Testing Library + MSW + `test/setup.ts`.
 - `styles/tokens.css` (نسخ §3.2 حرفياً + spacing/radius/easing كـ variables)، `base.css`، `motion.css` (§8.3 + reduced-motion).
 - `Icon.tsx` + `icons.ts` (سكربت `scripts/extract-icons.mjs` ينسخ الـ paths من `@atlaskit/icon`) + `TypeIcon` (Task/Story SVG من §5.3) + `Logo`.
 - `main.tsx` (QueryClient: `staleTime: 30s`, `retry` ذكي لا يعيد 4xx، `refetchOnWindowFocus` مفعّل)، `router.tsx` بهيكل فارغ.
-- إصلاح ملاحظات §1.
-- `npm i zustand`، ونقل `app/auth.tsx` (جزء الـ token/session)، `theme.tsx`، `toast.tsx`، `announcer.tsx` من Context إلى `stores/` (§5.1b). الـ `user` يبقى query `['me']` عبر hook `useCurrentUser()`.
-- commit: `chore(client): tooling, design tokens, icons and app bootstrap`
-- commit: `refactor(client): move UI state from context to zustand stores`
+- `.gitattributes` بـ `* text=auto eol=lf` (يوقف تحذيرات LF/CRLF على Windows).
+- `api/client.ts`: `request<T>(method, path, { body, signal, timeoutMs })` — يضيف `Authorization` و `Content-Type`، يعيد `undefined` لـ 204، يرمي `ApiError` لغير 2xx، `NETWORK_ERROR` عند فشل الشبكة، `TIMEOUT` عند انتهاء المهلة (ويتجاهل `AbortError` الناتج عن إلغاء TanStack Query)، ويستدعي `useSession.getState().expire()` عند 401 (إلا `/auth/login`). مع unit tests بـ MSW لكل حالة.
+- `api/auth.ts`, `projects.ts`, `todos.ts`, `sprints.ts`, `ai.ts`: دوال typed من `api.ts` تمرّر `signal`. الـ AI بـ `timeoutMs: 45_000`.
+- stores الـ Zustand (`session`, `theme`, `toast`, `announcer`) كما في §5.1b. الـ `user` يبقى query `['me']` عبر hook `useCurrentUser()`.
+- commit: `chore(client): scaffold vite app with tooling, tokens and icons`
+- commit: `feat(client): api layer and zustand ui stores`
 
 ### المرحلة 1 — Design system components
 Button (كل الـ variants + loading يحفظ العرض)، IconButton (aria-label إلزامي في النوع)، Field/Input/Textarea/Select/DateInput/Checkbox/TagInput، Dialog (Radix + أحجام §3.5)، ConfirmDialog، Menu (Radix DropdownMenu)، Lozenge، Chip، PointsPill، Avatar، ProgressBar، StatTile، Skeleton، Spinner، EmptyState، PageError، Banner.
@@ -230,7 +274,7 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 - commit: `feat(board): active sprint board, complete sprint and sprints history`
 
 ### المرحلة 7 — AI (AI-1…5)
-`useAiStatus` (مرة واحدة، `staleTime: Infinity`) → Mock badge. AssistantDrawer (Radix Dialog جانبي، chat state في context على مستوى المشروع يُصفّر عند تغيير `projectId`، Enter/Shift+Enter، thinking dots، Markdown بدون raw HTML، quick prompts، Copy). GenerateTodosDialog (drafts قابلة للتعديل، select all، bulk save، skeleton، AI error panel). PlanSprintDialog (capacity bar، over-capacity، goal قابل للتعديل، يربط `todoIds` بكاش الـ backlog). SprintSummaryCard (saved + Regenerate + وقت التوليد). خيار "Generate AI summary" في Complete. Disclaimer في كل سطح AI. 429/502 → رسالة + Try again.
+`useAiStatus` (مرة واحدة، `staleTime: Infinity`) → Mock badge. AssistantDrawer (Radix Dialog جانبي، المحادثة في `stores/assistant.ts` مفهرسة بـ `projectId`، Enter/Shift+Enter، thinking dots، Markdown بدون raw HTML، quick prompts، Copy). GenerateTodosDialog (drafts قابلة للتعديل، select all، bulk save، skeleton، AI error panel). PlanSprintDialog (capacity bar، over-capacity، goal قابل للتعديل، يربط `todoIds` بكاش الـ backlog). SprintSummaryCard (saved + Regenerate + وقت التوليد). خيار "Generate AI summary" في Complete. Disclaimer في كل سطح AI. 429/502 → رسالة + Try again.
 - commit: `feat(ai): assistant drawer, generate todos, plan sprint and summaries`
 
 ### المرحلة 8 — Polish + جودة
@@ -242,8 +286,8 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 - `client/README.md`: التشغيل، القرارات ولماذا، جدول AC (✅/⚠️)، التحسينات، الانحرافات عن التصميم (§2 هنا)، known issues.
 - commit لكل بند على حدة.
 
-### المرحلة 9 — CI (اختياري، تنفّذه أنت)
-`.github/workflows/client.yml`: `npm ci` → `lint` → `typecheck` → `test` → `build` (+ e2e في job منفصل يشغّل السيرفر في mock mode بعد `npm run seed`).
+### المرحلة 9 — E2E في الـ CI (تنفّذه أنت)
+إضافة job `e2e` إلى `.github/workflows/client.yml` (الـ job `verify` موجود منذ المرحلة 0): seed للسيرفر في mock mode ثم Playwright، و `webServer` في `playwright.config.ts` يشغّل السيرفر والواجهة. التفاصيل في [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 
 ---
 
@@ -310,9 +354,13 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 
 ---
 
-## 10. أسئلة مفتوحة تحتاج قرارك
+## 10. القرارات (2026-11-03)
 
-1. Forgot password: UI-only (موصى به) أم حذفها؟
-2. حذف الـ todo: Confirm (يطابق AC، موصى به) أم Undo toast كما في التصميم؟
-3. Radix UI مقبول كـ dependency، أم تريد primitives مكتوبة يدوياً بالكامل؟
-4. هل نضيف Playwright + CI ضمن النطاق أم نكتفي بـ Vitest؟
+| # | الموضوع | القرار | السبب |
+|---|---|---|---|
+| 1 | Forgot password | **واجهة فقط، بدون endpoint**: `/forgot-password` بنموذج email (validation عند blur و submit) ← زر "Sending…" (تأخير محاكى ~800ms) ← حالة "Check your email" (أيقونة email، العنوان bold، زر Resend مع cooldown، "Back to log in"). ملاحظة "Demo only — password reset isn't available in this version" بلون `--text-subtlest`. القرار موثّق في `client/README.md` | الـ Requirements تمنع تعديل الـ backend وتضع password reset خارج النطاق، و §9 تسمح بمحاكاة الميزات في الواجهة مع التوثيق |
+| 2 | الحذف | **Confirm dialog** للـ project وللـ todo. بعد التأكيد يختفي العنصر فوراً (optimistic) ويعود مع toast خطأ إذا فشل الطلب. الـ **Undo toast** للـ **move** فقط ("KAN-12 moved to Sprint 3 · Undo") | BL-4 و PRJ-4 تشترطان التأكيد، والـ AC هي ما يُختبر (40%). حذف المشروع cascade على السيرفر ولا يمكن التراجع عنه حقيقةً |
+| 3 | Primitives | **Radix UI**: `react-dialog` (Dialog والـ AI drawer)، `react-alert-dialog` (Confirm و Session expired)، `react-dropdown-menu` (قوائم ⋯ و switcher و profile). باقي المكوّنات (Button و Field و Select الأصلي…) نكتبها بأنفسنا | focus trap و restore و Esc و roving focus و `aria-*` مختبرة جيداً، و tree-shakable (~10–15KB gz للثلاثة)، و unstyled فنطبق tokens التصميم 1:1. كتابتها يدوياً = خطر a11y بلا فائدة |
+| 4 | الاختبارات و CI | **نعم، الثلاثة**: (أ) Vitest + Testing Library + MSW لطبقة الـ API والـ guards والـ stores والدوال النقية (`moveInLists`) والمكوّنات الأساسية، تُكتب مع كل مرحلة. (ب) Playwright: سيناريو e2e واحد للمسار الكامل في الـ demo + فحص `@axe-core/playwright` على الصفحات الرئيسية في الثيمين، في المرحلة 8. (ج) GitHub Actions: `lint` ← `typecheck` ← `test` ← `build`، و job e2e منفصل يشغّل السيرفر في mock mode بعد `npm run seed`، في المرحلة 9 | مذكورة في تحسينات الـ Requirements §9، وترفع تقييم Code quality. أنت تشغّلها وترفعها بنفسك |
+
+**مرجع القرار 1:** الـ Requirements تمنع تعديل الـ backend في الجدول الأول ("Do not change it; treat it as the contract")، و §7 Out of scope ("password reset" و "any backend change")، و §9 ("fine to fake on the frontend… as long as you explain it").
