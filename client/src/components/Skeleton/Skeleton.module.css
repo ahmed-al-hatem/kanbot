@@ -1,0 +1,43 @@
+/* DESIGN §7 Skeleton: kbShimmer 1.2s infinite over a --neutral block. */
+.skeleton {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  inline-size: 100%;
+  background: var(--neutral);
+}
+
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--neutral-hover), transparent);
+  animation: kbShimmer 1.2s var(--ease-practical) infinite;
+}
+
+.small {
+  border-radius: var(--radius-small);
+}
+
+.medium {
+  border-radius: var(--radius-medium);
+}
+
+.large {
+  border-radius: var(--radius-large);
+}
+
+.xlarge {
+  border-radius: var(--radius-xlarge);
+}
+
+.full {
+  border-radius: var(--radius-full);
+}
+
+.region {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}

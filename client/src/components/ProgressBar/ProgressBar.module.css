@@ -1,0 +1,33 @@
+/* DESIGN §7 Progress bar */
+.track {
+  inline-size: 100%;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--progress);
+}
+
+.h4 {
+  block-size: 4px;
+}
+
+.h6 {
+  block-size: 6px;
+}
+
+.h8 {
+  block-size: 8px;
+}
+
+.fill {
+  display: block;
+  block-size: 100%;
+  border-radius: var(--radius-full);
+  background: var(--progress-done);
+  transition:
+    inline-size 500ms var(--ease-inout),
+    background-color 200ms var(--ease-practical);
+}
+
+.over {
+  background: var(--danger-icon);
+}
