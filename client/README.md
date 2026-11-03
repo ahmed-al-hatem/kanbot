@@ -42,7 +42,7 @@ npm run dev           # http://localhost:5173
 | `npm run build` | Type-check (`tsc -b`) then production build to `dist/` |
 | `npm run preview` | Serve `dist/` on 4173 (same proxy) |
 | `npm run typecheck` | `tsc -b` for app and config projects |
-| `npm run lint` | ESLint (zero warnings) + `scripts/check-css.mjs` (no hex outside `tokens.css`, logical properties only) |
+| `npm run lint` | ESLint (zero warnings) + `scripts/check-css.mjs` (no hex outside `tokens.css`, logical properties only, `global(kbX)` keyframes in CSS Modules) |
 | `npm run format` / `format:check` | Prettier write / check |
 | `npm run test` | Vitest (watch); `npm run test -- --run` for a single run |
 | `npm run e2e` | Playwright (added in phase 8) |
@@ -161,6 +161,7 @@ CSS Modules + tokens only; every one is in `/__ui` (run `npm run dev`, open http
 | 2026-11-03 | A loading button uses `aria-disabled`, not `disabled` | A natively disabled button drops keyboard focus to `<body>` mid-save; `aria-disabled` keeps focus and the click handler is skipped instead |
 | 2026-11-03 | Menus focus their first item on mouse open too | DESIGN §10.3 says "focus the first item on open"; Radix does it only for keyboard opens and keeps `onOpenAutoFocus` private on DropdownMenu, so the first focus of the panel after opening is forwarded to the first enabled item |
 | 2026-11-03 | Dialogs remember the focused element on open and refocus it on close (`useReturnFocus`), and set `aria-modal="true"` themselves | Radix modal dialogs return focus only to a `Dialog.Trigger` (to `<body>` without one) and don't set `aria-modal`; our dialogs are controlled and usually have no Trigger |
+| 2026-11-03 | In CSS Modules the shared keyframes are written `animation: global(kbSpin) …`; `scripts/check-css.mjs` rejects a bare `kbX` there | CSS Modules rename keyframe names to local ones (`_kbSpin_2afvj_1`), which have no `@keyframes`, so Spinner, Skeleton, Dialog and Menu animations silently didn't run. The keyframes stay global in `motion.css` (DESIGN §8.3 verbatim) |
 | 2026-11-03 | Added a `sm` (28px) Button size | The canvas uses 28px buttons in banners, composers and the save-error bar |
 | 2026-11-03 | `Field` wires controls through context, not a render prop | `<Field label error><Input {...register('x')} /></Field>` stays one line with react-hook-form; explicit `id`/`aria-*` on the control still win |
 | 2026-11-03 | `/__ui` exists only under `import.meta.env.DEV` | Vite replaces the flag with `false` in `vite build`, so the route and its lazy chunk are dropped from production |
