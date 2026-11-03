@@ -1,0 +1,48 @@
+/* Motion (DESIGN §8). Keyframes copied as-is from §8.3; utility classes from the prototype. */
+
+@keyframes kbRise     { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:none } }
+@keyframes kbFade     { from { opacity:0 } to { opacity:1 } }
+@keyframes kbFadeOut  { from { opacity:1 } to { opacity:0 } }
+@keyframes kbModalIn  { from { opacity:0; transform:scale(.95) } to { opacity:1; transform:none } }
+@keyframes kbModalOut { from { opacity:1; transform:none } to { opacity:0; transform:scale(.95) } }
+@keyframes kbDrawerIn { from { transform:translateX(100%) } to { transform:none } }
+@keyframes kbDrawerOut{ from { transform:none } to { transform:translateX(100%) } }
+@keyframes kbPop      { from { opacity:0; transform:translateY(-8px) scale(.98) } to { opacity:1; transform:none } }
+@keyframes kbFlagIn   { from { opacity:0; transform:translateX(-50%) } to { opacity:1; transform:none } }
+@keyframes kbFlagOut  { from { opacity:1; transform:none } to { opacity:0; transform:translateX(-15%) } }
+@keyframes kbBar      { from { transform:scaleY(0) } to { transform:scaleY(1) } }
+@keyframes kbDrop     { 0% { transform:scale(1.04); box-shadow:0 0 0 2px var(--brand), var(--shadow-overlay) }
+                        60% { box-shadow:0 0 0 2px var(--brand), var(--shadow-raised) }
+                        100% { transform:none; box-shadow:var(--shadow-raised) } }
+@keyframes kbAdded    { 0% { opacity:0; transform:translateY(8px); background:var(--selected) }
+                        25% { opacity:1; transform:none; background:var(--selected) }
+                        100% { background:var(--surface-raised) } }
+@keyframes kbShake    { 0%,100% { transform:none } 20% { transform:translateX(-6px) } 40% { transform:translateX(5px) }
+                        60% { transform:translateX(-3px) } 80% { transform:translateX(2px) } }
+@keyframes kbPulse    { 0% { box-shadow:0 0 0 0 var(--ai-border) } 70% { box-shadow:0 0 0 6px transparent } 100% { box-shadow:0 0 0 0 transparent } }
+@keyframes kbSpin     { to { transform:rotate(360deg) } }
+@keyframes kbShimmer  { to { transform:translateX(100%) } }
+@keyframes kbDot      { 0%,80%,100% { opacity:.25; transform:translateY(0) } 40% { opacity:1; transform:translateY(-3px) } }
+
+/* RTL: mirror the X translations of the drawer and the flag (DESIGN §8.4). */
+@keyframes kbDrawerInRtl  { from { transform:translateX(-100%) } to { transform:none } }
+@keyframes kbDrawerOutRtl { from { transform:none } to { transform:translateX(-100%) } }
+@keyframes kbFlagInRtl    { from { opacity:0; transform:translateX(50%) } to { opacity:1; transform:none } }
+@keyframes kbFlagOutRtl   { from { opacity:1; transform:none } to { opacity:0; transform:translateX(15%) } }
+
+/* Entry animations use `backwards` so they don't block hover transforms afterwards (§8.4). */
+.kb-page    { animation: kbRise 250ms var(--ease-bold) backwards; }
+.kb-rise    { animation: kbRise 300ms var(--ease-bold) backwards; }
+.kb-pop     { animation: kbPop 150ms var(--ease-practical) backwards; transform-origin: top center; }
+.kb-shake   { animation: kbShake 420ms var(--ease-practical) 100ms backwards; }
+.kb-added   { animation: kbAdded 1300ms var(--ease-bold) backwards; }
+.kb-dropped { animation: kbDrop 900ms var(--ease-bold); }
+.kb-live    { animation: kbPulse 2s var(--ease-practical) infinite; }
+.kb-spin    { animation: kbSpin 700ms linear infinite; }
+
+/* Stagger: set --i (item index) or --col (column index) inline. 45ms per item, 60ms per column. */
+.kb-stagger { animation-delay: calc(var(--i, 0) * 45ms + var(--col, 0) * 60ms); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; }
+}

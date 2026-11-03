@@ -1,0 +1,111 @@
+/*
+ * Design tokens — the only file allowed to contain hex colors.
+ * Colors: DESIGN.md §3.2 verbatim. Theme = `light` | `dark` class on <html>
+ * (set before first paint by the inline script in index.html).
+ */
+
+:root {
+  /* Spacing (DESIGN §3.4, 8px base) */
+  --space-025: 2px;
+  --space-050: 4px;
+  --space-075: 6px;
+  --space-100: 8px;
+  --space-150: 12px;
+  --space-200: 16px;
+  --space-250: 20px;
+  --space-300: 24px;
+  --space-400: 32px;
+
+  /* Radius (DESIGN §3.5) */
+  --radius-small: 4px;
+  --radius-medium: 6px;
+  --radius-large: 8px;
+  --radius-xlarge: 12px;
+  --radius-full: 999px;
+
+  /* Fixed sizes (DESIGN §3.5) */
+  --size-button: 32px;
+  --size-button-lg: 40px;
+  --size-input: 36px;
+  --size-chip-button: 28px;
+  --size-page-header: 64px;
+  --size-backlog-row: 44px;
+  --size-sidebar: 240px;
+  --size-drawer: 440px;
+  --size-column-min: 232px;
+  --size-board-min: 980px;
+  --size-auth-card: 420px;
+  --size-mobile-bar: 56px;
+
+  /* Dialog max widths (DESIGN §3.5) */
+  --dialog-session: 420px;
+  --dialog-complete: 480px;
+  --dialog-sprint: 520px;
+  --dialog-project: 560px;
+  --dialog-todo: 880px;
+  --dialog-generate: 920px;
+  --dialog-plan: 960px;
+
+  /* Typography (DESIGN §4) */
+  --font-sans: 'Inter Variable', Inter, ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  /* Easing (DESIGN §8.1) */
+  --ease-practical: cubic-bezier(0.4, 1, 0.6, 1); /* buttons, inputs, menus */
+  --ease-bold: cubic-bezier(0, 0.4, 0, 1); /* pages, drawer, entries */
+  --ease-in: cubic-bezier(0.6, 0, 0.8, 0.6); /* exits */
+  --ease-inout: cubic-bezier(0.4, 0, 0, 1); /* dialogs, progress, rotations */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* avatar hover */
+
+  /* Logo — identical in both themes (DESIGN §5.4) */
+  --logo-bg: #4f46e5;
+  --logo-fg: #ffffff;
+  --logo-accent: #22c55e;
+}
+
+.light {
+  --surface:#FFFFFF; --surface-hovered:#F0F1F2; --surface-pressed:#DDDEE1; --surface-sunken:#F8F8F8; --surface-raised:#FFFFFF; --surface-overlay:#FFFFFF;
+  --text:#292A2E; --text-subtle:#505258; --text-subtlest:#6B6E76; --text-inverse:#FFFFFF;
+  --brand:#4F46E5; --brand-hover:#4338CA; --brand-pressed:#3730A3; --text-brand:#4338CA;
+  --selected:#EEF2FF; --selected-hover:#E0E7FF; --selected-pressed:#C7D2FE; --text-selected:#4338CA; --border-selected:#4F46E5;
+  --neutral:#0515240F; --neutral-hover:#0B120E24; --neutral-pressed:#080F214A;
+  --border:#0B120E24; --border-input:#8C8F97; --input:#FFFFFF; --input-hover:#F8F8F8; --focus:#6366F1;
+  --shadow-raised:0px 1px 1px #1E1F2140, 0px 0px 1px #1E1F214F;
+  --shadow-overlay:0px 8px 12px #1E1F2126, 0px 0px 1px #1E1F214F;
+  --blanket:#050C1F75; --drop:#4F46E514;
+  --ai-bg:#DCFFF1; --ai-bg-hover:#BAF3DB; --ai-bg-pressed:#7EE2B8; --ai-fg:#164B35; --ai-icon:#22A06B; --ai-border:#7EE2B8;
+  --danger:#AE2E24; --danger-icon:#C9372C; --danger-bg:#FFECEB; --danger-border:#E2483D;
+  --warning-icon:#E06C00; --warning-bg:#FFF5DB; --warning-fg:#693200;
+  --info-icon:#357DE8; --success:#4C6B1F; --success-icon:#22A06B;
+  --t-story:#6A9A23; --t-bug:#C9372C; --t-task:#4688EC;
+  --progress:#0515240F; --progress-done:#4F46E5;
+  --lz-blue-bg:#CFE1FD; --lz-blue-fg:#123263; --lz-purple-bg:#EED7FC; --lz-purple-fg:#48245D;
+  --lz-green-bg:#BAF3DB; --lz-green-fg:#164B35; --lz-orange-bg:#FCE4A6; --lz-orange-fg:#693200;
+  --lz-teal-bg:#C6EDFB; --lz-teal-fg:#164555; --lz-magenta-bg:#FDD0EC; --lz-magenta-fg:#50253F;
+  --lz-gray-bg:#DDDEE1; --lz-gray-fg:#1E1F21;
+  --av-1:#4F46E5; --av-2:#1F845A; --av-3:#AE4787; --av-4:#BD5B00; --av-fg:#FFFFFF;
+  --flag:#292A2E; --flag-fg:#FFFFFF;
+}
+.dark {
+  --surface:#1F1F21; --surface-hovered:#242528; --surface-pressed:#303134; --surface-sunken:#18191A; --surface-raised:#242528; --surface-overlay:#2B2C2F;
+  --text:#CECFD2; --text-subtle:#A9ABAF; --text-subtlest:#96999E; --text-inverse:#1F1F21;
+  --brand:#818CF8; --brand-hover:#A5B4FC; --brand-pressed:#C7D2FE; --text-brand:#A5B4FC;
+  --selected:#25274A; --selected-hover:#2F3263; --selected-pressed:#3A3F7A; --text-selected:#A5B4FC; --border-selected:#818CF8;
+  --neutral:#CECED912; --neutral-hover:#E3E4F21F; --neutral-pressed:#E5E9F640;
+  --border:#E3E4F21F; --border-input:#7E8188; --input:#242528; --input-hover:#2B2C2F; --focus:#A5B4FC;
+  --shadow-raised:0px 0px 0px 1px #00000000, 0px 1px 1px #01040480, 0px 0px 1px #01040480;
+  --shadow-overlay:0px 0px 0px 1px #BDBDBD1F, 0px 8px 12px #0104045C, 0px 0px 1px 1px #01040480;
+  --blanket:#10121499; --drop:#818CF81F;
+  --ai-bg:#1C3329; --ai-bg-hover:#164B35; --ai-bg-pressed:#216E4E; --ai-fg:#BAF3DB; --ai-icon:#2ABB7F; --ai-border:#216E4E;
+  --danger:#FD9891; --danger-icon:#F15B50; --danger-bg:#42221F; --danger-border:#F15B50;
+  --warning-icon:#FBC828; --warning-bg:#3A2C1F; --warning-fg:#FCE4A6;
+  --info-icon:#4688EC; --success:#B3DF72; --success-icon:#2ABB7F;
+  --t-story:#82B536; --t-bug:#F15B50; --t-task:#4688EC;
+  --progress:#CECED912; --progress-done:#818CF8;
+  --lz-blue-bg:#123263; --lz-blue-fg:#CFE1FD; --lz-purple-bg:#48245D; --lz-purple-fg:#EED7FC;
+  --lz-green-bg:#164B35; --lz-green-fg:#BAF3DB; --lz-orange-bg:#693200; --lz-orange-fg:#FCE4A6;
+  --lz-teal-bg:#164555; --lz-teal-fg:#C6EDFB; --lz-magenta-bg:#50253F; --lz-magenta-fg:#FDD0EC;
+  --lz-gray-bg:#4B4D51; --lz-gray-fg:#E2E3E4;
+  --av-1:#818CF8; --av-2:#4BCE97; --av-3:#E774BB; --av-4:#FCA700; --av-fg:#1F1F21;
+  --flag:#CECFD2; --flag-fg:#1F1F21;
+}
