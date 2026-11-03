@@ -22,7 +22,7 @@ beforeAll(() => {
 
 beforeEach(() => {
   window.localStorage.clear();
-  useSession.setState({ token: null, sessionExpired: false });
+  useSession.setState({ token: null, sessionExpired: false, signedOut: false });
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
 });

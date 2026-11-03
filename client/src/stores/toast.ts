@@ -16,6 +16,7 @@ export interface Toast {
   duration: number | null;
 }
 
+/** Without a `duration`, the Flag timing from DESIGN §7 applies: 3.2s, or 5s with an action. */
 export type ToastInput = Omit<Toast, 'id' | 'duration'> & { duration?: number | null };
 
 interface ToastState {
@@ -27,15 +28,18 @@ interface ToastState {
   reset: () => void;
 }
 
-export const DEFAULT_TOAST_DURATION = 5000;
+export const DEFAULT_TOAST_DURATION = 3200;
+export const ACTION_TOAST_DURATION = 5000;
 
 let nextId = 1;
 
 export const useToast = create<ToastState>()((set, get) => ({
   toast: null,
-  show: ({ duration = DEFAULT_TOAST_DURATION, ...input }) => {
+  show: ({ duration, ...input }) => {
     const id = nextId++;
-    set({ toast: { ...input, id, duration } });
+    // `null` is kept: it means "until dismissed".
+    const ms = duration === undefined ? (input.action ? ACTION_TOAST_DURATION : DEFAULT_TOAST_DURATION) : duration;
+    set({ toast: { ...input, id, duration: ms } });
     return id;
   },
   dismiss: (id) => {
