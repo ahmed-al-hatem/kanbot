@@ -15,7 +15,7 @@ _Screenshot and feature tour come with the screens (phase 8)._
 
 ## 2. Getting started
 
-Requirements: Node 20+ (`.nvmrc`), the server running on port 4000.
+Requirements: Node 24 (`.nvmrc`; 22.22+ also works), the server running on port 4000.
 
 ```bash
 # Terminal 1 — API (mock AI unless AI_API_KEY is set)
@@ -126,6 +126,7 @@ The endpoint modules unwrap the response envelopes (`{ project }` → `ProjectWi
 | Date | Decision | Why |
 |---|---|---|
 | 2026-11-03 | **TypeScript 6.0**, not the 7.0 that `create-vite` installs | `typescript-eslint` (type-checked rules) supports `<6.1`; TS 7 has no compatible JS API yet |
+| 2026-11-03 | **Node 24** for the client (`.nvmrc`, `engines: ^22.22.2 \|\| >=24.15.0`), not 20 as in the plan | jsdom 30, its undici, vitest 5 and msw 3 all require Node 22+; on Node 20 CI test workers crash (`createZstdDecompress` is missing). The server keeps its own `>=20` |
 | 2026-11-03 | **ESLint 9**, not 10; removed the scaffold's `oxlint` | `eslint-plugin-jsx-a11y` peers on `eslint ≤ 9`; the plan asks for ESLint + jsx-a11y |
 | 2026-11-03 | A `401` expires the session only when a token was sent (and never for `/auth/login`) | Avoids a "session expired" dialog for a visitor who was never signed in |
 | 2026-11-03 | A non-JSON 5xx is reported as `NETWORK_ERROR` | The API always returns `ApiErrorBody`; anything else is the dev/preview proxy saying the server is down |
