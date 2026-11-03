@@ -203,7 +203,7 @@ CSS Modules + tokens only; every one is in `/__ui` (run `npm run dev`, open http
 | BL-5, BL-7, SPR-1…3 | ⏳ | Phase 5 |
 | SPR-4…7 | ⏳ | Phase 6 |
 | AI-1…5 | ⏳ | Phase 7 |
-| NFR-4 | ⚠️ | Shell: ≥ 1024px full sidebar, 761–1023px icon rail (the sidebar collapses), ≤ 760px top bar + hamburger; the Projects grid reflows. The board's horizontal scroll comes with the board (phase 6). Not yet checked in a real browser at 1440/1024/768/390 |
+| NFR-4 | ⚠️ | Shell: ≥ 1024px full sidebar, 761–1023px icon rail (the sidebar collapses), ≤ 760px top bar + hamburger; the Projects grid reflows. Checked by hand at 768 and 390px in both themes and with the keyboard only (phase 3). The board's horizontal scroll comes with the board (phase 6) |
 | NFR-2, NFR-3 | ⚠️ | Done for Projects and the shell (skeleton / empty / error, toasts and loading buttons on every mutation, confirm on delete); per page in later phases |
 | NFR-6 | ⚠️ | Hover/focus prefetch of the project and its page chunk; project detail seeded from the list. Parallel loading for board and backlog comes with those pages |
 | NFR-9 | ⏳ | Audited in phase 8 |
@@ -293,7 +293,7 @@ _Filled in as they land (tests, CI, a11y checks…)._ So far: CI (`.github/workf
 - In `/__ui`, dialogs and menus portal to `<body>`, so they follow the global theme (header toggle), not the pane they were opened from.
 - `vitest-axe@0.1.0` ships type augmentations for an old Vitest, so its `toHaveNoViolations` matcher isn't used; `expectNoAxeViolations()` asserts on the violations list instead.
 - The unsaved-changes confirm bar isn't built yet: it comes with Todo details (phase 4). The Toast and LiveRegion hosts landed in phase 2.
-- Not checked in a real browser in this session: the auth screens, the shell (1440/1024/768/390, both themes, the mobile nav panel, the rail) and Projects against the canvas, and the dialog/drawer/toast motion. Worth a look before merging.
+- Phase 3 was checked by hand against the canvas: light, dark, 768px, 390px and keyboard only.
 
 ## 12. Demo
 
