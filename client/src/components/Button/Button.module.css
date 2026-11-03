@@ -1,0 +1,153 @@
+/* DESIGN §7 Button: 32 (lg 40) · padding 0 12 · radius 6 · 14/500 · gap 6 · icon 16. */
+.button {
+  flex: none;
+  display: inline-grid;
+  grid-template-areas: 'stack';
+  place-items: center;
+  block-size: var(--size-button);
+  padding-block: 0;
+  padding-inline: var(--space-150);
+  border: none;
+  border-radius: var(--radius-medium);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition:
+    background-color 150ms var(--ease-practical),
+    color 150ms var(--ease-practical),
+    transform 100ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical);
+}
+
+/* Idle label and loading label share one cell: width = the longer of the two. */
+.label,
+.pending {
+  grid-area: stack;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-075);
+}
+
+.pending,
+.button[data-loading] .label {
+  visibility: hidden;
+}
+
+.button[data-loading] .pending {
+  visibility: visible;
+}
+
+.icon {
+  flex: none;
+}
+
+.button:not(:disabled, [aria-disabled='true']):active {
+  transform: scale(0.97);
+}
+
+.button:disabled,
+.button[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.sm {
+  block-size: var(--size-chip-button);
+}
+
+.md {
+  block-size: var(--size-button);
+}
+
+.lg {
+  block-size: var(--size-button-lg);
+}
+
+.iconOnly {
+  inline-size: var(--size-button);
+  padding-inline: 0;
+}
+
+.iconOnly.sm {
+  inline-size: var(--size-chip-button);
+}
+
+/* Variants — hover/pressed only while enabled; color repeated so `a:hover` can't win. */
+.primary {
+  background: var(--brand);
+  color: var(--text-inverse);
+}
+
+.primary:not(:disabled, [aria-disabled='true']):hover {
+  background: var(--brand-hover);
+  color: var(--text-inverse);
+}
+
+.primary:not(:disabled, [aria-disabled='true']):active {
+  background: var(--brand-pressed);
+}
+
+.neutral {
+  background: var(--neutral);
+  color: var(--text-subtle);
+}
+
+.neutral:not(:disabled, [aria-disabled='true']):hover {
+  background: var(--neutral-hover);
+  color: var(--text-subtle);
+}
+
+.neutral:not(:disabled, [aria-disabled='true']):active {
+  background: var(--neutral-pressed);
+}
+
+.subtle {
+  background: transparent;
+  color: var(--text-subtle);
+}
+
+.subtle:not(:disabled, [aria-disabled='true']):hover {
+  background: var(--neutral);
+  color: var(--text-subtle);
+}
+
+.subtle:not(:disabled, [aria-disabled='true']):active {
+  background: var(--neutral-hover);
+}
+
+.ai {
+  background: var(--ai-bg);
+  color: var(--ai-fg);
+}
+
+.ai .icon {
+  color: var(--ai-icon);
+  transition: transform 250ms var(--ease-bold);
+}
+
+.ai:not(:disabled, [aria-disabled='true']):hover {
+  background: var(--ai-bg-hover);
+  color: var(--ai-fg);
+}
+
+.ai:not(:disabled, [aria-disabled='true']):hover .icon {
+  transform: rotate(18deg) scale(1.1);
+}
+
+.ai:not(:disabled, [aria-disabled='true']):active {
+  background: var(--ai-bg-pressed);
+}
+
+.danger {
+  background: transparent;
+  color: var(--danger);
+}
+
+.danger:not(:disabled, [aria-disabled='true']):hover {
+  background: var(--danger-bg);
+  color: var(--danger);
+}

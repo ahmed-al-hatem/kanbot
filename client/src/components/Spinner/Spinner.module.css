@@ -1,0 +1,29 @@
+/* DESIGN §7 Button loading: 14px ring, 2px border, one side transparent, 700ms linear. */
+.spinner {
+  flex: none;
+  display: inline-block;
+  border-radius: var(--radius-full);
+  border: 2px solid currentColor;
+  border-inline-end-color: transparent;
+  animation: kbSpin 700ms linear infinite;
+}
+
+.s14 {
+  inline-size: 14px;
+  block-size: 14px;
+}
+
+.s20 {
+  inline-size: 20px;
+  block-size: 20px;
+}
+
+.s24 {
+  inline-size: 24px;
+  block-size: 24px;
+  border-width: 3px;
+}
+
+.labelled {
+  display: inline-flex;
+}
