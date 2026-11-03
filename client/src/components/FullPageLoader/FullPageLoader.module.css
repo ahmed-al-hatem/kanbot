@@ -1,0 +1,20 @@
+.loader {
+  flex: 1 1 auto;
+  display: grid;
+  place-items: center;
+  min-block-size: 100dvh;
+  background: var(--surface-sunken);
+}
+
+/* Invisible for the first 150ms (DESIGN §11), then fades in. */
+.inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-200);
+  animation: global(kbFade) 200ms linear 150ms backwards;
+}
+
+.spinner {
+  color: var(--brand);
+}

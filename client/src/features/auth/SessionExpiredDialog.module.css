@@ -1,0 +1,32 @@
+/* Canvas S05: centered, padding 28 24 20, gap 12, lock badge on --selected. */
+.panel {
+  align-items: center;
+  gap: var(--space-150);
+  padding: 28px var(--space-300) var(--space-250);
+  text-align: center;
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  inline-size: 48px;
+  block-size: 48px;
+  border-radius: var(--radius-full);
+  background: var(--selected);
+  color: var(--text-selected);
+}
+
+.title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.text {
+  color: var(--text-subtle);
+}
+
+.action {
+  inline-size: 100%;
+  margin-block-start: var(--space-100);
+}

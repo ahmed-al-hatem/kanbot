@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { STORAGE_KEYS } from '@/lib/storage';
 import { useAnnouncer } from './announcer';
-import { useSession } from './session';
+import { listenForSessionChanges, useSession } from './session';
 import { useTheme } from './theme';
 import { toast, useToast } from './toast';
 
@@ -33,6 +33,30 @@ describe('session store', () => {
     expect(useToast.getState().toast).toBeNull();
     expect(useAnnouncer.getState().message).toBe('');
     expect(queryClient.getQueryData(['projects'])).toBeUndefined();
+  });
+
+  it('signOut() marks a deliberate log out until the next sign in', () => {
+    useSession.getState().signOut();
+    expect(useSession.getState().signedOut).toBe(true);
+    useSession.getState().signIn('abc');
+    expect(useSession.getState()).toMatchObject({ token: 'abc', signedOut: false, sessionExpired: false });
+  });
+
+  it('follows a log out in another tab', async () => {
+    useSession.getState().signIn('abc');
+    queryClient.setQueryData(['projects'], []);
+    const stop = listenForSessionChanges();
+
+    // What the other tab's signOut() writes; the storage event only fires in other tabs.
+    const newValue = JSON.stringify({ state: { token: null }, version: 0 });
+    window.localStorage.setItem(STORAGE_KEYS.token, newValue);
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEYS.token, newValue }));
+
+    await vi.waitFor(() => {
+      expect(useSession.getState()).toMatchObject({ token: null, signedOut: true });
+    });
+    expect(queryClient.getQueryData(['projects'])).toBeUndefined();
+    stop();
   });
 });
 

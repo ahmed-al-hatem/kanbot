@@ -10,6 +10,11 @@ interface SessionState {
   token: string | null;
   /** Set when an authenticated request returns 401; drives the session-expired dialog (AUTH-6). */
   sessionExpired: boolean;
+  /**
+   * True right after a deliberate log out, so the guard sends the user to plain `/login`
+   * instead of `/login?redirect=<page they were on>` (AUTH-4). Never persisted.
+   */
+  signedOut: boolean;
   signIn: (token: string) => void;
   /** Called by api/client.ts on a 401. Idempotent, so parallel 401s are harmless. */
   expire: () => void;
@@ -18,21 +23,21 @@ interface SessionState {
   reset: () => void;
 }
 
-const initialState = { token: null, sessionExpired: false } satisfies Partial<SessionState>;
+const initialState = { token: null, sessionExpired: false, signedOut: false } satisfies Partial<SessionState>;
 
 export const useSession = create<SessionState>()(
   persist(
     (set, get) => ({
       ...initialState,
       signIn: (token) => {
-        set({ token, sessionExpired: false });
+        set({ token, sessionExpired: false, signedOut: false });
       },
       expire: () => {
         if (get().sessionExpired) return;
         set({ token: null, sessionExpired: true });
       },
       signOut: () => {
-        set(initialState);
+        set({ ...initialState, signedOut: true });
         useToast.getState().reset();
         useAnnouncer.getState().reset();
         queryClient.clear();
@@ -48,3 +53,32 @@ export const useSession = create<SessionState>()(
     },
   ),
 );
+
+/**
+ * Follows log in / log out in other tabs (plan §9.2): the `storage` event fires when another
+ * tab writes the token key. A different token means a different session, so the cache goes too.
+ * Returns the unsubscribe function.
+ */
+export function listenForSessionChanges(): () => void {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key !== STORAGE_KEYS.token) return;
+    const before = useSession.getState().token;
+    const apply = () => {
+      const after = useSession.getState().token;
+      if (after === before) return;
+      queryClient.clear();
+      if (!after) useSession.setState({ signedOut: true });
+    };
+    // A removed key (storage cleared) rehydrates nothing, so drop the token by hand.
+    if (event.newValue === null) {
+      useSession.setState({ token: null });
+      apply();
+      return;
+    }
+    void Promise.resolve(useSession.persist.rehydrate()).then(apply);
+  };
+  window.addEventListener('storage', onStorage);
+  return () => {
+    window.removeEventListener('storage', onStorage);
+  };
+}

@@ -1,0 +1,30 @@
+.page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page:focus {
+  outline: none;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-200);
+  block-size: var(--size-mobile-bar);
+  padding-inline: var(--space-300);
+  border-block-end: 1px solid var(--border);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  padding: var(--space-400) var(--space-300);
+}
+
+.text {
+  color: var(--text-subtle);
+}
