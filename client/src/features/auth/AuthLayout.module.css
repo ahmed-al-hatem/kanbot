@@ -1,0 +1,111 @@
+/* DESIGN §9 01 Login, canvas L01/D01/M01. */
+.page {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 100dvh;
+  padding: var(--space-400) var(--space-200);
+  background: var(--surface-sunken);
+}
+
+.page:focus {
+  outline: none;
+}
+
+.theme {
+  position: absolute;
+  inset-block-start: var(--space-200);
+  inset-inline-end: var(--space-200);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  inline-size: 100%;
+  max-inline-size: var(--size-auth-card);
+  padding: 40px 40px var(--space-400);
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-overlay);
+}
+
+.brand {
+  display: flex;
+  justify-content: center;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.heading {
+  text-align: center;
+}
+
+.title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.subtitle {
+  margin-block-start: var(--space-050);
+  color: var(--text-subtlest);
+}
+
+.tagline {
+  margin-block-start: var(--space-300);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+/* Shared by the three forms. */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.submit {
+  inline-size: 100%;
+}
+
+.switch {
+  text-align: center;
+  color: var(--text-subtle);
+}
+
+.switch a {
+  font-weight: 500;
+}
+
+/* "Forgot password?" sits on the Password label row (canvas) but after the input in tab order. */
+.passwordField {
+  position: relative;
+}
+
+.forgotLink {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  font-size: 12px;
+  line-height: 16px;
+  text-decoration: none;
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: var(--space-400) var(--space-300) var(--space-300);
+  }
+}

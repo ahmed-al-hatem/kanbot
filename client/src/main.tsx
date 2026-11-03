@@ -5,9 +5,13 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/motion.css';
 import { Providers } from './app/Providers';
+import { listenForSessionChanges } from './stores/session';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
+
+// Log in / log out in another tab applies here too (plan §9.2).
+listenForSessionChanges();
 
 createRoot(root).render(
   <StrictMode>
