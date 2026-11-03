@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en" class="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Kanbot — your sprint board with an AI teammate." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Kanbot</title>
+    <script>
+      // Set the theme class before first paint (no flash). Saved choice wins, then the OS.
+      // Mirrors stores/theme.ts, which persists { state: { theme } } under "kanbot.theme".
+      (function () {
+        var theme;
+        try {
+          var saved = JSON.parse(localStorage.getItem('kanbot.theme') || 'null');
+          theme = saved && saved.state && saved.state.theme;
+        } catch (e) {}
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.className = theme;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

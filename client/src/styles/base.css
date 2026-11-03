@@ -1,0 +1,181 @@
+/* Reset, typography and focus (DESIGN §3.1, §4, §10.3). Logical properties only. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.light {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100dvh;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-block-size: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+h1,
+h2,
+h3,
+h4,
+p,
+ul,
+ol,
+figure,
+blockquote {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+svg {
+  display: block;
+  max-inline-size: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+a {
+  color: var(--text-brand);
+  transition: color 150ms var(--ease-practical);
+}
+
+a:hover {
+  color: var(--brand-hover);
+}
+
+kbd {
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  padding-inline: 5px;
+  border-radius: var(--radius-small);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-subtle);
+}
+
+::placeholder {
+  color: var(--text-subtlest);
+}
+
+::selection {
+  background: var(--selected-pressed);
+}
+
+/* Focus: visible ring for keyboard users only (DESIGN §10.3) */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[role='dialog']:focus {
+  outline: none;
+}
+
+/* Typography scale (DESIGN §4) */
+.page-title {
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+}
+
+.dialog-title {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.group-title {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.label {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.meta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.metric {
+  font-size: 28px;
+  line-height: 32px;
+  font-weight: 700;
+}
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Theme switch cross-fade: the theme store adds `theming` to <html> for 300ms. */
+.theming,
+.theming * {
+  transition:
+    background-color 300ms var(--ease-practical),
+    color 300ms var(--ease-practical),
+    border-color 300ms var(--ease-practical),
+    box-shadow 300ms var(--ease-practical) !important;
+}

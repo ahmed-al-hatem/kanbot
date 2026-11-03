@@ -1,0 +1,14 @@
+.task {
+  flex: none;
+  color: var(--t-task);
+}
+
+.story {
+  flex: none;
+  color: var(--t-story);
+}
+
+.bug {
+  flex: none;
+  color: var(--t-bug);
+}
