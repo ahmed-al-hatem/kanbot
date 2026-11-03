@@ -15,11 +15,11 @@
 }
 
 .menu[data-state='open'] {
-  animation: kbPop 150ms var(--ease-practical);
+  animation: global(kbPop) 150ms var(--ease-practical);
 }
 
 .menu[data-state='closed'] {
-  animation: kbFadeOut 100ms var(--ease-in) forwards;
+  animation: global(kbFadeOut) 100ms var(--ease-in) forwards;
 }
 
 .item {

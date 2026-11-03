@@ -11,11 +11,11 @@
 }
 
 .blanket[data-state='open'] {
-  animation: kbFade 250ms linear;
+  animation: global(kbFade) 250ms linear;
 }
 
 .blanket[data-state='closed'] {
-  animation: kbFadeOut 200ms linear forwards;
+  animation: global(kbFadeOut) 200ms linear forwards;
 }
 
 .panel {
@@ -34,11 +34,11 @@
 }
 
 .panel[data-state='open'] {
-  animation: kbModalIn 250ms var(--ease-inout);
+  animation: global(kbModalIn) 250ms var(--ease-inout);
 }
 
 .panel[data-state='closed'] {
-  animation: kbModalOut 200ms var(--ease-in) forwards;
+  animation: global(kbModalOut) 200ms var(--ease-in) forwards;
 }
 
 .session {
