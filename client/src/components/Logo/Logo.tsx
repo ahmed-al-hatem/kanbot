@@ -1,3 +1,4 @@
+import { cx } from '@/lib/cx';
 import styles from './Logo.module.css';
 
 interface LogoProps {
@@ -34,7 +35,7 @@ export function Logo({ size = 28, wordmark = false }: LogoProps) {
   return (
     <span className={styles.logo}>
       {mark}
-      <span className={styles.wordmark}>Kanbot</span>
+      <span className={cx(styles.wordmark, size === 36 && styles.large)}>Kanbot</span>
     </span>
   );
 }

@@ -26,3 +26,10 @@
   font-weight: 700;
   color: var(--text);
 }
+
+/* Auth card (canvas): 22px next to the 36px mark. */
+.large {
+  font-size: 22px;
+  line-height: 28px;
+  letter-spacing: -0.4px;
+}
