@@ -1,0 +1,137 @@
+/* DESIGN §7 Dialog, §3.5 widths, §8.2 motion. Layout follows the canvas (divided header/footer). */
+.blanket {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: var(--space-400) var(--space-300);
+  overflow-y: auto;
+  background: var(--blanket);
+}
+
+.blanket[data-state='open'] {
+  animation: kbFade 250ms linear;
+}
+
+.blanket[data-state='closed'] {
+  animation: kbFadeOut 200ms linear forwards;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  inline-size: 100%;
+  max-block-size: calc(100dvh - 64px);
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-overlay);
+  box-shadow: var(--shadow-overlay);
+  color: var(--text);
+}
+
+.panel:focus {
+  outline: none;
+}
+
+.panel[data-state='open'] {
+  animation: kbModalIn 250ms var(--ease-inout);
+}
+
+.panel[data-state='closed'] {
+  animation: kbModalOut 200ms var(--ease-in) forwards;
+}
+
+.session {
+  max-inline-size: var(--dialog-session);
+}
+
+.complete {
+  max-inline-size: var(--dialog-complete);
+}
+
+.sprint {
+  max-inline-size: var(--dialog-sprint);
+}
+
+.project {
+  max-inline-size: var(--dialog-project);
+}
+
+.todo {
+  max-inline-size: var(--dialog-todo);
+}
+
+.generate {
+  max-inline-size: var(--dialog-generate);
+}
+
+.plan {
+  max-inline-size: var(--dialog-plan);
+}
+
+.header {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: var(--space-200) var(--space-300);
+  border-block-end: 1px solid var(--border);
+}
+
+.title {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+  padding: var(--space-250) var(--space-300);
+  overflow-y: auto;
+}
+
+.description {
+  color: var(--text-subtle);
+}
+
+.footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-100);
+  padding: var(--space-200) var(--space-300);
+  border-block-start: 1px solid var(--border);
+}
+
+.spacer {
+  flex: 1 1 0;
+}
+
+/* ConfirmDialog: compact, no dividers. */
+.confirm {
+  gap: var(--space-150);
+  padding: var(--space-300) var(--space-300) var(--space-250);
+}
+
+.confirmText {
+  color: var(--text-subtle);
+}
+
+.confirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-100);
+  margin-block-start: var(--space-100);
+}
+
+@media (max-width: 760px) {
+  .blanket {
+    padding: var(--space-200);
+  }
+}
