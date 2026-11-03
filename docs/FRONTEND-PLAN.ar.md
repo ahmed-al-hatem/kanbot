@@ -233,6 +233,7 @@ qk = {
 - alias `@/` → `src/` في `tsconfig` و `vite.config.ts`.
 - Vite proxy: `server.proxy` و `preview.proxy` لـ `/api` → `http://localhost:4000`، و `VITE_API_URL=/api`، و `strictPort: true` (انظر §9.1).
 - ESLint 9 + Prettier + `.editorconfig` + سكربتات `lint`, `format`, `test`, `e2e`.
+- CI من أول يوم: `.github/workflows/client.yml` (job `verify`: `npm ci` ← `lint` ← `typecheck` ← `test` ← `build`) و `.github/pull_request_template.md`، كما في [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 - Vitest + Testing Library + MSW + `test/setup.ts`.
 - `styles/tokens.css` (نسخ §3.2 حرفياً + spacing/radius/easing كـ variables)، `base.css`، `motion.css` (§8.3 + reduced-motion).
 - `Icon.tsx` + `icons.ts` (سكربت `scripts/extract-icons.mjs` ينسخ الـ paths من `@atlaskit/icon`) + `TypeIcon` (Task/Story SVG من §5.3) + `Logo`.
@@ -285,8 +286,8 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 - `client/README.md`: التشغيل، القرارات ولماذا، جدول AC (✅/⚠️)، التحسينات، الانحرافات عن التصميم (§2 هنا)، known issues.
 - commit لكل بند على حدة.
 
-### المرحلة 9 — CI (اختياري، تنفّذه أنت)
-`.github/workflows/client.yml`: `npm ci` → `lint` → `typecheck` → `test` → `build` (+ e2e في job منفصل يشغّل السيرفر في mock mode بعد `npm run seed`).
+### المرحلة 9 — E2E في الـ CI (تنفّذه أنت)
+إضافة job `e2e` إلى `.github/workflows/client.yml` (الـ job `verify` موجود منذ المرحلة 0): seed للسيرفر في mock mode ثم Playwright، و `webServer` في `playwright.config.ts` يشغّل السيرفر والواجهة. التفاصيل في [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 
 ---
 

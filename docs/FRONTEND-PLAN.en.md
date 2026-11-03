@@ -234,6 +234,7 @@ Every phase ends with a working app and a clean `npm run lint && npm run typeche
 - Vite proxy: `server.proxy` and `preview.proxy` for `/api` → `http://localhost:4000`, `VITE_API_URL=/api`, `strictPort: true` (see §9.1).
 - `.gitattributes` with `* text=auto eol=lf` (stops the LF/CRLF warnings on Windows).
 - ESLint 9 + Prettier + `.editorconfig` + `lint`, `format`, `test`, `e2e` scripts.
+- CI from day one: `.github/workflows/client.yml` (`verify` job: `npm ci` → `lint` → `typecheck` → `test` → `build`) and `.github/pull_request_template.md`, exactly as in [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 - Vitest + Testing Library + MSW + `test/setup.ts`.
 - `styles/tokens.css` (DESIGN §3.2 verbatim + spacing/radius/easing variables), `base.css`, `motion.css` (§8.3 + reduced motion).
 - `Icon.tsx` + `icons.ts` (`scripts/extract-icons.mjs` copies paths from `@atlaskit/icon`), `TypeIcon` (Task/Story SVGs from §5.3), `Logo`.
@@ -284,8 +285,8 @@ SprintHeader (dates, days left, progress), 4 columns (`role=region` + count), To
 - `client/README.md`: setup, decisions and why, AC table (✅/⚠️), enhancements, deviations from the design (§2), known issues.
 - One commit per item.
 
-### Phase 9 — CI (you run it)
-`.github/workflows/client.yml`: `npm ci` → `lint` → `typecheck` → `test` → `build`, plus a separate e2e job that starts the server in mock mode after `npm run seed`.
+### Phase 9 — E2E in CI (you run it)
+Add the `e2e` job to `.github/workflows/client.yml` (the `verify` job exists since phase 0): seed the server in mock mode, then run Playwright, with `webServer` in `playwright.config.ts` starting the server and the client. Details: [SESSION-RUNBOOK.ar.md §هـ](SESSION-RUNBOOK.ar.md).
 
 ---
 
