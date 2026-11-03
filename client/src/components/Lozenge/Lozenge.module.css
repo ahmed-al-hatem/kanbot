@@ -1,0 +1,61 @@
+/* DESIGN §7 Lozenge */
+.lozenge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-050);
+  block-size: 20px;
+  padding-inline: var(--space-075);
+  border-radius: var(--radius-small);
+  font-size: 11px;
+  line-height: 20px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background-color 200ms var(--ease-practical),
+    color 200ms var(--ease-practical);
+}
+
+.dot {
+  flex: none;
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+  background: var(--info-icon);
+}
+
+.gray {
+  background: var(--lz-gray-bg);
+  color: var(--lz-gray-fg);
+}
+
+.blue {
+  background: var(--lz-blue-bg);
+  color: var(--lz-blue-fg);
+}
+
+.green {
+  background: var(--lz-green-bg);
+  color: var(--lz-green-fg);
+}
+
+.purple {
+  background: var(--lz-purple-bg);
+  color: var(--lz-purple-fg);
+}
+
+.orange {
+  background: var(--lz-orange-bg);
+  color: var(--lz-orange-fg);
+}
+
+.teal {
+  background: var(--lz-teal-bg);
+  color: var(--lz-teal-fg);
+}
+
+.magenta {
+  background: var(--lz-magenta-bg);
+  color: var(--lz-magenta-fg);
+}

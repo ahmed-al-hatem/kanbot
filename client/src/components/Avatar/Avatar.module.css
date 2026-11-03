@@ -1,0 +1,53 @@
+/* DESIGN §7 Avatar */
+.avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  color: var(--av-fg);
+  font-weight: 700;
+  transition: transform 250ms var(--ease-spring);
+}
+
+.avatar:hover {
+  transform: scale(1.12);
+}
+
+.s24 {
+  inline-size: 24px;
+  block-size: 24px;
+  font-size: 10px;
+}
+
+.s28 {
+  inline-size: 28px;
+  block-size: 28px;
+  font-size: 11px;
+}
+
+.s32 {
+  inline-size: 32px;
+  block-size: 32px;
+  font-size: 12px;
+}
+
+.av1 {
+  background: var(--av-1);
+}
+
+.av2 {
+  background: var(--av-2);
+}
+
+.av3 {
+  background: var(--av-3);
+}
+
+.av4 {
+  background: var(--av-4);
+}
+
+.unassigned {
+  border: 1px dashed var(--border-input);
+  background: transparent;
+}
