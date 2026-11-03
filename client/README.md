@@ -5,7 +5,7 @@
 > React app for Kanbot, a sprint board with an AI teammate. Built phase by phase from
 > [`docs/FRONTEND-PLAN.en.md`](../docs/FRONTEND-PLAN.en.md); the API in [`server/`](../server/) is the contract.
 
-**Status:** Phase 1 — design system components. No product screens yet; `/` shows the phase-0 placeholder, and in dev `/__ui` shows every component and state in both themes.
+**Status:** Phase 2 — auth. Log in, Sign up and Forgot password (frontend only) work against the API; every private path shows a placeholder with Log out until the app shell lands in phase 3. In dev, `/__ui` shows every component and state in both themes.
 
 ---
 
@@ -70,17 +70,17 @@ npm run dev           # http://localhost:5173
 ```
 src/
 ├── main.tsx            # fonts + global styles, <Providers/>
-├── router.tsx          # createBrowserRouter, lazy routes (placeholder in phase 0)
-├── app/                # Providers (QueryClient + Router), queryClient
+├── router.tsx          # `routes` (guest + private layouts, lazy pages) and createBrowserRouter
+├── app/                # Providers, queryClient, global hosts: Toaster (Flag), LiveRegion
 ├── api/                # client.ts (request<T>), errors.ts (ApiError), auth/projects/todos/sprints/ai.ts
-├── hooks/              # queryKeys.ts (one key factory); query/mutation hooks per phase
+├── hooks/              # queryKeys.ts (one key factory); useAuth.ts (me, login, register, logout)
 ├── stores/             # Zustand UI state: session, theme, toast, announcer
 ├── components/         # design system, one folder per component (see §6)
 ├── dev/                # UiPage: the /__ui catalogue, dev server only
-├── features/           # one folder per area; todos/TypeIcon so far
-├── lib/                # storage.ts (localStorage that never throws), cx.ts (class names)
+├── features/           # auth/ (pages, guards, SessionExpiredDialog), shell/ (phase-2 placeholder), todos/TypeIcon
+├── lib/                # storage.ts (localStorage that never throws), cx.ts, formErrors.ts (server errors → setError)
 ├── styles/             # tokens.css, base.css, motion.css
-├── test/               # setup.ts, MSW server
+├── test/               # setup.ts, MSW server, renderApp (real routes on a memory router)
 └── types/api.ts        # verbatim copy of server/src/types/api.ts — never edited by hand
 ```
 
@@ -93,6 +93,23 @@ src/
 - no response → `NETWORK_ERROR` ("Cannot reach the server. Is it running?"); over the timeout (15 s, 45 s for AI) → `TIMEOUT`; a cancel from TanStack Query is rethrown untouched so it stays a cancel;
 - `401` on an authenticated request (except `/auth/login`) → `useSession.getState().expire()` (AUTH-6);
 - `fieldErrors(err)` maps validation `details` to `{ field: message }` for `setError`.
+
+**Auth flow (phase 2).**
+
+| Situation | What happens |
+|---|---|
+| Signed-out visitor opens a private page | `ProtectedRoute` → `/login?redirect=<path + search>` (AUTH-5) |
+| Signed-in user opens `/login`, `/register`, `/forgot-password` | `GuestRoute` → `?redirect=` if present, else `/projects` (AUTH-5) |
+| Log in succeeds | `startSession()` clears the cache, seeds `['me']`, saves the token; `GuestRoute` then sends the user to `?redirect=` (AUTH-2) |
+| Reload with a saved token | `GET /auth/me` behind a full-page loader; a non-401 failure shows PageError with Try again (AUTH-3) |
+| Saved token rejected on startup | 401 → `expire()` → straight to `/login?redirect=…` with "Your session has expired. Please log in again." (no dialog: the user never got in) |
+| 401 mid-session | `expire()` → the page stays behind `SessionExpiredDialog` (Esc and scrim do nothing) → "Log in again" → `/login?redirect=<current page>` with the same message (AUTH-6) |
+| Log out | `signOut()` clears token, UI stores and cache, and sets `signedOut` so the guard goes to plain `/login` (AUTH-4) |
+| Log in / log out in another tab | `listenForSessionChanges()` rehydrates the token on the `storage` event and clears the cache (plan §9.2) |
+
+`?redirect=` is accepted only as a same-origin app path (`safeRedirect`): `//host`, `/\host`, absolute URLs and guest pages fall back to `/projects`, so the login page can't be used as an open redirect.
+
+Forms use react-hook-form + zod with `mode: 'onTouched'` (validate on blur, then on every change). The client schemas mirror the server's (`name` 1–80, `password` 8–200, trimmed email). On submit with errors, focus goes to the first invalid field and the live region says "N fields need attention". Server `details[]` go under their fields via `applyServerErrors()`; a register 409 always lands under Email; anything else (401, 429, network) is a danger banner above the form. Submit buttons use `loading`, which swallows clicks and the implicit Enter submit, so a form can't be sent twice.
 
 The endpoint modules unwrap the response envelopes (`{ project }` → `ProjectWithStats`) and pass `signal` through. The QueryClient uses `staleTime: 30s`, refetch on focus, and never retries a 4xx.
 
@@ -123,17 +140,35 @@ CSS Modules + tokens only; every one is in `/__ui` (run `npm run dev`, open http
 | `Skeleton`, `SkeletonRegion`, `Spinner` | Shimmering blocks (always `aria-hidden`) inside a `role="status" aria-busy` region with "Loading <page>". Spinner 14/20/24, decorative unless given a `label` |
 | `EmptyState`, `PageError`, `Banner`, `VisuallyHidden` | EmptyState `sunken` (nothing yet) or `dashed` (no match). PageError = S04: "We couldn't load <page>", Try again (spins while retrying), Back to Projects, and a small code from the `ApiError`. Banner warning (`role="status"`) / danger (`role="alert"`), page or inline layout, action inherits the banner color |
 
+### Hosts and auth screens (phase 2)
+
+| Piece | Notes |
+|---|---|
+| `Toaster` (Flag) | Fixed bottom inline-start, 24px; `--flag` / `--flag-fg`; success/error/info icon; optional action (bold, underlined) and Dismiss. The `role="status"` region is always mounted so a new toast is announced. 3.2s, 5s with an action (DESIGN §7); the timer pauses on hover or focus. `kbFlagIn` / `kbFlagOut`, RTL variants via `:dir(rtl)` |
+| `LiveRegion` | One polite and one assertive visually hidden region at the root, fed by `announce()`. The message node is keyed by id, so the same text is announced twice |
+| `FullPageLoader` | Logo + 24px spinner labelled "Loading your workspace" on `--surface-sunken`; fades in after 150ms so a fast `/auth/me` never flashes. Also the router's `hydrateFallbackElement` |
+| `AuthLayout` | 420px card (radius 12, overlay shadow, 40 40 32 padding; 32 24 24 under 480px), logo 36 + 22px wordmark, tagline, theme toggle at the top inline-end, `<main id="main">`, a `<title>` per page |
+| Login | "Welcome back", Email (`email`), Password (`current-password`) with "Forgot password?" on its label row but after it in tab order, "Logging in…". 401 → danger banner with the server message, password `aria-invalid` and described by the banner; cleared on any edit |
+| Register | Name (`name`), Email, Password (`new-password`) with the strength meter and help text, Confirm (re-checked when the password changes after it was visited), "Creating account…", welcome toast "Welcome to Kanbot, &lt;first name&gt;" |
+| Forgot password | Email → "Sending…" (simulated 800ms) → "Check your email" with the address in bold, Resend with a 30s cooldown ("Resend link in 12s"), "Back to log in", and the "Demo only" note |
+| `SessionExpiredDialog` | Radix AlertDialog, 420px, lock badge, "Your session has expired", one primary lg action focused on open; Esc and the scrim do nothing |
+
 **Deviations from the design:** see [plan §2](../docs/FRONTEND-PLAN.en.md#2-design-vs-api-conflicts-decide-before-building); additions below in Decisions.
 
 ## 7. Progress
 
 | ID | Status | Notes |
 |---|---|---|
-| NFR-1 | ✅ | React 19 + TS strict + Vite; `no-explicit-any` is an error; `lint`, `typecheck`, `test` (69) and `build` pass (phase 1) |
+| NFR-1 | ✅ | React 19 + TS strict + Vite; `no-explicit-any` is an error; `lint`, `typecheck`, `test` and `build` pass (phase 2) |
 | NFR-7 | ⚠️ | Only the JWT is persisted (`partialize`), `no-console` is an error, Authorization never logged. Markdown without raw HTML comes with the AI UI (phase 7) |
 | NFR-8 | ✅ | Folder structure per plan §4; API layer in `src/api/` typed from `types/api.ts`; `fetch` banned outside `src/api/` by ESLint |
 | NFR-5 | ⚠️ | Component level done: labelled fields with `aria-describedby`/`aria-invalid`, visible `:focus-visible` rings, dialogs with focus trap / Esc / restore (Radix), keyboard menus, icon-only buttons named by type, priority/type chips carry text or an icon, contrast from the DESIGN token table; axe clean in unit tests. Still per screen: landmarks and headings (phase 3+), DnD keyboard alternative (phases 5–6), Lighthouse ≥ 95 audit (phase 8) |
-| AUTH-1…6 | ⏳ | Phase 2 (`expire()` on 401 is ready) |
+| AUTH-1 | ✅ | Name, email, password, confirm; zod on blur/submit (required, email, ≥ 8, match); `details[]` under fields; 409 under Email; loading button can't double-submit; success signs in → `/projects` + welcome toast |
+| AUTH-2 | ✅ | Email + password; 401 shows the server message above the form; success → `?redirect=` (sanitised) or `/projects` |
+| AUTH-3 | ✅ | Token persisted in `localStorage` (`kanbot.token`, token only); on start `GET /auth/me` behind a full-page loader; 401 clears the token and shows login |
+| AUTH-4 | ⚠️ | Works: clears token, UI stores and cache, goes to `/login`. For now it sits on the phase-2 placeholder page; it moves to the sidebar/profile menu with the shell (phase 3) |
+| AUTH-5 | ✅ | `ProtectedRoute` → `/login?redirect=<page>`; `GuestRoute` sends signed-in users from `/login`, `/register`, `/forgot-password` to the app |
+| AUTH-6 | ✅ | Any 401 except login (when a token was sent) → non-dismissable dialog → "Log in again" → `/login?redirect=<current page>` with "Your session has expired. Please log in again." |
 | PRJ-1…5 | ⏳ | Phase 3 |
 | BL-1…4, BL-6 | ⏳ | Phase 4 |
 | BL-5, BL-7, SPR-1…3 | ⏳ | Phase 5 |
@@ -165,26 +200,45 @@ CSS Modules + tokens only; every one is in `/__ui` (run `npm run dev`, open http
 | 2026-11-03 | Added a `sm` (28px) Button size | The canvas uses 28px buttons in banners, composers and the save-error bar |
 | 2026-11-03 | `Field` wires controls through context, not a render prop | `<Field label error><Input {...register('x')} /></Field>` stays one line with react-hook-form; explicit `id`/`aria-*` on the control still win |
 | 2026-11-03 | `/__ui` exists only under `import.meta.env.DEV` | Vite replaces the flag with `false` in `vite build`, so the route and its lazy chunk are dropped from production |
+| 2026-11-03 | The login 401 banner shows the **server** message ("Incorrect email or password."), not the canvas copy | AUTH-2 asks for the server message; the API contract and AC outrank the design |
+| 2026-11-03 | The register meter has the **canvas's four levels** (Too short / Fair / Good / Strong: danger → warning → info → success), not DESIGN §9's three | The canvas is the reference for look and is a superset; "Too short" matches the server's 8-character minimum |
+| 2026-11-03 | `SessionExpiredDialog` lives in the private layout route, not with the global hosts | Only private pages make authenticated calls. There it unmounts by itself when "Log in again" goes to `/login`, and the page stays mounted behind it until then |
+| 2026-11-03 | A stale token on **startup** skips the dialog and goes straight to `/login?redirect=` with the expired message | AUTH-3 says "401 → clear the token and show login"; a dialog over a loader the user never got past is an extra click with nothing behind it |
+| 2026-11-03 | `sessionExpired` stays set until the next sign in, and the login page shows the message while it is set | Survives the trip from the dialog to `/login` without a URL flag and disappears on success. Not persisted, so a reload clears it |
+| 2026-11-03 | `signedOut` flag in the session store | After Log out the private guard would otherwise send the user to `/login?redirect=<page they left>`; AUTH-4 says `/login`. Cleared by the next sign in |
+| 2026-11-03 | Every sign-in starts with `queryClient.clear()` and seeds `['me']` from the response | No data from a previous user or session can show after logging in, and the guard needs no second `/auth/me` |
+| 2026-11-03 | `?redirect=` is sanitised (`safeRedirect`) and carried across Log in ↔ Sign up ↔ Forgot password | Blocks open redirects (`//evil.example`) and loops to guest pages; a visitor who detours through Sign up still lands where they were going |
+| 2026-11-03 | Toasts default to 3.2s (5s with an action), per DESIGN §7, and pause on hover/focus | The store had one 5s default. Pausing keeps "Undo" reachable for keyboard and slow pointer users (WCAG 2.2.1) |
+| 2026-11-03 | No "expires in 30 minutes" on Forgot password, and no "30 minutes of inactivity" in the session dialog | Nothing is sent and server tokens last 7 days; the copy shouldn't claim either |
+| 2026-11-03 | Until phase 3: `/` → `/projects`, every `/projects/*` path shows a placeholder, unknown paths go to `/` | The guards and `?redirect=` deep links can be tested end to end now; the 404 page is phase 8 |
+| 2026-11-03 | Page titles use React 19 `<title>` inside the page | Hoisted to `<head>` with no helper or library |
+| 2026-11-03 | Removed the phase-0 `FoundationsPage` | Its own comment said it is replaced in phase 2 |
+| 2026-11-03 | `SessionExpiredDialog` and `PageError` are `lazy()` inside `ProtectedRoute` | They show only after a 401 or a failed `/auth/me`, but as static imports they put Radix AlertDialog in every visit's startup bundle (133.8 KB gz, over the ~120 KB target of plan §5.4); lazy, it is 119.4 KB and the dialog chunk is 14 KB. The dialog has no Suspense fallback (the page stays as it is for that moment); the error falls back to the full-page loader |
 | 2026-11-03 | axe in unit tests runs with `color-contrast` and `region` off | jsdom has no layout/canvas to measure color, and a lone component is not a page. Contrast comes from the DESIGN token table and is checked again with Lighthouse in phase 8 |
 
 ## 9. Enhancements
 
-_Filled in as they land (tests, CI, a11y checks…)._ So far: CI (`.github/workflows/client.yml`), unit tests for the API layer and stores with MSW, component tests with axe checks, and the dev-only `/__ui` component catalogue in both themes.
+_Filled in as they land (tests, CI, a11y checks…)._ So far: CI (`.github/workflows/client.yml`), unit tests for the API layer and stores with MSW, component tests with axe checks, the dev-only `/__ui` component catalogue in both themes, app-level auth tests on the real routes, open-redirect protection on `?redirect=`, cross-tab log in / log out sync, and a forgot-password flow (frontend only).
 
 ## 10. Testing & CI
 
 - Unit: Vitest + Testing Library + MSW (`src/test/setup.ts` fails any unhandled request). Covered now: `request()` (token, body, query, 204, ApiError, 401 → expire, login 401, network error, proxy 5xx, timeout, cancel), `fieldErrors`, stores (session, toast, announcer, theme), `Icon` / `TypeIcon` a11y.
 - Components (phase 1): Button loading/disabled (name, `aria-busy`, focus kept, clicks and implicit submit blocked, width-keeping layers), IconButton name and its type-level `aria-label`; Field wiring of `aria-describedby` / `aria-invalid` / `aria-required` for every control; TagInput keys and announcements; Dialog autofocus, Tab trap, Esc and × with focus restore, controlled veto; ConfirmDialog Cancel focus and pending lock; Menu ↑ ↓ Home End, disabled skip, wrap, Enter, Esc with focus back on the trigger. Each runs `vitest-axe` (`src/test/axe.ts`).
+- Auth (phase 2, `features/auth/auth.test.tsx`: the whole app on a memory router with MSW): guard redirects (signed-out → `/login?redirect=`, signed-in → away from `/login` and `/register`, unsafe `?redirect=` ignored); login 401 banner + `aria-invalid`, cleared on edit; client validation with focus and the live-region summary; login → `?redirect=` with a trimmed email; register 409 under Email with focus; server `details[]` under Name; password match and strength; register → welcome toast; token persisted on login; reload with a saved token (loader during `/auth/me`, Bearer sent); a failed `/auth/me` → page error → Try again; stale token → login with the message; log out; session expired mid-session (dialog, Esc ignored, focus, Log in again → `/login?redirect=` + message → back to the page); forgot-password validation. Plus `safeRedirect`/`loginPath`, `passwordStrength`, `registerSchema`, the Toaster (timing, action, pause, Dismiss, axe), LiveRegion, `signedOut` and cross-tab sync.
 - CI: `.github/workflows/client.yml` runs `npm ci → lint → typecheck → test → build` on every PR and on `main`. E2E job joins in phase 9.
 
 ## 11. Known issues
 
 - `npm audit` reports 13 moderate advisories in dev dependencies after install; not reviewed yet.
-- `/` is a phase-0 placeholder; every route renders it until phase 2.
+- Private pages are a placeholder (`features/shell/PrivatePlaceholder`) until the app shell and Projects land in phase 3; Log out moves to the sidebar/profile menu then.
+- Unknown paths redirect to `/` instead of showing a 404 (phase 8).
+- Focus isn't moved to `<main>`/`h1` on route change yet (plan §9.3; comes with the shell in phase 3).
+- Forgot password sends nothing — there is no endpoint (plan §10 decision 1); the page says "Demo only".
 - The theme does not follow OS changes after load (only the initial default does).
 - In `/__ui`, dialogs and menus portal to `<body>`, so they follow the global theme (header toggle), not the pane they were opened from.
 - `vitest-axe@0.1.0` ships type augmentations for an old Vitest, so its `toHaveNoViolations` matcher isn't used; `expectNoAxeViolations()` asserts on the violations list instead.
-- Toast host (Flag), LiveRegion host and the unsaved-changes confirm bar are not built yet: they come with auth and the shell (phases 2–3) and Todo details (phase 4).
+- The unsaved-changes confirm bar isn't built yet: it comes with Todo details (phase 4). The Toast and LiveRegion hosts landed in phase 2.
+- Not checked in a real browser in this session: the auth screens against the canvas in both themes and at 390px, and the dialog/toast motion. Worth a look before merging.
 
 ## 12. Demo
 
