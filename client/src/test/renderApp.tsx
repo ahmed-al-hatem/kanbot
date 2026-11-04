@@ -23,6 +23,11 @@ export async function preloadPages() {
     import('@/features/auth/SessionExpiredDialog'),
     import('@/components/PageError/PageError'),
     import('@/features/ai/AssistantDrawer'),
+    import('@/features/ai/GenerateTodosDialog'),
+    import('@/features/ai/PlanSprintDialog'),
+    import('@/features/ai/SprintSummaryCard'),
+    import('@/features/ai/SprintSummaryDialog'),
+    import('@/features/ai/Markdown'),
   ]);
 }
 
