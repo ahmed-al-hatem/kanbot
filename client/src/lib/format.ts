@@ -23,6 +23,11 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((dayValue(to) - dayValue(from)) / MS_PER_DAY);
 }
 
+/** `YYYY-MM-DD` plus `days` (negative goes back), without time-zone drift. */
+export function addDays(isoDate: string, days: number): string {
+  return new Date(dayValue(isoDate) + days * MS_PER_DAY).toISOString().slice(0, 10);
+}
+
 /** "Nov 2" for a `YYYY-MM-DD` date. */
 export function formatDay(isoDate: string): string {
   return shortDate.format(dayValue(isoDate));
