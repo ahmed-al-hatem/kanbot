@@ -5,7 +5,7 @@ import { useRef } from 'react';
  * when opened without one, as our controlled dialogs are. This remembers whatever had focus
  * when the dialog opened and puts focus back there on close (DESIGN §10.3).
  */
-export function useReturnFocus() {
+export function useReturnFocus(fallback?: () => HTMLElement | null) {
   const returnTo = useRef<HTMLElement | null>(null);
   return {
     /** For `onOpenAutoFocus`: runs before Radix moves focus into the dialog. */
@@ -13,11 +13,15 @@ export function useReturnFocus() {
       const active = document.activeElement;
       returnTo.current = active instanceof HTMLElement && active !== document.body ? active : null;
     },
-    /** For `onCloseAutoFocus`. Falls back to Radix's behaviour if the opener is gone. */
+    /**
+     * For `onCloseAutoFocus`. If the opener is gone (its row was deleted or moved), focus goes
+     * to `fallback()`, then to Radix's behaviour.
+     */
     restore: (event: Event) => {
-      const target = returnTo.current;
+      const opener = returnTo.current;
       returnTo.current = null;
-      if (target?.isConnected) {
+      const target = opener?.isConnected ? opener : fallback?.();
+      if (target) {
         event.preventDefault();
         target.focus();
       }

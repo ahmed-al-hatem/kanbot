@@ -22,6 +22,8 @@ interface ConfirmDialogProps {
   pending?: boolean;
   /** The parent closes the dialog when the action succeeds (or right away if optimistic). */
   onConfirm: () => void;
+  /** Where focus goes on close when the opener is gone (e.g. its row was just deleted). */
+  fallbackFocus?: () => HTMLElement | null;
   trigger?: ReactElement;
 }
 
@@ -40,9 +42,10 @@ export function ConfirmDialog({
   tone = 'danger',
   pending = false,
   onConfirm,
+  fallbackFocus,
   trigger,
 }: ConfirmDialogProps) {
-  const returnFocus = useReturnFocus();
+  const returnFocus = useReturnFocus(fallbackFocus);
 
   return (
     <AlertDialog.Root

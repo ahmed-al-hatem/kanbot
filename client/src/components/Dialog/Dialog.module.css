@@ -86,6 +86,18 @@
   font-weight: 700;
 }
 
+.header:has(.headerMeta) .title {
+  flex: 0 1 auto;
+}
+
+.headerMeta {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
 .body {
   flex: 1 1 auto;
   display: flex;

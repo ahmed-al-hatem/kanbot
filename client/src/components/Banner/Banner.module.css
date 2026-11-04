@@ -55,3 +55,9 @@
 .banner .action :is(button, a):hover {
   color: inherit;
 }
+
+/* The confirm bar's Discard keeps the danger color instead of inheriting the banner's. */
+.banner .action .confirm,
+.banner .action .confirm:hover {
+  color: var(--danger);
+}

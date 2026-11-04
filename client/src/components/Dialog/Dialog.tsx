@@ -16,6 +16,8 @@ interface DialogProps {
    */
   onOpenChange: (open: boolean) => void;
   title: ReactNode;
+  /** Muted text after the title in the header, outside the accessible name. */
+  headerMeta?: ReactNode;
   /** Optional line under the title, wired to `aria-describedby`. */
   description?: ReactNode;
   size?: DialogSize;
@@ -25,6 +27,10 @@ interface DialogProps {
   footer?: ReactNode;
   /** Inline-start footer actions, e.g. Delete (DESIGN §7). */
   footerStart?: ReactNode;
+  /** Bars pinned above the footer, outside the scrolling body (save error, confirm bar). */
+  beforeFooter?: ReactNode;
+  /** Where focus goes on close when the element that opened the dialog is gone. */
+  fallbackFocus?: () => HTMLElement | null;
   /** Optional element that opens the dialog. Either way focus returns to whatever had it before. */
   trigger?: ReactElement;
   className?: string;
@@ -39,16 +45,19 @@ export function Dialog({
   open,
   onOpenChange,
   title,
+  headerMeta,
   description,
   size = 'project',
   children,
   footer,
   footerStart,
+  beforeFooter,
+  fallbackFocus,
   trigger,
   className,
 }: DialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
-  const returnFocus = useReturnFocus();
+  const returnFocus = useReturnFocus(fallbackFocus);
 
   return (
     <RadixDialog.Root open={open} onOpenChange={onOpenChange}>
@@ -71,6 +80,7 @@ export function Dialog({
           >
             <header className={styles.header}>
               <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
+              {headerMeta && <span className={styles.headerMeta}>{headerMeta}</span>}
               <RadixDialog.Close asChild>
                 <IconButton icon="cross" aria-label="Close" />
               </RadixDialog.Close>
@@ -81,6 +91,7 @@ export function Dialog({
               )}
               {children}
             </div>
+            {beforeFooter}
             {(footer ?? footerStart) && (
               <footer className={styles.footer}>
                 {footerStart}
