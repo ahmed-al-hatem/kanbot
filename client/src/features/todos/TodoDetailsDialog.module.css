@@ -81,3 +81,17 @@
   flex-direction: column;
   gap: var(--space-200);
 }
+
+/* Plan §9.4 AI suggestion area: "Improve this todo" under the description. */
+.aiSuggest {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+.aiHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}

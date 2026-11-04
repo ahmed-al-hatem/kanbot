@@ -12,6 +12,7 @@ import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { useDeleteProject, usePrefetchProject, useProjects } from '@/hooks/useProjects';
 import { neighbourFocus, refocusAfterRemoval } from '@/lib/refocus';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
+import { useAssistant } from '@/stores/assistant';
 import { useHighlight } from '@/stores/highlight';
 import { toast } from '@/stores/toast';
 import type { ProjectWithStats } from '@/types/api';
@@ -105,7 +106,7 @@ export function ProjectsPage() {
     setToDelete({ open: true, project, focus: projectNeighbourFocus(project.id) });
   }, [setToDelete]);
 
-  const onSaved = (saved: ProjectWithStats) => {
+  const onSaved = (saved: ProjectWithStats, { starter }: { starter: boolean }) => {
     setForm((state) => ({ ...state, open: false }));
     if (form.project) {
       toast.success(`${saved.name} updated`);
@@ -113,6 +114,9 @@ export function ProjectsPage() {
     }
     toast.success(`${saved.name} created`);
     markHighlight(saved.id);
+    // Plan §9.4: the starter backlog is Generate todos on the new backlog, pre-filled from the
+    // description — the user reviews the drafts; nothing is added until they click Add.
+    if (starter) useAssistant.getState().openDialog({ kind: 'generate', projectId: saved.id, prompt: starterPrompt(saved) });
     // PRJ-2: a new project opens on its backlog.
     void navigate(`/projects/${saved.id}/backlog`);
   };
@@ -292,4 +296,10 @@ function EmptyIllustration() {
       <circle cx="100" cy="24" r="6" fill="var(--ai-icon)" />
     </svg>
   );
+}
+
+/** The Generate todos description for a new project: its description, or a line from its name. */
+function starterPrompt(project: ProjectWithStats): string {
+  const description = project.description.trim();
+  return description.length >= 3 ? description : `First todos for a new project called "${project.name}"`;
 }

@@ -20,6 +20,7 @@ import { useTodo, useUpdateTodo } from '@/hooks/useTodos';
 import { applyServerErrors, onInvalidSubmit } from '@/lib/formErrors';
 import { formatTimestamp, overdueDays, plural } from '@/lib/format';
 import { announce } from '@/stores/announcer';
+import { useAssistant } from '@/stores/assistant';
 import { toast } from '@/stores/toast';
 import { TODO_STATUSES, type Sprint, type Todo } from '@/types/api';
 import styles from './TodoDetailsDialog.module.css';
@@ -279,6 +280,15 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
     void handleSubmit(onValid, onInvalidSubmit)();
   };
 
+  /**
+   * Plan §9.4 "Improve this todo": opens the assistant over this dialog with a prompt about the
+   * todo (its current, maybe unsaved, values) in the composer. Nothing is sent until the user
+   * presses Send, and nothing changes here until they edit and save.
+   */
+  const improve = () => {
+    useAssistant.getState().openWith(todo.projectId, improvePrompt(todo.key, getValues()));
+  };
+
   const confirmDelete = () => {
     // Captured now, while the row and its neighbours are still on the page.
     const neighbour = todoNeighbourFocus(todo.id);
@@ -381,6 +391,12 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           <Field label="Description" error={errors.description?.message}>
             <Textarea rows={10} maxLength={5000} placeholder="Add more detail…" {...register('description')} />
           </Field>
+          <div className={styles.aiSuggest}>
+            <Button variant="ai" size="sm" aria-haspopup="dialog" onClick={improve}>
+              Improve this todo
+            </Button>
+            <span className={styles.aiHint}>Ask Kanbot for a clearer title, description and acceptance criteria.</span>
+          </div>
         </div>
 
         <div className={styles.side}>
@@ -524,4 +540,17 @@ function saveErrorText(key: string, error: unknown) {
     return `Couldn't save ${key}. ${error.message} Your edits are still here.`;
   }
   return `Couldn't save ${key}. Check your connection and try again — your edits are still here.`;
+}
+
+/** The "Improve this todo" prompt: what the todo says now, and what to suggest (not to do). */
+function improvePrompt(key: string, values: TodoFormValues): string {
+  const points = values.storyPoints === NO_POINTS ? 'not estimated' : `${values.storyPoints} points`;
+  return [
+    `Improve ${key || 'this todo'}: suggest a clearer title, a better description and acceptance criteria. I'll review your suggestions and edit the todo myself.`,
+    '',
+    `Title: ${values.title.trim()}`,
+    `Type: ${TYPE_LABELS[values.type]} · Priority: ${PRIORITY_LABELS[values.priority]} · ${points}`,
+    // The chat takes 4000 characters a message; a long description is cut to leave room.
+    `Description: ${values.description.trim().slice(0, 3000) || '(none)'}`,
+  ].join('\n');
 }

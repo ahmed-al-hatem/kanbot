@@ -5,7 +5,9 @@ import { isApiError } from '@/api/errors';
 import { Banner } from '@/components/Banner/Banner';
 import { Button } from '@/components/Button/Button';
 import { Dialog } from '@/components/Dialog/Dialog';
+import { Checkbox } from '@/components/Field/Checkbox';
 import { Field } from '@/components/Field/Field';
+import { Icon } from '@/components/Icon/Icon';
 import { Input, Textarea } from '@/components/Field/Input';
 import { ProjectAvatar } from '@/components/ProjectAvatar/ProjectAvatar';
 import { useCreateProject, useUpdateProject } from '@/hooks/useProjects';
@@ -25,8 +27,11 @@ interface ProjectFormDialogProps {
   project?: ProjectWithStats | null;
   /** Keys the user already has, so the preview shows the key the server will really generate. */
   takenKeys: readonly string[];
-  /** After the request succeeds; the parent closes the dialog, toasts and navigates. */
-  onSaved: (project: ProjectWithStats) => void;
+  /**
+   * After the request succeeds; the parent closes the dialog, toasts and navigates. `starter`:
+   * the user asked for an AI starter backlog (DESIGN §9 12, plan §9.4) — create only.
+   */
+  onSaved: (project: ProjectWithStats, options: { starter: boolean }) => void;
 }
 
 /**
@@ -42,6 +47,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
   const update = useUpdateProject();
   const saving = create.isPending || update.isPending;
   const [formError, setFormError] = useState<string | null>(null);
+  const [starter, setStarter] = useState(false);
 
   const {
     register,
@@ -85,9 +91,22 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
       ...(values.key ? { key: values.key } : {}),
     };
     if (project) {
-      update.mutate({ projectId: project.id, body }, { onSuccess: onSaved, onError });
+      update.mutate(
+        { projectId: project.id, body },
+        {
+          onSuccess: (saved) => {
+            onSaved(saved, { starter: false });
+          },
+          onError,
+        },
+      );
     } else {
-      create.mutate(body, { onSuccess: onSaved, onError });
+      create.mutate(body, {
+        onSuccess: (saved) => {
+          onSaved(saved, { starter });
+        },
+        onError,
+      });
     }
   }, onInvalidSubmit);
 
@@ -178,6 +197,23 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
         <Field label="Description" error={errors.description?.message}>
           <Textarea rows={3} placeholder="What is this project about?" {...register('description')} />
         </Field>
+
+        {!isEdit && (
+          <Checkbox
+            className={styles.starter}
+            checked={starter}
+            onChange={(event) => {
+              setStarter(event.target.checked);
+            }}
+            label={
+              <span className={styles.starterLabel}>
+                <Icon name="ai-sparkle" size={12} className={styles.starterIcon} />
+                Generate a starter backlog with AI
+              </span>
+            }
+            description="Uses the description to draft first todos. You review them before anything is added."
+          />
+        )}
       </form>
     </Dialog>
   );
