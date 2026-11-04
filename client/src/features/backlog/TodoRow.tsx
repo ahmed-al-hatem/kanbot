@@ -14,7 +14,7 @@ import { cx } from '@/lib/cx';
 import { useHighlight } from '@/stores/highlight';
 import type { Todo } from '@/types/api';
 import styles from './Backlog.module.css';
-import type { DropData } from './dnd';
+import type { DropData } from '@/lib/dnd/sensors';
 
 /** DESIGN §8.2 "New or moved row": kbAdded runs 1300ms. */
 const HIGHLIGHT_MS = 1400;

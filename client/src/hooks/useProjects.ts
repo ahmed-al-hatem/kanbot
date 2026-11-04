@@ -6,6 +6,8 @@ import { queryClient } from '@/app/queryClient';
 import { pageChunks, type ProjectSection } from '@/routeChunks';
 import type { ProjectWithStats, UpdateProjectRequest } from '@/types/api';
 import { qk } from './queryKeys';
+import { boardQuery } from './useBoard';
+import { sprintsQuery } from './useSprints';
 
 const projectsQuery = queryOptions({
   queryKey: qk.projects,
@@ -50,9 +52,17 @@ export function usePrefetchProject() {
   return useCallback(
     (projectId: string, section: ProjectSection = 'backlog') => {
       // Fetches only when missing or stale; a failed prefetch is ignored (the page shows its own error).
-      void client.query(projectQuery(projectId)).catch(() => undefined);
+      const project = client.query(projectQuery(projectId));
+      void project.catch(() => undefined);
       void pageChunks.project();
       void pageChunks[section]();
+      // The board needs the active sprint's id from the project; the history needs the sprint list.
+      if (section === 'board') {
+        void project
+          .then(({ stats }) => (stats.activeSprint ? client.query(boardQuery(stats.activeSprint.id)) : undefined))
+          .catch(() => undefined);
+      }
+      if (section === 'sprints') void client.query(sprintsQuery(projectId)).catch(() => undefined);
     },
     [client],
   );
