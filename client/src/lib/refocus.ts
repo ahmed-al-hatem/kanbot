@@ -2,6 +2,9 @@
 const WATCH_MS = 3000;
 const TICK_MS = 50;
 
+/** The running watch, if any. */
+let timer: ReturnType<typeof setTimeout> | null = null;
+
 /**
  * After deleting an item, the button that had focus (its ⋯ or title) leaves the DOM with it
  * and focus falls to `<body>`. Whichever comes last — the confirm dialog closing or the
@@ -9,20 +12,29 @@ const TICK_MS = 50;
  * fallback) once focus is lost. Focus the user put somewhere else on purpose is left alone.
  */
 export function refocusAfterRemoval(resolve: () => HTMLElement | null) {
+  // One watcher at a time: a newer removal knows better where focus belongs.
+  stopRefocus();
   const started = Date.now();
   let focused: HTMLElement | null = null;
   // Done only once focus is still on what we focused a tick later: a closing dialog's focus
   // trap can pull it back inside and then unmount, dropping it to `<body>` again.
   const tick = () => {
+    timer = null;
     const active = document.activeElement;
     if (focused && active === focused) return;
     if (!active || active === document.body) {
       focused = resolve();
       focused?.focus();
     }
-    if (Date.now() - started < WATCH_MS) setTimeout(tick, TICK_MS);
+    if (Date.now() - started < WATCH_MS) timer = setTimeout(tick, TICK_MS);
   };
-  setTimeout(tick, 0);
+  timer = setTimeout(tick, 0);
+}
+
+/** Cancels a running watch, e.g. between tests, so it never acts on the next page. */
+export function stopRefocus() {
+  if (timer !== null) clearTimeout(timer);
+  timer = null;
 }
 
 /**
