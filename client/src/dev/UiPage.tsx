@@ -556,7 +556,7 @@ function StatesSection() {
             </Button>
           }
         >
-          You&apos;re offline. Changes will sync when you reconnect.
+          You&apos;re offline. Changes can&apos;t be saved until you reconnect.
         </Banner>
         <Banner
           tone="danger"

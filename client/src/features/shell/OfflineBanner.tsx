@@ -6,7 +6,8 @@ import { toast } from '@/stores/toast';
 
 /**
  * DESIGN §11 Offline (artboard S06): a full-width warning banner above the shell while
- * TanStack Query is offline, "Retry now", and a "Back online" toast on reconnect.
+ * TanStack Query is offline, "Retry now", and a "Back online" toast on reconnect. Mutations
+ * don't wait for the network (`networkMode: 'always'`), so the copy doesn't promise a sync.
  */
 export function OfflineBanner() {
   const online = useOnline();
@@ -14,7 +15,7 @@ export function OfflineBanner() {
   const wasOnline = useRef(online);
 
   useEffect(() => {
-    if (online && !wasOnline.current) toast.success('Back online · your changes are synced');
+    if (online && !wasOnline.current) toast.success('Back online');
     wasOnline.current = online;
   }, [online]);
 
@@ -38,7 +39,7 @@ export function OfflineBanner() {
         </Button>
       }
     >
-      You&apos;re offline. Changes will sync when you reconnect.
+      You&apos;re offline. Changes can&apos;t be saved until you reconnect.
     </Banner>
   );
 }

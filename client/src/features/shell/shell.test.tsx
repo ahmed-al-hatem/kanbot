@@ -158,13 +158,13 @@ describe('mobile nav, Ask AI and offline', () => {
     act(() => {
       onlineManager.setOnline(false);
     });
-    expect(await screen.findByText("You're offline. Changes will sync when you reconnect.")).toBeInTheDocument();
+    expect(await screen.findByText("You're offline. Changes can't be saved until you reconnect.")).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry now' })).toBeInTheDocument();
 
     act(() => {
       onlineManager.setOnline(true);
     });
-    expect(await screen.findByText('Back online · your changes are synced')).toBeInTheDocument();
-    expect(screen.queryByText("You're offline. Changes will sync when you reconnect.")).not.toBeInTheDocument();
+    expect(await screen.findByText('Back online')).toBeInTheDocument();
+    expect(screen.queryByText("You're offline. Changes can't be saved until you reconnect.")).not.toBeInTheDocument();
   });
 });
