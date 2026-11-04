@@ -75,7 +75,8 @@ describe('backlog list (BL-1)', () => {
     renderApp('/projects/p1/backlog');
 
     expect(await screen.findByRole('heading', { name: 'Your backlog is empty' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Generate todos' })).toBeInTheDocument();
+    // The page header's and the empty state's.
+    expect(screen.getAllByRole('button', { name: 'Generate todos' })).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: 'Create todo' }));
     expect(quickCreate()).toHaveFocus();
   });
