@@ -82,7 +82,7 @@
 | 10 | Progress | Done فقط | `stats.donePoints` (Done فقط) | Done فقط ✔ |
 | 11 | Status في Todo details | معطّل إلا في الـ sprint النشط | الـ API يسمح دائماً | نتبع التصميم (أوضح للمستخدم) |
 | 12 | حدود الحقول | title 120، goal 160، description 300 | title 200، goal 300، description 500/5000، name 80 | zod في الواجهة = **حدود الـ API** حتى لا نرفض قيماً صحيحة |
-| 13 | Offline | تعديلات تُحفظ في طابور | — | TanStack Query يوقف الـ mutations تلقائياً offline (`networkMode: 'online'`) ويستأنفها؛ نضيف البانر + toast عند العودة. لا نبني طابوراً يدوياً |
+| 13 | Offline | تعديلات تُحفظ في طابور | — | **لا طابور.** الـ mutations تعمل بـ `networkMode: 'always'`: عند انقطاع الشبكة تفشل فوراً بـ `NETWORK_ERROR` وتُظهر واجهة الخطأ المعتادة (شريط خطأ الحفظ مع Retry مع بقاء التعديلات، toast للخطأ، والتراجع عن التحديث المتفائل). الطابور (mutations متوقفة في TanStack) يعيش في الذاكرة فقط ويضيع عند إعادة التحميل، وكان يُبقي مؤشر الحفظ يدور بلا أي رد. الـ queries ما زالت تتوقف وتُعاد عند عودة الاتصال. البانر: "You're offline. Changes can't be saved until you reconnect." + toast "Back online" (قرار 2026-11-04) |
 | 14 | React | 18 | `package.json` فيه 19 | React 19 |
 
 ---

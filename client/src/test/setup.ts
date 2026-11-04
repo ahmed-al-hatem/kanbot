@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { queryClient } from '@/app/queryClient';
+import { stopRefocus } from '@/lib/refocus';
 import { useAnnouncer } from '@/stores/announcer';
 import { useAssistant } from '@/stores/assistant';
 import { useHighlight } from '@/stores/highlight';
@@ -31,10 +32,12 @@ beforeEach(() => {
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
   useAssistant.setState({ open: false });
-  useHighlight.setState({ projectId: null });
+  useHighlight.setState({ projectId: null, todoIds: [] });
 });
 
 afterEach(() => {
+  // A focus watch left from a delete must not outlive its test (or jsdom: "document is not defined").
+  stopRefocus();
   cleanup();
   server.resetHandlers();
   queryClient.clear();

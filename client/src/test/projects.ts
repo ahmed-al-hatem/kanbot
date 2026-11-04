@@ -31,8 +31,10 @@ export const PORTFOLIO = makeProject({
 });
 
 /**
- * `GET /projects` and `GET /projects/:id` backed by `projects`. A test adds its own handlers
- * with `server.use` afterwards, and those win.
+ * `GET /projects` and `GET /projects/:id` backed by `projects`, plus empty todo and sprint
+ * lists so a project page (the backlog) can load. A test adds its own handlers with
+ * `server.use` afterwards, and those win; in one `server.use` call the first match wins, so
+ * pass `todoHandlers` before these.
  */
 export function projectHandlers(projects: ProjectWithStats[] = [KANBOT, PORTFOLIO]) {
   return [
@@ -43,5 +45,7 @@ export function projectHandlers(projects: ProjectWithStats[] = [KANBOT, PORTFOLI
         ? HttpResponse.json({ project })
         : HttpResponse.json(errorBody('NOT_FOUND', 'Project not found'), { status: 404 });
     }),
+    http.get(apiUrl('/projects/:projectId/todos'), () => HttpResponse.json({ todos: [] })),
+    http.get(apiUrl('/projects/:projectId/sprints'), () => HttpResponse.json({ sprints: [] })),
   ];
 }

@@ -1,0 +1,24 @@
+/* Canvas backlog row: 16px priority icon + 12px label in --text-subtle. */
+.priority {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-050);
+  min-inline-size: 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.urgent,
+.high {
+  color: var(--danger-icon);
+}
+
+.medium {
+  color: var(--warning-icon);
+}
+
+.low {
+  color: var(--info-icon);
+}

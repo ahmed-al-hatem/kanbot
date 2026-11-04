@@ -244,6 +244,10 @@ describe('delete project (PRJ-4)', () => {
     expect(deleted).toBe(true);
     expect(router.state.location.pathname).toBe('/projects');
     expect(screen.getByRole('heading', { name: 'Portfolio Site' })).toBeInTheDocument();
+    // The ⋯ that had focus left with its tile: focus moves to the next tile, not <body>.
+    await waitFor(() => {
+      expect(screen.getByRole('link', { name: 'Portfolio Site' })).toHaveFocus();
+    });
   });
 
   it('puts the tile back with an error toast when the delete fails', async () => {

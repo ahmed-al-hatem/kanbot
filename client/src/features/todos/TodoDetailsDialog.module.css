@@ -1,0 +1,83 @@
+/* DESIGN §9 06 Todo details, laid out as on the canvas: main column + 280px side column. */
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.layout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-300);
+}
+
+.main {
+  flex: 999 1 380px;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.side {
+  flex: 1 1 260px;
+  max-inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-150);
+}
+
+/* Two classes, so it beats the Field control styles whatever order the CSS chunks load in. */
+.main .titleInput {
+  block-size: 40px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-150);
+}
+
+.overdue {
+  color: var(--danger);
+}
+
+/* Save-error and confirm bars sit above the footer, outside the scrolling body (canvas). */
+.bars {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  padding: 0 var(--space-300) var(--space-150);
+}
+
+.hint,
+.dirtyHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-end: var(--space-050);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.dirtyDot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+  background: var(--warning-icon);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}

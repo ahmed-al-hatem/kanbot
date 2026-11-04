@@ -82,7 +82,7 @@ The new API layer must cover from day one:
 | 10 | Progress | Done only | `stats.donePoints` (Done only) | Done only ✔ |
 | 11 | Status in Todo details | Disabled unless in the active sprint | The API always allows it | Follow the design (clearer for the user) |
 | 12 | Field limits | title 120, goal 160, description 300 | title 200, goal 300, description 500/5000, name 80 | Client zod = **API limits**, so valid values are never rejected |
-| 13 | Offline | Edits queued | — | TanStack Query pauses mutations offline (`networkMode: 'online'`) and resumes them; add the banner + a toast on reconnect. No hand-built queue |
+| 13 | Offline | Edits queued | — | **No queue.** Mutations use `networkMode: 'always'`: offline they fail at once with `NETWORK_ERROR` and show the normal error UI (save-error bar with Retry and edits kept, error toasts, optimistic rollback). A queue (TanStack's paused mutations) would live in memory only, be lost on reload, and kept the Save spinner turning with no feedback. Queries still pause and refetch on reconnect. Banner "You're offline. Changes can't be saved until you reconnect." + a "Back online" toast (decided 2026-11-04) |
 | 14 | React | 18 | 19 | React 19 |
 
 ---

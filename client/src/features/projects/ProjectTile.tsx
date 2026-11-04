@@ -58,7 +58,7 @@ export const ProjectTile = memo(function ProjectTile({
         <ProjectAvatar id={project.id} name={project.name} size={40} />
         <div className={styles.tileTitle}>
           <h2 className={styles.tileName}>
-            <Link to={backlogPath} className={styles.stretch}>
+            <Link to={backlogPath} className={styles.stretch} data-project-focus={project.id}>
               {project.name}
             </Link>
           </h2>

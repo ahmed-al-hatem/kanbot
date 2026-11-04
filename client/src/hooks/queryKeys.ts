@@ -10,6 +10,8 @@ export const qk = {
   project: (projectId: string) => ['project', projectId] as const,
   todos: (projectId: string, filters?: TodoListQuery) =>
     filters ? (['todos', projectId, filters] as const) : (['todos', projectId] as const),
+  /** One todo (`GET /todos/:id`), for Todo details opened by a deep link. */
+  todo: (todoId: string) => ['todo', todoId] as const,
   sprints: (projectId: string) => ['sprints', projectId] as const,
   sprint: (sprintId: string) => ['sprint', sprintId] as const,
   board: (sprintId: string) => ['board', sprintId] as const,

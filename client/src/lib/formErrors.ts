@@ -12,7 +12,12 @@ export function applyServerErrors<T extends FieldValues>(
   setError: UseFormSetError<T>,
   fields: readonly Path<T>[],
 ): boolean {
-  const byField = fieldErrors(error);
+  // `labels.3` belongs under the Labels field: match on the top-level name.
+  const byField: Record<string, string> = {};
+  for (const [path, message] of Object.entries(fieldErrors(error))) {
+    const field = path.split('.')[0] ?? path;
+    if (!(field in byField)) byField[field] = message;
+  }
   const matched = fields.filter((field) => field in byField);
   matched.forEach((field, index) => {
     setError(field, { type: 'server', message: byField[field] }, { shouldFocus: index === 0 });
