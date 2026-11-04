@@ -1,0 +1,100 @@
+/* Shared AI pieces: thinking dots (DESIGN §8 kbDot), Mock badge (AI-5), disclaimer, AI error panel (S07). */
+.dots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-050);
+}
+
+.dot {
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+  background: var(--ai-icon);
+  animation: global(kbDot) 1.2s ease infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.mockBadge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  block-size: 20px;
+  padding-inline: var(--space-075);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-small);
+  background: var(--ai-bg);
+  color: var(--ai-fg);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.disclaimer {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.errorPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-100);
+  padding-block: var(--space-400);
+  padding-inline: var(--space-200);
+  border: 1px dashed var(--danger-border);
+  border-radius: var(--radius-large);
+  text-align: center;
+}
+
+.errorCompact {
+  align-items: flex-start;
+  gap: var(--space-050);
+  padding: var(--space-150);
+  text-align: start;
+}
+
+.errorIcon {
+  color: var(--danger-icon);
+}
+
+.errorTitle {
+  font-weight: 600;
+}
+
+.errorText {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+}
+
+.errorPanel:not(.errorCompact) > :last-child {
+  margin-block-start: var(--space-050);
+}
+
+/* Complete sprint's "Generate AI summary" option: divider above, sparkle in --ai-icon. */
+.option {
+  padding-block-start: var(--space-200);
+  border-block-start: 1px solid var(--border);
+}
+
+.optionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  font-weight: 500;
+}
+
+.optionIcon {
+  color: var(--ai-icon);
+}

@@ -1,5 +1,5 @@
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
-import { useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
@@ -9,7 +9,10 @@ import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { ProjectMeta } from '@/components/PageHeader/ProjectMeta';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
+import { SummaryOption } from '@/features/ai/AiParts';
+import { SprintSummaryDialog } from '@/features/ai/lazy';
 import { StartSprintDialog } from '@/features/sprints/StartSprintDialog';
+import { useSprintSummaryRequest, useSummarizeSprint } from '@/hooks/useAi';
 import { useBoard } from '@/hooks/useBoard';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
@@ -55,7 +58,11 @@ export function BoardPage() {
   const highlightIds = useHighlight((s) => s.todoIds);
   const reducedMotion = useReducedMotion();
   // `key` remounts the dialog on every open, so it starts from the Backlog choice again.
-  const [complete, setComplete] = useState({ open: false, key: 0 });
+  const [complete, setComplete] = useState({ open: false, key: 0, withSummary: false });
+  const summarize = useSummarizeSprint();
+  // Mounted on first open and kept, so the dialog can play its exit animation.
+  const [summary, setSummary] = useState({ open: false, mounted: false });
+  const summaryRequest = useSprintSummaryRequest(activeId ?? '');
   const [toStart, setToStart] = useState<{ open: boolean; sprint: Sprint | null }>({ open: false, sprint: null });
 
   const loading = project.data ? Boolean(activeId) && board.isPending : project.isPending;
@@ -81,10 +88,16 @@ export function BoardPage() {
     [setParams],
   );
 
-  /** SPR-6: toast (a status region, so it is announced), then the sprint's page in the history. */
+  /**
+   * SPR-6: toast (a status region, so it is announced), then the sprint's page in the history.
+   * With "Generate AI summary" (AI-4) the summary is asked for only now, after the sprint is
+   * completed: its card on the sprint's page shows it loading, and a failure is a toast and Try
+   * again on the card — it never undoes the completion.
+   */
   const onCompleted = ({ sprint: done, destination, moved }: Completed) => {
     setComplete((state) => ({ ...state, open: false }));
     toast.success(moved > 0 ? `${done.name} completed · ${plural(moved, 'todo')} moved to ${destination}` : `${done.name} completed`);
+    if (complete.withSummary) summarize.mutate({ sprint: done, notify: true });
     void navigate(`/projects/${projectId}/sprints/${done.id}`);
   };
 
@@ -121,9 +134,22 @@ export function BoardPage() {
             <AskAiButton />
             {sprint && (
               <Button
+                variant="ai"
+                aria-haspopup="dialog"
+                onClick={() => {
+                  setSummary({ open: true, mounted: true });
+                  // No saved summary: one click opens the dialog and starts writing it (AI-4).
+                  if (!sprint.summary && summaryRequest?.status !== 'pending') summarize.mutate({ sprint });
+                }}
+              >
+                {sprint.summary ? 'View summary' : 'Summarize'}
+              </Button>
+            )}
+            {sprint && (
+              <Button
                 variant="primary"
                 onClick={() => {
-                  setComplete((state) => ({ open: true, key: state.key + 1 }));
+                  setComplete((state) => ({ open: true, key: state.key + 1, withSummary: false }));
                 }}
               >
                 Complete sprint
@@ -220,7 +246,28 @@ export function BoardPage() {
           sprint={sprint}
           planned={planned}
           onCompleted={onCompleted}
+          summaryOption={
+            <SummaryOption
+              checked={complete.withSummary}
+              onChange={(withSummary) => {
+                setComplete((state) => ({ ...state, withSummary }));
+              }}
+            />
+          }
         />
+      )}
+
+      {/* AI-4 on the board (canvas): "Summarize" in the header opens the summary card in a dialog. */}
+      {sprint && summary.mounted && (
+        <Suspense fallback={null}>
+          <SprintSummaryDialog
+            open={summary.open}
+            onOpenChange={(open) => {
+              setSummary((state) => ({ ...state, open }));
+            }}
+            sprint={sprint}
+          />
+        </Suspense>
       )}
 
       {toStart.sprint && (

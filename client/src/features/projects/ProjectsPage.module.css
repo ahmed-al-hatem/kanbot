@@ -239,3 +239,27 @@
 .keyInput::placeholder {
   font-weight: 400;
 }
+
+/* DESIGN §9 12 "Generate a starter backlog with AI": an AI-styled checkbox card. */
+.starter {
+  padding: var(--space-150);
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-large);
+  background: var(--ai-bg);
+  color: var(--ai-fg);
+}
+
+.starter :is(label, span) {
+  color: inherit;
+}
+
+.starterLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  font-weight: 600;
+}
+
+.starterIcon {
+  color: var(--ai-icon);
+}

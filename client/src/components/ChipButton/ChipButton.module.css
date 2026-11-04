@@ -1,0 +1,36 @@
+/* DESIGN §7 Chip button: 28px pill, 1px --border, 12/500 --text-subtle; hover --neutral + --border-input; pressed .96. */
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  block-size: var(--size-chip-button);
+  padding-block: 0;
+  padding-inline: var(--space-150);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 150ms var(--ease-practical),
+    border-color 150ms var(--ease-practical),
+    transform 100ms var(--ease-practical);
+}
+
+.chip:not(:disabled):hover {
+  background: var(--neutral);
+  border-color: var(--border-input);
+}
+
+.chip:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

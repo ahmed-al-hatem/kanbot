@@ -53,7 +53,7 @@ function setActiveSprint(projectId: string, activeSprint: ProjectWithStats['stat
 }
 
 /** Writes the saved sprint into the cached list right away, so the group header updates at once. */
-function putSprint(projectId: string, sprint: Sprint) {
+export function putSprint(projectId: string, sprint: Sprint) {
   queryClient.setQueryData<Sprint[]>(qk.sprints(projectId), (list) => {
     if (!list) return list;
     return list.some((item) => item.id === sprint.id)
@@ -62,12 +62,21 @@ function putSprint(projectId: string, sprint: Sprint) {
   });
 }
 
-/** `POST /projects/:id/sprints` (SPR-1). */
+/**
+ * `POST /projects/:id/sprints` (SPR-1). With `todoIds` (AI-3's plan) the server moves those
+ * backlog todos into the new sprint; the cached backlog follows at once, before the refetch.
+ */
 export function useCreateSprint(projectId: string) {
   return useMutation({
     mutationFn: (body: CreateSprintRequest) => createSprint(projectId, body),
-    onSuccess: (sprint) => {
+    onSuccess: (sprint, body) => {
       putSprint(projectId, sprint);
+      const moved = new Set(body.todoIds ?? []);
+      if (moved.size > 0) {
+        queryClient.setQueryData<Todo[]>(qk.todos(projectId, {}), (list) =>
+          list?.map((todo) => (moved.has(todo.id) ? { ...todo, sprintId: sprint.id } : todo)),
+        );
+      }
       invalidateAfterSprintChange(projectId);
     },
   });

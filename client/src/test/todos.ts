@@ -106,6 +106,7 @@ export interface TodoDb {
     list: number;
     get: number;
     create: CreateTodoRequest[];
+    bulk: CreateTodoRequest[][];
     update: UpdateTodoRequest[];
     remove: string[];
     move: { todoId: string; body: MoveTodoRequest }[];
@@ -127,6 +128,7 @@ export function makeTodoDb(todos = seedTodos(), sprints = [SPRINT_3, SPRINT_4]):
       list: 0,
       get: 0,
       create: [],
+      bulk: [],
       update: [],
       remove: [],
       move: [],
@@ -238,6 +240,27 @@ export function todoHandlers(db: TodoDb) {
       db.todos.push(todo);
       return HttpResponse.json({ todo }, { status: 201 });
     }),
+    http.post(apiUrl('/projects/:projectId/todos/bulk'), async ({ request }) => {
+      const { todos } = (await request.json()) as { todos: CreateTodoRequest[] };
+      db.calls.bulk.push(todos);
+      let order = db.todos.filter((item) => item.sprintId === null).length;
+      const created = todos.map((body) => {
+        const todo = makeTodo({
+          id: `new-${nextNumber}`,
+          key: `KAN-${nextNumber}`,
+          title: body.title,
+          description: body.description ?? '',
+          type: body.type ?? 'task',
+          priority: body.priority ?? 'medium',
+          storyPoints: body.storyPoints ?? null,
+          order: order++,
+        });
+        nextNumber += 1;
+        return todo;
+      });
+      db.todos.push(...created);
+      return HttpResponse.json({ todos: created }, { status: 201 });
+    }),
     http.patch(apiUrl('/todos/:todoId'), async ({ params, request }) => {
       const body = (await request.json()) as UpdateTodoRequest;
       db.calls.update.push(body);
@@ -270,7 +293,12 @@ export function todoHandlers(db: TodoDb) {
         endDate: body.endDate ?? null,
       });
       db.sprints.push(sprint);
-      return HttpResponse.json({ sprint }, { status: 201 });
+      // Like the server: `todoIds` (an AI plan) move from the backlog into the new sprint, in order.
+      for (const todoId of body.todoIds ?? []) {
+        const todo = find(todoId);
+        if (todo) serverMove(db, todo, { sprintId: sprint.id, status: todo.status, position: Number.MAX_SAFE_INTEGER });
+      }
+      return HttpResponse.json({ sprint: withStats(db, sprint) }, { status: 201 });
     }),
     http.patch(apiUrl('/sprints/:sprintId'), async ({ params, request }) => {
       const body = (await request.json()) as UpdateSprintRequest;

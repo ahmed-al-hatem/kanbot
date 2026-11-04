@@ -7,7 +7,8 @@ import { Sidebar } from './Sidebar';
 import { SkipLink } from './SkipLink';
 import styles from './AppShell.module.css';
 
-// The drawer's content is phase 7; its chunk loads on the first "Ask AI" (plan §5.4).
+// The drawer's chunk loads on the first "Ask AI" (plan §5.4), then stays mounted so an answer
+// that arrives while it is closed still lands in its chat.
 const AssistantDrawer = lazy(async () => {
   const { AssistantDrawer: Component } = await import('@/features/ai/AssistantDrawer');
   return { default: Component };

@@ -25,6 +25,7 @@ import { useListsDnd } from '@/lib/dnd/useListsDnd';
 import { plural, todosAndPoints } from '@/lib/format';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useReducedMotion } from '@/lib/useReducedMotion';
+import { useAssistant } from '@/stores/assistant';
 import { useHighlight } from '@/stores/highlight';
 import { toast } from '@/stores/toast';
 import type { Sprint, Todo } from '@/types/api';
@@ -93,6 +94,7 @@ export function BacklogPage() {
   const [toStart, setToStart] = useState<GroupDialogState>({ open: false, group: null });
   const [sprintToDelete, setSprintToDelete] = useState<GroupDialogState>({ open: false, group: null });
   const deleteSprint = useDeleteSprint(projectId);
+  const openAiDialog = useAssistant((s) => s.openDialog);
   const boardPath = `/projects/${projectId}/board`;
 
   const filters = useMemo<BacklogFilters>(
@@ -243,6 +245,23 @@ export function BacklogPage() {
         actions={
           <>
             <Button
+              variant="ai"
+              onClick={() => {
+                openAiDialog({ kind: 'generate', projectId });
+              }}
+            >
+              Generate todos
+            </Button>
+            <Button
+              variant="ai"
+              disabled={!groups}
+              onClick={() => {
+                openAiDialog({ kind: 'plan', projectId });
+              }}
+            >
+              Plan sprint
+            </Button>
+            <Button
               icon="add"
               disabled={!groups}
               onClick={() => {
@@ -301,7 +320,7 @@ export function BacklogPage() {
                             <Button
                               variant="ai"
                               onClick={() => {
-                                toast.info('Generating todos with AI arrives in a later update.');
+                                openAiDialog({ kind: 'generate', projectId });
                               }}
                             >
                               Generate todos

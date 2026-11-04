@@ -32,4 +32,6 @@ export const safeStorage: StateStorage = {
 export const STORAGE_KEYS = {
   token: 'kanbot.token',
   theme: 'kanbot.theme',
+  /** AI chats per project (an enhancement, Requirements §9); cleared on log out. */
+  chats: 'kanbot.chats',
 } as const;

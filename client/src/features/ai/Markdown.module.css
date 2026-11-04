@@ -1,0 +1,101 @@
+/* AI Markdown: compact prose that inherits the bubble or card color. */
+.markdown {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.markdown > * {
+  margin: 0;
+}
+
+.markdown :is(h1, h2, h3, h4) {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.markdown h1,
+.markdown h2 {
+  font-size: 15px;
+}
+
+.markdown :is(ul, ol) {
+  margin: 0;
+  /* base.css resets lists; AI lists keep their bullets and numbers. */
+  list-style: disc;
+  padding-inline-start: var(--space-250);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+}
+
+.markdown p {
+  margin: 0;
+}
+
+.markdown a {
+  color: var(--text-brand);
+  text-decoration: underline;
+}
+
+.markdown code {
+  padding-inline: var(--space-050);
+  border-radius: var(--radius-small);
+  background: var(--neutral);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+}
+
+.markdown pre {
+  margin: 0;
+  padding: var(--space-100);
+  border-radius: var(--radius-medium);
+  background: var(--neutral);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.markdown blockquote {
+  margin: 0;
+  padding-inline-start: var(--space-150);
+  border-inline-start: 3px solid var(--border);
+  color: var(--text-subtle);
+}
+
+.markdown table {
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.markdown :is(th, td) {
+  padding-block: var(--space-050);
+  padding-inline: var(--space-100);
+  border: 1px solid var(--border);
+  text-align: start;
+}
+
+/* LazyMarkdown fallback: the raw text while the Markdown chunk loads. */
+.plain {
+  white-space: pre-wrap;
+}
+
+/* A todo key the AI mentioned, linked to its details. */
+.todoLink {
+  font-weight: 600;
+}
+
+.markdown ol {
+  list-style: decimal;
+}
+
+.markdown :is(ul, ol) :is(ul, ol) {
+  list-style: circle;
+}

@@ -47,6 +47,8 @@ export function projectHandlers(projects: ProjectWithStats[] = [KANBOT, PORTFOLI
         : HttpResponse.json(errorBody('NOT_FOUND', 'Project not found'), { status: 404 });
     }),
     http.get(apiUrl('/projects/:projectId/todos'), () => HttpResponse.json({ todos: [] })),
+    // AI-5: the drawer asks once for the mode (the Mock AI badge).
+    http.get(apiUrl('/ai/status'), () => HttpResponse.json({ mode: 'mock', model: null })),
     http.get(apiUrl('/projects/:projectId/sprints'), () => HttpResponse.json({ sprints: [] })),
     // An empty board for the active sprint of a project page that isn't about the board.
     http.get(apiUrl('/sprints/:sprintId/todos'), ({ params }) =>

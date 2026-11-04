@@ -1,0 +1,79 @@
+/* DESIGN §9 10 AI summary card: --ai-border, radius 12; header on --ai-bg / --ai-fg. */
+.card {
+  overflow: hidden;
+  border: 1px solid var(--ai-border);
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-raised);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-100);
+  padding-block: var(--space-150);
+  padding-inline: var(--space-200);
+  background: var(--ai-bg);
+  color: var(--ai-fg);
+}
+
+.title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.sparkle {
+  color: var(--ai-icon);
+}
+
+.action {
+  color: var(--ai-fg);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+  padding-block: var(--space-200) var(--space-250);
+  padding-inline: var(--space-250);
+}
+
+.meta {
+  padding-block-start: var(--space-150);
+  border-block-start: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-150);
+  padding: var(--space-250);
+}
+
+.skeletonGap {
+  margin-block-start: var(--space-100);
+}
+
+.empty {
+  padding-block: var(--space-400);
+  padding-inline: var(--space-250);
+  text-align: center;
+  color: var(--text-subtle);
+}
+
+/* Mid-sprint facts, above the AI text. */
+.stats {
+  padding-block: var(--space-150);
+  padding-inline: var(--space-250);
+  border-block-end: 1px solid var(--border);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}

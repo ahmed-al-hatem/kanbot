@@ -69,3 +69,41 @@ export function daysRemaining(endDate: string | null, today = todayIso()): strin
   if (days === 0) return 'Ends today';
   return `Ended ${plural(-days, 'day')} ago`;
 }
+
+const dateTime = new Intl.DateTimeFormat('en', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
+
+/** "Nov 4, 2026, 3:42 PM" for a full ISO timestamp, in the user's time zone. */
+export function formatDateTime(iso: string): string {
+  return dateTime.format(new Date(iso));
+}
+
+const MINUTE = 60_000;
+const HOUR = 60 * MINUTE;
+
+/** "just now", "2 min ago", "3 hours ago", "4 days ago" — how long before `now` an ISO timestamp is. */
+export function timeAgo(iso: string, now = Date.now()): string {
+  const elapsed = now - new Date(iso).getTime();
+  // Under a minute, or a little in the future (clock skew with the server).
+  if (elapsed < MINUTE) return 'just now';
+  if (elapsed < HOUR) return `${Math.floor(elapsed / MINUTE)} min ago`;
+  if (elapsed < MS_PER_DAY) return `${plural(Math.floor(elapsed / HOUR), 'hour')} ago`;
+  return `${plural(Math.floor(elapsed / MS_PER_DAY), 'day')} ago`;
+}
+
+/** "Day 3 of 14" numbers for a sprint with both dates, today clamped into it; null without dates. */
+export function sprintDay(
+  start: string | null,
+  end: string | null,
+  today = todayIso(),
+): { day: number; total: number } | null {
+  if (!start || !end) return null;
+  const total = daysBetween(start, end) + 1;
+  if (total < 1) return null;
+  return { day: Math.min(Math.max(daysBetween(start, today) + 1, 1), total), total };
+}

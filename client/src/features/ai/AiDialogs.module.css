@@ -1,0 +1,426 @@
+/* DESIGN §9 08 Generate todos (920px) and 09 Plan sprint (960px). */
+.dialogTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.titleIcon {
+  display: grid;
+  place-items: center;
+  inline-size: 28px;
+  block-size: 28px;
+  border-radius: var(--radius-medium);
+  background: var(--ai-bg);
+  color: var(--ai-icon);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.counter {
+  display: block;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.generateRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-150);
+}
+
+.countField {
+  inline-size: 140px;
+}
+
+.hint {
+  flex: 1 1 160px;
+  align-self: center;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.divider {
+  block-size: 1px;
+  margin-block: var(--space-200);
+  background: var(--border);
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-075);
+}
+
+.loadingText {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  font-size: 13px;
+  color: var(--text-subtle);
+}
+
+.emptyNote {
+  padding-block: var(--space-300);
+  text-align: center;
+  color: var(--text-subtle);
+}
+
+.disclaimer {
+  margin-block-start: var(--space-200);
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  padding-block: var(--space-100) var(--space-150);
+  padding-inline: var(--space-300);
+}
+
+.total {
+  color: var(--text-subtle);
+}
+
+.total b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Drafts */
+.drafts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.draftsHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-150);
+}
+
+.sectionTitle {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.muted {
+  font-weight: 500;
+  color: var(--text-subtlest);
+}
+
+.selectAll {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  font-weight: 500;
+  color: var(--text-brand);
+  cursor: pointer;
+}
+
+.selectAll input,
+.draftRow input[type='checkbox'],
+.candidateLabel input {
+  inline-size: 16px;
+  block-size: 16px;
+  accent-color: var(--brand);
+}
+
+.draftScroll {
+  overflow-x: auto;
+}
+
+.draftGrid {
+  display: grid;
+  grid-template-columns: 28px minmax(220px, 1fr) 120px 120px 88px;
+  gap: 10px;
+  align-items: center;
+  min-inline-size: 640px;
+  padding-inline: 10px;
+}
+
+.draftHeader {
+  padding-block-end: var(--space-075);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.draftList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-075);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.draftRow {
+  padding-block: var(--space-075);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+  transition: opacity 150ms var(--ease-practical);
+}
+
+.unchecked {
+  opacity: 0.55;
+}
+
+.control {
+  inline-size: 100%;
+  min-inline-size: 0;
+  block-size: 32px;
+  padding-inline: var(--space-100);
+  border: 1px solid var(--border-input);
+  border-radius: var(--radius-medium);
+  background: var(--input);
+  color: var(--text);
+  font-size: 14px;
+}
+
+.control:focus {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow:
+    inset 0 0 0 1px var(--focus),
+    0 0 0 3px var(--drop);
+}
+
+.control[aria-invalid='true'] {
+  border-color: var(--danger-border);
+}
+
+/* Plan sprint */
+.planInputs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-150);
+  margin-block-end: var(--space-200);
+}
+
+.capacityField {
+  flex: 1 1 160px;
+}
+
+.focusField {
+  flex: 3 1 240px;
+}
+
+/* Lines up with the inputs under their 20px labels. */
+.suggest {
+  margin-block-start: 24px;
+  block-size: var(--size-input);
+}
+
+.planSkeleton,
+.planColumns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-250);
+}
+
+.planResult {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.goalBox {
+  padding-block: var(--space-150);
+  padding-inline: var(--space-200);
+  border-radius: var(--radius-large);
+  background: var(--ai-bg);
+  color: var(--ai-fg);
+}
+
+.goalField label {
+  color: var(--ai-fg);
+}
+
+.planMain {
+  flex: 3 1 400px;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+}
+
+.planSide {
+  flex: 2 1 260px;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+}
+
+.sectionLabel {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.candidates {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+}
+
+.candidateList {
+  max-block-size: 360px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.candidate {
+  border-block-end: 1px solid var(--border);
+  transition: opacity 150ms var(--ease-practical);
+}
+
+.candidateLabel {
+  display: grid;
+  grid-template-columns: 16px 16px 64px minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  min-block-size: 40px;
+  padding-inline: var(--space-150);
+  cursor: pointer;
+}
+
+.candidateLabel:hover {
+  background: var(--surface-hovered);
+}
+
+.candidateKey {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.candidateTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.candidatePriority {
+  font-size: 12px;
+}
+
+.totalRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-150);
+  padding: var(--space-150);
+  background: var(--surface-sunken);
+}
+
+.totalLabel {
+  font-weight: 600;
+}
+
+.capacityBar {
+  flex: 1 1 auto;
+}
+
+.totalValue {
+  flex: none;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.overText {
+  color: var(--danger);
+}
+
+.overMessage {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--danger);
+}
+
+.reasoning {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-200);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+  white-space: pre-wrap;
+}
+
+.reasoningNote {
+  margin-block-start: auto;
+}
+
+@media (max-width: 760px) {
+  .candidateLabel {
+    grid-template-columns: 16px 16px minmax(0, 1fr) auto;
+  }
+
+  .candidateKey,
+  .candidatePriority {
+    display: none;
+  }
+}
+
+/* Plan sprint: the computed fact first, then the model's reasoning as its opinion. */
+.planFact {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.opinion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-050);
+  padding-block-start: 10px;
+  border-block-start: 1px solid var(--border);
+}
+
+.leftOut {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-075);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--warning-fg);
+  white-space: normal;
+}
+
+.leftOut > svg {
+  flex: none;
+  margin-block-start: 2px;
+  color: var(--warning-icon);
+}
+
+.asSuggested,
+.caveat {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+  white-space: normal;
+}
+
+.caveat {
+  font-style: italic;
+}
