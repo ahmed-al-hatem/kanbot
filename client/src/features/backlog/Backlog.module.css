@@ -1,0 +1,319 @@
+/* DESIGN §9 04 Backlog, §7 Backlog group and row (canvas layout). */
+.backlog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.headerTotals {
+  margin-inline-start: var(--space-100);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Filter bar ---------- */
+.filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-100);
+}
+
+.search {
+  position: relative;
+  inline-size: 240px;
+  max-inline-size: 100%;
+}
+
+.searchIcon {
+  position: absolute;
+  inset-inline-start: 10px;
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  color: var(--text-subtlest);
+}
+
+/* Two classes, so it beats the Field control padding whatever order the CSS chunks load in. */
+.search .searchInput {
+  padding-inline-start: 34px;
+}
+
+.filterSelect {
+  inline-size: 140px;
+}
+
+.summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.summary .clear {
+  color: var(--text-brand);
+}
+
+/* ---------- Group ---------- */
+.group {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-050);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+}
+
+.groupHeader {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-block-size: 40px;
+  padding: 6px var(--space-100) 6px var(--space-050);
+}
+
+.toggle svg {
+  transition: rotate 200ms var(--ease-practical);
+}
+
+.toggle[aria-expanded='false'] svg {
+  rotate: -90deg;
+}
+
+.groupTitle {
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.groupMeta {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+  font-variant-numeric: tabular-nums;
+}
+
+.groupBody {
+  overflow: hidden;
+  border-radius: var(--radius-medium);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+}
+
+.groupBody[hidden] {
+  display: none;
+}
+
+.groupMessage {
+  display: grid;
+  place-items: center;
+  min-block-size: 56px;
+  padding: var(--space-100) var(--space-200);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--text-subtlest);
+  text-align: center;
+}
+
+.groupBody .emptyBacklog {
+  padding-block: 40px;
+  background: transparent;
+}
+
+/* ---------- Row ---------- */
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Grid from DESIGN §7 without the drag column, which arrives with drag and drop (phase 5). */
+.row {
+  display: grid;
+  grid-template-columns: 16px 64px minmax(0, 1fr) 96px 52px 32px;
+  align-items: center;
+  gap: var(--space-100);
+  min-block-size: 44px;
+  padding-inline: var(--space-150) var(--space-100);
+  border-block-start: 1px solid var(--border);
+  background: var(--surface-raised);
+  transition: background-color 50ms linear;
+}
+
+.rows > .row:first-child {
+  border-block-start: none;
+}
+
+.row:hover,
+.row:has([aria-expanded='true']) {
+  background: var(--surface-hovered);
+}
+
+.row:active {
+  background: var(--surface-pressed);
+}
+
+.saving {
+  opacity: 0.6;
+}
+
+.typeCell {
+  display: grid;
+  place-items: center;
+}
+
+.key {
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.titleCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.title {
+  flex: 0 1 auto;
+  min-inline-size: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+  text-align: start;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+button.title {
+  cursor: pointer;
+}
+
+button.title:hover {
+  color: var(--text-brand);
+  text-decoration: underline;
+}
+
+.labels {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-050);
+}
+
+.label {
+  max-inline-size: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moreLabels {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.points {
+  justify-self: end;
+}
+
+.menuCell {
+  display: grid;
+  place-items: center;
+}
+
+.skeletonRow {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-inline: var(--space-150);
+  border-block-start: 1px solid var(--border);
+}
+
+.skeletonRow:first-child {
+  border-block-start: none;
+}
+
+.skeletonRow > * {
+  flex: 1 1 auto;
+}
+
+/* ---------- Quick create (BL-2) ---------- */
+.quickCreate {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-block-size: 44px;
+  padding-inline: var(--space-150);
+  border-block-start: 1px solid var(--border);
+  color: var(--text-subtle);
+}
+
+.quickCreate:focus-within {
+  box-shadow: inset 0 0 0 2px var(--focus);
+}
+
+.quickCreateInput {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  block-size: 32px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+}
+
+.quickCreateInput::placeholder {
+  color: var(--text-subtlest);
+}
+
+.quickCreateHint {
+  flex: none;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+  white-space: nowrap;
+}
+
+/* DESIGN §13 mobile: rows drop priority, points (and labels); the filter bar stacks. */
+@media (max-width: 760px) {
+  .row {
+    grid-template-columns: 16px 56px minmax(0, 1fr) 32px;
+  }
+
+  /* `.row` prefix: PriorityLabel and PointsPill set their own `display` with one class, and
+     whichever CSS chunk loads last would win; two classes always beat it. */
+  .row .priority,
+  .row .points,
+  .row .labels {
+    display: none;
+  }
+
+  .search,
+  .filterSelect {
+    inline-size: 100%;
+  }
+
+  .filterSelect {
+    flex: 1 1 0;
+  }
+
+  .groupMeta {
+    inline-size: 100%;
+    padding-inline-start: 36px;
+  }
+}
