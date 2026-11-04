@@ -1,12 +1,14 @@
 import { Outlet } from 'react-router';
 import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
+import { TodoDetailsHost } from '@/features/todos/TodoDetailsDialog';
 import { useCurrentProject } from '@/hooks/useProjects';
 
 /**
  * Layout for `/projects/:projectId/*`. The project comes from the URL (PRJ-5), so a reload
  * reopens it. An id the API doesn't know (404) or a failed load shows the page error; the
- * dedicated 404 page replaces it in phase 8.
+ * dedicated 404 page replaces it in phase 8. Todo details (`?todo=<id>`) is mounted here, so
+ * every project page — the backlog now, the board in phase 6 — shares one dialog and deep link.
  */
 export function ProjectLayout() {
   const project = useCurrentProject();
@@ -30,5 +32,10 @@ export function ProjectLayout() {
     );
   }
 
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+      <TodoDetailsHost />
+    </>
+  );
 }
