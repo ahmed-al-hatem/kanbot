@@ -1,5 +1,15 @@
 import { http, HttpResponse } from 'msw';
-import type { CreateTodoRequest, Sprint, Todo, UpdateTodoRequest } from '@/types/api';
+import {
+  TODO_STATUSES,
+  type CreateSprintRequest,
+  type CreateTodoRequest,
+  type MoveTodoRequest,
+  type Sprint,
+  type StartSprintRequest,
+  type Todo,
+  type UpdateSprintRequest,
+  type UpdateTodoRequest,
+} from '@/types/api';
 import { errorBody } from './renderApp';
 import { apiUrl } from './server';
 
@@ -91,11 +101,61 @@ export interface TodoDb {
   todos: Todo[];
   sprints: Sprint[];
   /** Requests seen, by handler name, so tests can check what was (not) sent. */
-  calls: { list: number; get: number; create: CreateTodoRequest[]; update: UpdateTodoRequest[]; remove: string[] };
+  calls: {
+    list: number;
+    get: number;
+    create: CreateTodoRequest[];
+    update: UpdateTodoRequest[];
+    remove: string[];
+    move: { todoId: string; body: MoveTodoRequest }[];
+    createSprint: CreateSprintRequest[];
+    updateSprint: { sprintId: string; body: UpdateSprintRequest }[];
+    deleteSprint: string[];
+    startSprint: { sprintId: string; body: StartSprintRequest }[];
+  };
 }
 
 export function makeTodoDb(todos = seedTodos(), sprints = [SPRINT_3, SPRINT_4]): TodoDb {
-  return { todos, sprints, calls: { list: 0, get: 0, create: [], update: [], remove: [] } };
+  // Copies: the handlers mutate what they store, and SPRINT_3 / SPRINT_4 are shared constants.
+  return {
+    todos: todos.map((todo) => ({ ...todo, labels: [...todo.labels] })),
+    sprints: sprints.map((sprint) => ({ ...sprint })),
+    calls: {
+      list: 0,
+      get: 0,
+      create: [],
+      update: [],
+      remove: [],
+      move: [],
+      createSprint: [],
+      updateSprint: [],
+      deleteSprint: [],
+      startSprint: [],
+    },
+  };
+}
+
+const STATUS_RANK = Object.fromEntries(TODO_STATUSES.map((status, index) => [status, index])) as Record<string, number>;
+
+/** The server's list sort (todos.routes.ts), written out again so the tests don't trust the client's copy. */
+function serverOrder(a: Todo, b: Todo) {
+  if (a.sprintId !== b.sprintId) return (a.sprintId ?? '').localeCompare(b.sprintId ?? '');
+  return (a.sprintId === null ? 0 : STATUS_RANK[a.status]! - STATUS_RANK[b.status]!) || a.order - b.order;
+}
+
+/** The server's `moveTodo` (board.service.ts): lists are the backlog or one status column of a sprint. */
+export function serverMove(db: TodoDb, todo: Todo, target: { sprintId: string | null; status: Todo['status']; position: number }) {
+  const sameList = (where: Pick<Todo, 'sprintId' | 'status'>) => (item: Todo) =>
+    item.id !== todo.id && item.sprintId === where.sprintId && (where.sprintId === null || item.status === where.status);
+  const renumber = (list: Todo[]) => {
+    list.forEach((item, index) => (item.order = index));
+  };
+  renumber(db.todos.filter(sameList(todo)).sort((a, b) => a.order - b.order));
+  todo.sprintId = target.sprintId;
+  todo.status = target.status;
+  const to = db.todos.filter(sameList(todo)).sort((a, b) => a.order - b.order);
+  to.splice(Math.max(0, Math.min(target.position, to.length)), 0, todo);
+  renumber(to);
 }
 
 /** The todos and sprints endpoints the backlog and Todo details use, backed by `db`. */
@@ -107,7 +167,7 @@ export function todoHandlers(db: TodoDb) {
   return [
     http.get(apiUrl('/projects/:projectId/todos'), () => {
       db.calls.list += 1;
-      return HttpResponse.json({ todos: db.todos });
+      return HttpResponse.json({ todos: [...db.todos].sort(serverOrder) });
     }),
     http.get(apiUrl('/projects/:projectId/sprints'), () => HttpResponse.json({ sprints: db.sprints })),
     http.get(apiUrl('/todos/:todoId'), ({ params }) => {
@@ -130,6 +190,68 @@ export function todoHandlers(db: TodoDb) {
       if (!todo) return notFound();
       Object.assign(todo, body);
       return HttpResponse.json({ todo });
+    }),
+    http.post(apiUrl('/todos/:todoId/move'), async ({ params, request }) => {
+      const body = (await request.json()) as MoveTodoRequest;
+      const todo = find(params.todoId);
+      if (!todo) return notFound();
+      db.calls.move.push({ todoId: todo.id, body });
+      serverMove(db, todo, {
+        sprintId: body.sprintId === undefined ? todo.sprintId : body.sprintId,
+        status: body.status ?? todo.status,
+        position: body.position,
+      });
+      return HttpResponse.json({ todo });
+    }),
+    http.post(apiUrl('/projects/:projectId/sprints'), async ({ request }) => {
+      const body = (await request.json()) as CreateSprintRequest;
+      db.calls.createSprint.push(body);
+      const sprint = makeSprint({
+        id: `sprint-${db.sprints.length + 1}`,
+        name: body.name ?? `Sprint ${db.sprints.length + 1}`,
+        status: 'planned',
+        goal: body.goal ?? '',
+        startDate: body.startDate ?? null,
+        endDate: body.endDate ?? null,
+      });
+      db.sprints.push(sprint);
+      return HttpResponse.json({ sprint }, { status: 201 });
+    }),
+    http.patch(apiUrl('/sprints/:sprintId'), async ({ params, request }) => {
+      const body = (await request.json()) as UpdateSprintRequest;
+      const sprint = db.sprints.find((item) => item.id === params.sprintId);
+      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      db.calls.updateSprint.push({ sprintId: sprint.id, body });
+      Object.assign(sprint, body);
+      return HttpResponse.json({ sprint });
+    }),
+    http.delete(apiUrl('/sprints/:sprintId'), ({ params }) => {
+      const sprint = db.sprints.find((item) => item.id === params.sprintId);
+      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (sprint.status !== 'planned') {
+        return HttpResponse.json(errorBody('CONFLICT', 'Only planned sprints can be deleted.'), { status: 409 });
+      }
+      db.calls.deleteSprint.push(sprint.id);
+      for (const todo of db.todos.filter((item) => item.sprintId === sprint.id)) {
+        serverMove(db, todo, { sprintId: null, status: todo.status, position: Number.MAX_SAFE_INTEGER });
+      }
+      db.sprints = db.sprints.filter((item) => item !== sprint);
+      return new HttpResponse(null, { status: 204 });
+    }),
+    http.post(apiUrl('/sprints/:sprintId/start'), async ({ params, request }) => {
+      const body = (await request.json()) as StartSprintRequest;
+      const sprint = db.sprints.find((item) => item.id === params.sprintId);
+      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      const active = db.sprints.find((item) => item.status === 'active');
+      if (active) {
+        return HttpResponse.json(
+          errorBody('CONFLICT', `"${active.name}" is still active. Complete it before starting another sprint.`),
+          { status: 409 },
+        );
+      }
+      db.calls.startSprint.push({ sprintId: sprint.id, body });
+      Object.assign(sprint, { status: 'active', startDate: body.startDate ?? null, endDate: body.endDate ?? null });
+      return HttpResponse.json({ sprint });
     }),
     http.delete(apiUrl('/todos/:todoId'), ({ params }) => {
       const todo = find(params.todoId);

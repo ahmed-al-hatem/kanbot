@@ -1,0 +1,24 @@
+/* DESIGN §9 13 Create / edit sprint and the Start sprint dialog (canvas `sprintForm`). */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.dates {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-150);
+}
+
+.note {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+@media (max-width: 480px) {
+  .dates {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

@@ -1,3 +1,5 @@
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useId, type ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
@@ -6,19 +8,27 @@ import { cx } from '@/lib/cx';
 import { formatRange, todosAndPoints } from '@/lib/format';
 import type { Todo } from '@/types/api';
 import styles from './Backlog.module.css';
-import { TodoRow } from './TodoRow';
+import { groupDropId, type DropData } from './dnd';
+import { TodoRow, type MoveTargetGroup, type RowMove } from './TodoRow';
 
 interface BacklogGroupProps {
   group: Group;
-  /** The group's todos that pass the filters. */
-  visible: Todo[];
+  /** The rows to show: the todos that pass the filters, or the drag preview's order. */
+  rows: readonly Todo[];
   filtering: boolean;
   collapsed: boolean;
   onToggle: (groupId: string) => void;
+  /** A drag is over this group (DESIGN §7: same drag-over style as a board column). */
+  isOver: boolean;
   highlightIds: readonly string[];
+  moveTargets: readonly MoveTargetGroup[];
   onOpen: (todoId: string) => void;
   onDelete: (todo: Todo) => void;
-  /** Replaces the "No todos in … yet" line when the group is empty (the Backlog's empty state). */
+  onMove: (todo: Todo, move: RowMove) => void;
+  onKeyMove: (todo: Todo, direction: 'up' | 'down') => void;
+  /** Inline-end of the header: Start sprint / Complete sprint and the sprint's ⋯ menu. */
+  actions?: ReactNode;
+  /** Replaces the empty line when the group is empty (the Backlog's empty state). */
   empty?: ReactNode;
   /** Under the rows: the Backlog's quick create. */
   footer?: ReactNode;
@@ -26,26 +36,50 @@ interface BacklogGroupProps {
 
 /**
  * DESIGN §7 Backlog group: collapse chevron, title, status lozenge, dates and "N todos · P pts",
- * then its rows. Read-only in phase 4: sprint actions and moves come in phase 5.
+ * the sprint actions, then its rows. The group is a drop target as a whole (so an empty or
+ * collapsed group still takes a drop) and its rows are a sortable list (BL-5, BL-7).
  */
 export function BacklogGroup({
   group,
-  visible,
+  rows,
   filtering,
   collapsed,
   onToggle,
+  isOver,
   highlightIds,
+  moveTargets,
   onOpen,
   onDelete,
+  onMove,
+  onKeyMove,
+  actions,
   empty,
   footer,
 }: BacklogGroupProps) {
   const headingId = useId();
   const bodyId = useId();
   const dates = group.sprint ? formatRange(group.sprint.startDate, group.sprint.endDate) : null;
+  const reorderable = group.kind !== 'active';
+  const { setNodeRef } = useDroppable({
+    id: groupDropId(group.id),
+    data: { type: 'group', groupId: group.id } satisfies DropData,
+    disabled: filtering,
+  });
+
+  const emptyLine =
+    group.todos.length > 0 && filtering ? (
+      <p className={styles.groupMessage}>No todos in {group.name} match your filters</p>
+    ) : (
+      (empty ??
+      (filtering || group.kind === 'backlog' ? (
+        <p className={styles.groupMessage}>No todos in {group.name} yet</p>
+      ) : (
+        <p className={cx(styles.groupMessage, styles.dropHint)}>Drag todos here to plan {group.name}</p>
+      )))
+    );
 
   return (
-    <section className={styles.group} aria-labelledby={headingId}>
+    <section ref={setNodeRef} className={cx(styles.group, isOver && styles.over)} aria-labelledby={headingId}>
       <div className={styles.groupHeader}>
         <IconButton
           size="sm"
@@ -71,26 +105,33 @@ export function BacklogGroup({
           {dates && `${dates} · `}
           {todosAndPoints(group.todos.length, group.points)}
         </span>
+        {actions && <span className={styles.groupActions}>{actions}</span>}
       </div>
 
       <div id={bodyId} hidden={collapsed} className={cx('kb-rise', styles.groupBody)}>
-        {visible.length > 0 ? (
-          <ul className={styles.rows} aria-label={`${group.name} todos`}>
-            {visible.map((todo) => (
-              <TodoRow
-                key={todo.id}
-                todo={todo}
-                highlighted={highlightIds.includes(todo.id)}
-                onOpen={onOpen}
-                onDelete={onDelete}
-              />
-            ))}
-          </ul>
-        ) : group.todos.length > 0 && filtering ? (
-          <p className={styles.groupMessage}>No todos in {group.name} match your filters</p>
-        ) : (
-          (empty ?? <p className={styles.groupMessage}>No todos in {group.name} yet</p>)
-        )}
+        <SortableContext id={group.id} items={rows.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
+          {rows.length > 0 ? (
+            <ul className={styles.rows} aria-label={`${group.name} todos`}>
+              {rows.map((todo) => (
+                <TodoRow
+                  key={todo.id}
+                  todo={todo}
+                  groupId={group.id}
+                  reorderable={reorderable}
+                  moveTargets={moveTargets}
+                  highlighted={highlightIds.includes(todo.id)}
+                  dragDisabled={filtering}
+                  onOpen={onOpen}
+                  onDelete={onDelete}
+                  onMove={onMove}
+                  onKeyMove={onKeyMove}
+                />
+              ))}
+            </ul>
+          ) : (
+            emptyLine
+          )}
+        </SortableContext>
         {footer}
       </div>
     </section>

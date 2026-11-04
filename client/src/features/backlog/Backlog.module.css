@@ -62,6 +62,28 @@
   padding: var(--space-050);
   border-radius: var(--radius-large);
   background: var(--surface-sunken);
+  transition:
+    background-color 150ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical);
+}
+
+/* DESIGN §7: a group under a dragged row looks like a board column under a card. */
+.group.over {
+  background: var(--drop);
+  box-shadow: inset 0 0 0 2px var(--border-selected);
+}
+
+.groupActions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-100);
+  margin-inline-start: auto;
+}
+
+.groupHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
 }
 
 .groupHeader {
@@ -116,6 +138,13 @@
   text-align: center;
 }
 
+.groupMessage.dropHint {
+  min-block-size: 64px;
+  margin: var(--space-050);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-medium);
+}
+
 .groupBody .emptyBacklog {
   padding-block: 40px;
   background: transparent;
@@ -128,17 +157,58 @@
   list-style: none;
 }
 
-/* Grid from DESIGN §7 without the drag column, which arrives with drag and drop (phase 5). */
+/* DESIGN §7 grid: drag · type · key · title · priority · points · ⋯ */
 .row {
   display: grid;
-  grid-template-columns: 16px 64px minmax(0, 1fr) 96px 52px 32px;
+  grid-template-columns: 16px 16px 64px minmax(0, 1fr) 96px 52px 32px;
   align-items: center;
   gap: var(--space-100);
   min-block-size: 44px;
-  padding-inline: var(--space-150) var(--space-100);
+  padding-inline: 6px var(--space-100);
   border-block-start: 1px solid var(--border);
   background: var(--surface-raised);
-  transition: background-color 50ms linear;
+  transition:
+    background-color 50ms linear,
+    opacity 150ms;
+}
+
+/* Long press on touch (DESIGN §13) still lets the page scroll and zoom. */
+.draggable {
+  cursor: grab;
+  touch-action: manipulation;
+}
+
+.draggable:active {
+  cursor: grabbing;
+}
+
+/* The row's slot while it is dragged; the overlay follows the pointer. */
+.row.dragging {
+  opacity: 0.35;
+}
+
+.row.preview {
+  border-block-start: none;
+  border-radius: var(--radius-medium);
+  box-shadow: var(--shadow-overlay);
+  cursor: grabbing;
+}
+
+.handle {
+  display: grid;
+  place-items: center;
+  inline-size: 16px;
+  block-size: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-subtlest);
+  cursor: inherit;
+}
+
+.handle:disabled {
+  opacity: 0.4;
 }
 
 .rows > .row:first-child {
@@ -234,6 +304,23 @@ button.title:hover {
   place-items: center;
 }
 
+/* BL-6: why drag and ↑/↓ are off while filtering. */
+.dragOff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+}
+
+.moveHelp {
+  padding-inline-start: var(--space-100);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
 .skeletonRow {
   display: flex;
   align-items: center;
@@ -292,7 +379,11 @@ button.title:hover {
 /* DESIGN §13 mobile: rows drop priority, points (and labels); the filter bar stacks. */
 @media (max-width: 760px) {
   .row {
-    grid-template-columns: 16px 56px minmax(0, 1fr) 32px;
+    grid-template-columns: 16px 16px 56px minmax(0, 1fr) 32px;
+  }
+
+  .groupActions {
+    margin-inline-start: 36px;
   }
 
   /* `.row` prefix: PriorityLabel and PointsPill set their own `display` with one class, and
