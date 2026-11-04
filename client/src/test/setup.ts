@@ -31,7 +31,7 @@ beforeEach(() => {
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
   useAssistant.setState({ open: false });
-  useHighlight.setState({ projectId: null });
+  useHighlight.setState({ projectId: null, todoIds: [] });
 });
 
 afterEach(() => {
