@@ -1,5 +1,5 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
-import { createTodo, deleteTodo, getTodo, listTodos, updateTodo } from '@/api/todos';
+import { bulkCreateTodos, createTodo, deleteTodo, getTodo, listTodos, updateTodo } from '@/api/todos';
 import { queryClient } from '@/app/queryClient';
 import type { CreateTodoRequest, Todo, TodoStatus, UpdateTodoRequest } from '@/types/api';
 import { qk } from './queryKeys';
@@ -176,6 +176,21 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
   };
 }
 
+/**
+ * `POST /projects/:id/todos/bulk` (AI-2): saves the drafts the user kept. Not optimistic — the
+ * dialog shows "Adding…" — and the new todos go to the end of the cached backlog at once, in
+ * the order the server returns them, then the lists refetch.
+ */
+export function useBulkCreateTodos(projectId: string) {
+  return useMutation({
+    mutationFn: (todos: CreateTodoRequest[]) => bulkCreateTodos(projectId, { todos }),
+    onSuccess: (created) => {
+      queryClient.setQueryData<Todo[]>(qk.todos(projectId, {}), (list) => (list ? [...list, ...created] : list));
+      invalidateAfterTodoChange(projectId, []);
+    },
+  });
+}
+
 /** `PATCH /todos/:id` (BL-3). Puts the saved todo in the caches, then refetches (plan §5.1). */
 export function useUpdateTodo() {
   return useMutation({
@@ -224,4 +239,19 @@ export function useDeleteTodo({ onDeleted, onFailed }: DeleteHandlers = {}) {
       invalidateAfterTodoChange(todo.projectId, [todo.sprintId]);
     },
   });
+}
+
+const NO_KEYS: ReadonlyMap<string, string> = new Map();
+
+/** `select`: key → id for every saved todo (temporary rows have no key yet). Stable, so memoized. */
+function keyToId(todos: Todo[]): ReadonlyMap<string, string> {
+  return new Map(todos.filter((todo) => todo.key).map((todo) => [todo.key, todo.id]));
+}
+
+/**
+ * This project's todo keys, for linking the keys an AI answer mentions (`KAN-22` → `?todo=<id>`).
+ * The same list the backlog uses, so it is usually cached already.
+ */
+export function useTodoKeyMap(projectId: string): ReadonlyMap<string, string> {
+  return useProjectTodos(projectId, keyToId).data ?? NO_KEYS;
 }

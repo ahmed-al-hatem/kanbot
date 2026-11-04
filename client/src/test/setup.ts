@@ -31,7 +31,7 @@ beforeEach(() => {
   useSession.setState({ token: null, sessionExpired: false, signedOut: false });
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
-  useAssistant.setState({ open: false });
+  useAssistant.setState({ open: false, chats: {}, composer: {}, dialog: null });
   useHighlight.setState({ projectId: null, todoIds: [] });
 });
 
