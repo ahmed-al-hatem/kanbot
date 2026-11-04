@@ -41,7 +41,7 @@ describe('backlog list (BL-1)', () => {
     expect(within(group('Sprint 3')).getByText('Active')).toBeInTheDocument();
     expect(within(group('Sprint 3')).getByText('Nov 2 – Nov 15 · 1 todo · 5 pts')).toBeInTheDocument();
     expect(within(group('Sprint 4')).getByText('Planned')).toBeInTheDocument();
-    expect(within(group('Sprint 4')).getByText('No todos in Sprint 4 yet')).toBeInTheDocument();
+    expect(within(group('Sprint 4')).getByText('Drag todos here to plan Sprint 4')).toBeInTheDocument();
     expect(within(group('Backlog')).getByText('3 todos · 5 pts')).toBeInTheDocument();
 
     const row = screen.getByRole('button', { name: 'Login screen' }).closest('li')!;
