@@ -2,6 +2,7 @@ import { http, HttpResponse } from 'msw';
 import type { ProjectWithStats } from '@/types/api';
 import { errorBody } from './renderApp';
 import { apiUrl } from './server';
+import { makeSprint } from './todos';
 
 /** A `ProjectWithStats` with test defaults. */
 export function makeProject(overrides: Partial<ProjectWithStats> & Pick<ProjectWithStats, 'id' | 'name' | 'key'>) {
@@ -32,7 +33,7 @@ export const PORTFOLIO = makeProject({
 
 /**
  * `GET /projects` and `GET /projects/:id` backed by `projects`, plus empty todo and sprint
- * lists so a project page (the backlog) can load. A test adds its own handlers with
+ * lists and an empty board so a project page (backlog, board) can load. A test adds its own handlers with
  * `server.use` afterwards, and those win; in one `server.use` call the first match wins, so
  * pass `todoHandlers` before these.
  */
@@ -47,5 +48,12 @@ export function projectHandlers(projects: ProjectWithStats[] = [KANBOT, PORTFOLI
     }),
     http.get(apiUrl('/projects/:projectId/todos'), () => HttpResponse.json({ todos: [] })),
     http.get(apiUrl('/projects/:projectId/sprints'), () => HttpResponse.json({ sprints: [] })),
+    // An empty board for the active sprint of a project page that isn't about the board.
+    http.get(apiUrl('/sprints/:sprintId/todos'), ({ params }) =>
+      HttpResponse.json({
+        sprint: makeSprint({ id: String(params.sprintId), name: 'Sprint 3', status: 'active' }),
+        columns: { todo: [], in_progress: [], in_review: [], done: [] },
+      }),
+    ),
   ];
 }
