@@ -1,8 +1,16 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
-import { createSprint, deleteSprint, listSprints, startSprint, updateSprint } from '@/api/sprints';
+import { completeSprint, createSprint, deleteSprint, listSprints, startSprint, updateSprint } from '@/api/sprints';
 import { queryClient } from '@/app/queryClient';
 import { compareTodos } from '@/lib/moveInLists';
-import type { CreateSprintRequest, Sprint, StartSprintRequest, Todo, UpdateSprintRequest } from '@/types/api';
+import type {
+  CompleteSprintRequest,
+  CreateSprintRequest,
+  ProjectWithStats,
+  Sprint,
+  StartSprintRequest,
+  Todo,
+  UpdateSprintRequest,
+} from '@/types/api';
 import { qk } from './queryKeys';
 
 export function sprintsQuery(projectId: string) {
@@ -19,18 +27,29 @@ export function useSprints(projectId: string) {
 
 /**
  * Plan §5.1. Create / update / delete: the sprint list and the todo lists (a deleted sprint's
- * todos return to the backlog). Start adds the board, the project (its active sprint) and the
- * projects list (tiles show it).
+ * todos return to the backlog). Start and complete add the sprint's board, the project (its
+ * active sprint) and the projects list (tiles show it); complete also adds the board of the
+ * planned sprint that took the unfinished todos.
  */
-function invalidateAfterSprintChange(projectId: string, { started }: { started?: string } = {}) {
+function invalidateAfterSprintChange(projectId: string, { boards = [] }: { boards?: string[] } = {}) {
   void queryClient.invalidateQueries({ queryKey: qk.sprints(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.todos(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.project(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.projects });
-  if (started) {
-    void queryClient.invalidateQueries({ queryKey: qk.sprint(started) });
-    void queryClient.invalidateQueries({ queryKey: qk.board(started) });
+  for (const sprintId of boards) {
+    void queryClient.invalidateQueries({ queryKey: qk.sprint(sprintId) });
+    void queryClient.invalidateQueries({ queryKey: qk.board(sprintId) });
   }
+}
+
+/**
+ * The project's active sprint changes the moment the server says so: the board reads it from
+ * `project.stats.activeSprint` (plan §5.3), so it must not wait for the refetch.
+ */
+function setActiveSprint(projectId: string, activeSprint: ProjectWithStats['stats']['activeSprint']) {
+  queryClient.setQueryData<ProjectWithStats>(qk.project(projectId), (project) =>
+    project ? { ...project, stats: { ...project.stats, activeSprint } } : project,
+  );
 }
 
 /** Writes the saved sprint into the cached list right away, so the group header updates at once. */
@@ -92,7 +111,25 @@ export function useStartSprint(projectId: string) {
     mutationFn: ({ sprintId, body }: { sprintId: string; body: StartSprintRequest }) => startSprint(sprintId, body),
     onSuccess: (sprint) => {
       putSprint(projectId, sprint);
-      invalidateAfterSprintChange(projectId, { started: sprint.id });
+      setActiveSprint(projectId, { id: sprint.id, name: sprint.name });
+      invalidateAfterSprintChange(projectId, { boards: [sprint.id] });
+    },
+  });
+}
+
+/**
+ * `POST /sprints/:id/complete` (SPR-6): the server stores `completedStats`, moves the unfinished
+ * todos to the backlog or a planned sprint, and the project has no active sprint any more.
+ */
+export function useCompleteSprint(projectId: string) {
+  return useMutation({
+    mutationFn: ({ sprintId, body }: { sprintId: string; body: CompleteSprintRequest }) => completeSprint(sprintId, body),
+    onSuccess: (sprint, { body }) => {
+      putSprint(projectId, sprint);
+      queryClient.setQueryData(qk.sprint(sprint.id), sprint);
+      setActiveSprint(projectId, null);
+      const boards = body.moveUnfinishedTo === 'backlog' ? [sprint.id] : [sprint.id, body.moveUnfinishedTo];
+      invalidateAfterSprintChange(projectId, { boards });
     },
   });
 }

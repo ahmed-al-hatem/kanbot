@@ -60,3 +60,12 @@ export function plural(count: number, one: string, many = `${one}s`): string {
 export function todosAndPoints(count: number, points: number): string {
   return `${plural(count, 'todo')} · ${points} ${points === 1 ? 'pt' : 'pts'}`;
 }
+
+/** "5 days left", "Ends today", "Ended 2 days ago" — from today to a sprint's end date (SPR-4). */
+export function daysRemaining(endDate: string | null, today = todayIso()): string | null {
+  if (!endDate) return null;
+  const days = daysBetween(today, endDate);
+  if (days > 0) return `${plural(days, 'day')} left`;
+  if (days === 0) return 'Ends today';
+  return `Ended ${plural(-days, 'day')} ago`;
+}

@@ -1,8 +1,9 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
 import { createTodo, deleteTodo, getTodo, listTodos, updateTodo } from '@/api/todos';
 import { queryClient } from '@/app/queryClient';
-import type { CreateTodoRequest, Todo, UpdateTodoRequest } from '@/types/api';
+import type { CreateTodoRequest, Todo, TodoStatus, UpdateTodoRequest } from '@/types/api';
 import { qk } from './queryKeys';
+import { findBoardTodo, updateCachedBoards } from './useBoard';
 
 /**
  * Every todo of a project in one request (plan §5.3): the backlog splits it by `sprintId`
@@ -28,13 +29,13 @@ export function isTempTodo(todoId: string) {
   return todoId.startsWith(TEMP_PREFIX);
 }
 
-/** The todo from any cached todo list of any project, with when that list was fetched. */
+/** The todo from any cached todo list or board, with when that list was fetched. */
 function findCachedTodo(todoId: string): { todo: Todo; updatedAt: number } | undefined {
   for (const [queryKey, list] of queryClient.getQueriesData<Todo[]>({ queryKey: ['todos'] })) {
     const todo = list?.find((item) => item.id === todoId);
     if (todo) return { todo, updatedAt: queryClient.getQueryState(queryKey)?.dataUpdatedAt ?? 0 };
   }
-  return undefined;
+  return findBoardTodo(todoId);
 }
 
 /**
@@ -62,10 +63,19 @@ function invalidateAfterTodoChange(projectId: string, sprintIds: (string | null)
   }
 }
 
+/**
+ * Replaces (or, with `null`, removes) a todo in every cached todo list of the project and in
+ * every cached board. A board rebuilds its columns, so a todo whose status or sprint changed
+ * lands in the right column (or leaves the board) at once.
+ */
 function replaceInLists(projectId: string, id: string, next: Todo | null) {
   queryClient.setQueriesData<Todo[]>({ queryKey: qk.todos(projectId) }, (list) =>
     next ? list?.map((item) => (item.id === id ? next : item)) : list?.filter((item) => item.id !== id),
   );
+  updateCachedBoards((todos) => {
+    if (!todos.some((item) => item.id === id)) return todos;
+    return next ? todos.map((item) => (item.id === id ? next : item)) : todos.filter((item) => item.id !== id);
+  });
 }
 
 /** Quick-create POSTs run one after another per project, so todos land in the order typed. */
@@ -82,6 +92,12 @@ interface CreateVariables {
   tempId: string;
 }
 
+/** Where a new todo goes: the backlog by default, or a sprint and a board column. */
+export interface CreatePlace {
+  sprintId: string;
+  status: TodoStatus;
+}
+
 interface CreateHandlers {
   /** The server's todo replaced the temporary row. */
   onCreated?: (todo: Todo) => void;
@@ -90,9 +106,10 @@ interface CreateHandlers {
 }
 
 /**
- * `POST /projects/:id/todos` (BL-2), optimistic: the row shows at once with a temporary id,
- * then takes the server's todo. The requests are queued (not the optimistic rows), so several
- * todos can be typed in a row; the lists refetch once the last one settles.
+ * `POST /projects/:id/todos` (BL-2, the board's column composer), optimistic: the row or card
+ * shows at once with a temporary id — at the end of the backlog, or of its board column — then
+ * takes the server's todo. The requests are queued (not the optimistic rows), so several todos
+ * can be typed in a row; the lists refetch once the last one settles.
  */
 export function useCreateTodo(projectId: string, { onCreated, onFailed }: CreateHandlers = {}) {
   const listKey = qk.todos(projectId, {});
@@ -111,7 +128,7 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
         title: body.title,
         description: '',
         type: body.type ?? 'task',
-        status: 'todo',
+        status: body.status ?? 'todo',
         priority: body.priority ?? 'medium',
         storyPoints: body.storyPoints ?? null,
         labels: [],
@@ -122,6 +139,10 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
         completedAt: null,
       };
       queryClient.setQueryData<Todo[]>(listKey, (list) => (list ? [...list, temp] : list));
+      if (temp.sprintId) {
+        await queryClient.cancelQueries({ queryKey: qk.board(temp.sprintId) });
+        updateCachedBoards((todos, board) => (board.sprint.id === temp.sprintId ? [...todos, temp] : todos));
+      }
     },
     // Hook-level callbacks: per-call ones only fire for the latest `mutate` (TanStack v5).
     onSuccess: (todo, { tempId }) => {
@@ -132,19 +153,24 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
       replaceInLists(projectId, tempId, null);
       onFailed?.(error, body.title);
     },
-    onSettled: () => {
-      // Still counted while settling: 1 means no other create is waiting (plan §9.2).
-      if (queryClient.isMutating({ mutationKey }) === 1) invalidateAfterTodoChange(projectId, []);
+    onSettled: (_data, _error, { body }) => {
+      // Still counted while settling: 1 means no other create is waiting (plan §9.2). A board
+      // composer creates in one sprint at a time, so its board and the sprint stats follow.
+      if (queryClient.isMutating({ mutationKey }) === 1) invalidateAfterTodoChange(projectId, [body.sprintId ?? null]);
     },
   });
 
   return {
     ...mutation,
-    /** Creates with the BL-2 defaults (task, medium, no points); returns the temporary id. */
-    create: (title: string) => {
+    /**
+     * Creates with the BL-2 defaults (task, medium, no points), in the backlog or in `place`
+     * (a sprint and a status column); returns the temporary id.
+     */
+    create: (title: string, place?: CreatePlace) => {
       tempCounter += 1;
       const tempId = `${TEMP_PREFIX}${tempCounter}`;
-      mutation.mutate({ body: { title }, tempId });
+      const body: CreateTodoRequest = place ? { title, sprintId: place.sprintId, status: place.status } : { title };
+      mutation.mutate({ body, tempId });
       return tempId;
     },
   };
