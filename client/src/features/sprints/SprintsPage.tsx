@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { Suspense, useCallback, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
 import { Button, ButtonLink } from '@/components/Button/Button';
@@ -7,6 +7,7 @@ import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { ProjectMeta } from '@/components/PageHeader/ProjectMeta';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
+import { SprintSummaryCard } from '@/features/ai/lazy';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
 import { plural } from '@/lib/format';
@@ -105,7 +106,19 @@ export function SprintsPage() {
             <SprintList projectId={projectId} sprints={list} selectedId={selected?.id} />
             {selected ? (
               // Keyed, so the panel and its tiles play their entrance for each sprint.
-              <SprintDetail key={selected.id} sprint={selected} onOpenTodo={openTodo} />
+              <SprintDetail
+                key={selected.id}
+                sprint={selected}
+                onOpenTodo={openTodo}
+                summary={
+                  // AI-4: active and completed sprints (a planned one has nothing to summarize yet).
+                  selected.status !== 'planned' && (
+                    <Suspense fallback={null}>
+                      <SprintSummaryCard sprint={selected} />
+                    </Suspense>
+                  )
+                }
+              />
             ) : (
               <PageError
                 page="this sprint"
