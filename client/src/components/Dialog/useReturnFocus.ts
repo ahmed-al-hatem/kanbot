@@ -20,6 +20,15 @@ export function useReturnFocus(fallback?: () => HTMLElement | null) {
     restore: (event: Event) => {
       const opener = returnTo.current;
       returnTo.current = null;
+      // Closed because another dialog opened (a todo key in an AI answer opens Todo details):
+      // focus already belongs to that dialog, so don't pull it back to the opener.
+      const active = document.activeElement;
+      const closing = event.target instanceof Node ? event.target : null;
+      const otherDialog = active?.closest('[role="dialog"], [role="alertdialog"]');
+      if (otherDialog && !closing?.contains(otherDialog)) {
+        event.preventDefault();
+        return;
+      }
       const target = opener?.isConnected ? opener : fallback?.();
       if (target) {
         event.preventDefault();
