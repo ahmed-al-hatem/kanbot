@@ -10,6 +10,7 @@ import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { useDeleteProject, usePrefetchProject, useProjects } from '@/hooks/useProjects';
+import { neighbourFocus, refocusAfterRemoval } from '@/lib/refocus';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useHighlight } from '@/stores/highlight';
 import { toast } from '@/stores/toast';
@@ -31,6 +32,16 @@ interface FormState {
 interface DeleteState {
   open: boolean;
   project: ProjectWithStats | null;
+  /** Captured when the confirm opens, while the tile is still there. */
+  focus: (() => HTMLElement | null) | undefined;
+}
+
+/**
+ * After a delete the ⋯ that had focus leaves with its tile: focus the next tile, the
+ * previous one, then the New project button.
+ */
+function projectNeighbourFocus(projectId: string) {
+  return neighbourFocus('data-project-focus', projectId, ['[data-new-project]', '.page-title']);
 }
 
 function matches(project: ProjectWithStats, needle: string) {
@@ -54,7 +65,7 @@ export function ProjectsPage() {
   const markHighlight = useHighlight((s) => s.markProject);
   const clearHighlight = useHighlight((s) => s.clearProject);
   const [form, setForm] = useState<FormState>({ open: false, project: null, session: 0 });
-  const [toDelete, setToDelete] = useState<DeleteState>({ open: false, project: null });
+  const [toDelete, setToDelete] = useState<DeleteState>({ open: false, project: null, focus: undefined });
 
   const list = projects.data;
   const needle = query.trim().toLowerCase();
@@ -91,7 +102,7 @@ export function ProjectsPage() {
     setForm((state) => ({ open: true, project, session: state.session + 1 }));
   }, [setForm]);
   const askDelete = useCallback((project: ProjectWithStats) => {
-    setToDelete({ open: true, project });
+    setToDelete({ open: true, project, focus: projectNeighbourFocus(project.id) });
   }, [setToDelete]);
 
   const onSaved = (saved: ProjectWithStats) => {
@@ -111,6 +122,7 @@ export function ProjectsPage() {
     if (!project) return;
     // Optimistic (plan §10 decision 2): the tile goes now and comes back if the request fails.
     setToDelete((state) => ({ ...state, open: false }));
+    if (toDelete.focus) refocusAfterRemoval(toDelete.focus);
     removeProject.mutate(project, {
       onSuccess: () => {
         toast.success(`${project.name} deleted`);
@@ -134,7 +146,7 @@ export function ProjectsPage() {
         title="Projects"
         meta={count === undefined ? undefined : count === 1 ? '1 project' : `${count} projects`}
         actions={
-          <Button variant="primary" icon="add" onClick={openCreate}>
+          <Button variant="primary" icon="add" onClick={openCreate} data-new-project>
             New project
           </Button>
         }
@@ -262,6 +274,7 @@ export function ProjectsPage() {
         }
         confirmLabel="Delete project"
         onConfirm={confirmDelete}
+        fallbackFocus={toDelete.focus}
       />
     </div>
   );
