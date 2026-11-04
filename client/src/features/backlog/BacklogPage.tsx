@@ -20,6 +20,8 @@ import { useBacklog, type BacklogGroup as Group } from '@/hooks/useBacklog';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useDeleteSprint, useSprints } from '@/hooks/useSprints';
 import { cx } from '@/lib/cx';
+import { useDragSensors } from '@/lib/dnd/sensors';
+import { useListsDnd } from '@/lib/dnd/useListsDnd';
 import { plural, todosAndPoints } from '@/lib/format';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useReducedMotion } from '@/lib/useReducedMotion';
@@ -33,7 +35,6 @@ import { FilterBar } from './FilterBar';
 import { QuickCreate } from './QuickCreate';
 import { SprintActions } from './SprintActions';
 import { DRAG_OFF_ID, ROW_HELP_ID, TodoRowPreview, type MoveTargetGroup } from './TodoRow';
-import { useBacklogDnd } from './useBacklogDnd';
 import { DRAG_OFF_TEXT, useBacklogMoves } from './useBacklogMoves';
 
 interface DeleteState {
@@ -58,6 +59,12 @@ interface GroupDialogState {
 const pageTitle = () => document.querySelector<HTMLElement>('.page-title');
 // dnd-kit re-measures while dragging, so a group that grows as a row joins it still takes drops.
 const MEASURING = { droppable: { strategy: MeasuringStrategy.Always } };
+const DRAG_INSTRUCTIONS = {
+  draggable:
+    'To pick up a todo, press Space or Enter. Use the up and down arrow keys to move it, Space or Enter to drop it, Escape to cancel.',
+};
+// The active sprint's order is per status column (the board's), so a drop inside it changes nothing.
+const isReorderable = (group: Group) => group.kind !== 'active';
 
 /**
  * `/projects/:projectId/backlog` (DESIGN §9 04; BL-1…7, SPR-1…3): the active sprint, the planned
@@ -105,7 +112,8 @@ export function BacklogPage() {
   const activeSprint = groups?.find((group) => group.kind === 'active')?.sprint ?? null;
 
   const { moveTo, onKeyMove, onMenuMove } = useBacklogMoves(projectId, groups, filtering);
-  const dnd = useBacklogDnd(groups, moveTo);
+  const sensors = useDragSensors({ keyboard: true });
+  const dnd = useListsDnd(groups, moveTo, { sensors, instructions: DRAG_INSTRUCTIONS, reorderable: isReorderable });
 
   const total = groups?.reduce((count, group) => count + group.todos.length, 0) ?? 0;
   const points = groups?.reduce((sum, group) => sum + group.points, 0) ?? 0;
@@ -272,7 +280,7 @@ export function BacklogPage() {
                   filtering={filtering}
                   collapsed={Boolean(collapsed[group.id])}
                   onToggle={toggleGroup}
-                  isOver={dnd.overGroup === group.id}
+                  isOver={dnd.overList === group.id}
                   highlightIds={highlightIds}
                   moveTargets={moveTargets}
                   onOpen={openTodo}

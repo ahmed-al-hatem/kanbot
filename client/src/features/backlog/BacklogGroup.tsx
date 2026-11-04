@@ -8,7 +8,7 @@ import { cx } from '@/lib/cx';
 import { formatRange, todosAndPoints } from '@/lib/format';
 import type { Todo } from '@/types/api';
 import styles from './Backlog.module.css';
-import { groupDropId, type DropData } from './dnd';
+import { groupDropId, type DropData } from '@/lib/dnd/sensors';
 import { TodoRow, type MoveTargetGroup, type RowMove } from './TodoRow';
 
 interface BacklogGroupProps {
