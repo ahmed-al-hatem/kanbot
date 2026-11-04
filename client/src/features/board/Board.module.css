@@ -1,0 +1,478 @@
+/* DESIGN §9 05 Active Sprint, §7 Todo card and Board column, §9 11 Complete sprint (canvas layout). */
+
+/* ---------- Sprint header ---------- */
+.sprintHeader {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-075);
+}
+
+.sprintTitleRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-100) var(--space-150);
+}
+
+.sprintName {
+  margin: 0;
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.sprintDates {
+  color: var(--text-subtlest);
+}
+
+.sprintLate {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* One line (DESIGN §9 05); the full goal is in the title attribute. */
+.sprintGoal {
+  margin: 0;
+  max-inline-size: 72ch;
+  overflow: hidden;
+  color: var(--text-subtle);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.sprintGoal b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.progressRows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-100) var(--space-300);
+  margin-block-start: var(--space-050);
+}
+
+.progressRow {
+  display: flex;
+  flex: 1 1 280px;
+  align-items: center;
+  gap: var(--space-150);
+  max-inline-size: 480px;
+}
+
+.progressBar {
+  flex: 1 1 auto;
+}
+
+.progressText {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
+.progressText b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.moveHelp {
+  margin: calc(var(--space-100) * -1) 0 0;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+/* ---------- Board ---------- */
+/* Tablet and up: 980px minimum with horizontal scroll (DESIGN §9 05, NFR-4). */
+.boardScroll {
+  overflow-x: auto;
+  padding-block-end: var(--space-100);
+}
+
+.boardGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(232px, 1fr));
+  gap: var(--space-200);
+  align-items: stretch;
+  min-inline-size: 980px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  min-block-size: 480px;
+  padding: var(--space-100);
+  border-radius: var(--radius-large);
+  background: var(--surface-sunken);
+  transition:
+    background-color 150ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical);
+}
+
+/* DESIGN §7: drag over = --drop fill + 2px selected ring. */
+.column.over {
+  background: var(--drop);
+  box-shadow: inset 0 0 0 2px var(--border-selected);
+}
+
+.columnHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-100);
+  padding: var(--space-075) var(--space-075) var(--space-050) var(--space-100);
+}
+
+/* DESIGN §3.3 board column dots: gray, blue, purple, green. */
+.dot {
+  flex: none;
+  inline-size: 8px;
+  block-size: 8px;
+  border-radius: var(--radius-full);
+}
+
+.todo {
+  background: var(--lz-gray-fg);
+}
+
+.in_progress {
+  background: var(--lz-blue-fg);
+}
+
+.in_review {
+  background: var(--lz-purple-fg);
+}
+
+.done {
+  background: var(--lz-green-fg);
+}
+
+.columnTitle {
+  margin: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.countPill {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 20px;
+  block-size: 20px;
+  padding-inline: var(--space-075);
+  border-radius: var(--radius-full);
+  background: var(--neutral);
+  color: var(--text-subtle);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+}
+
+.columnPoints {
+  margin-inline-start: auto;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+  white-space: nowrap;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dropHere {
+  display: grid;
+  place-items: center;
+  block-size: 96px;
+  margin: 0;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-xlarge);
+  color: var(--text-subtlest);
+  font-size: 13px;
+}
+
+/* ---------- Todo card (DESIGN §7) ---------- */
+.cardItem {
+  position: relative;
+  touch-action: manipulation;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  inline-size: 100%;
+  padding: var(--space-150);
+  border: none;
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-raised);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  text-align: start;
+  cursor: grab;
+  transition:
+    transform 150ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical),
+    background-color 150ms var(--ease-practical),
+    opacity 150ms;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-overlay);
+}
+
+.card:active {
+  transform: scale(0.985);
+  background: var(--surface-pressed);
+  cursor: grabbing;
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-overlay);
+}
+
+/* Dragging (source): opacity .35, scale .97, no shadow. */
+.dragging .card {
+  opacity: 0.35;
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.saving .card {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.preview {
+  box-shadow: var(--shadow-overlay);
+  cursor: grabbing;
+  transform: rotate(2deg);
+}
+
+/* Room for the ⋯ button, which sits over the card's top inline-end corner. */
+.cardTitle {
+  display: -webkit-box;
+  padding-inline-end: var(--space-300);
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 20px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow-wrap: anywhere;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-075);
+}
+
+/* The priority label inside a chip: chip-sized icon, the chip's text color. */
+.chipPriority {
+  color: inherit;
+}
+
+.chipPriority > svg {
+  inline-size: 12px;
+  block-size: 12px;
+}
+
+.moreLabels {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-100);
+}
+
+.cardKey {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-075);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.doneIcon {
+  color: var(--success-icon);
+}
+
+.cardMenu {
+  position: absolute;
+  inset-block-start: var(--space-100);
+  inset-inline-end: var(--space-100);
+}
+
+/* ---------- Column composer (DESIGN §7) ---------- */
+.composeButton {
+  justify-content: flex-start;
+  margin-block-start: auto;
+  padding-inline: var(--space-100);
+}
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  padding: var(--space-100);
+  border-radius: var(--radius-xlarge);
+  background: var(--surface-raised);
+  box-shadow:
+    0 0 0 2px var(--focus),
+    var(--shadow-raised);
+}
+
+.composerInput {
+  inline-size: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.composerActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-100);
+}
+
+.composerHint {
+  flex: 1 1 auto;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+/* ---------- Complete sprint (DESIGN §9 11) ---------- */
+.complete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-200);
+}
+
+.completeStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-100);
+}
+
+.completePoints,
+.completeNote {
+  margin: 0;
+  color: var(--text-subtle);
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-100);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.radioLegend {
+  margin-block-end: var(--space-100);
+  padding: 0;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  color: var(--text-subtle);
+}
+
+.radioCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px var(--space-150);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-large);
+  cursor: pointer;
+  transition:
+    background-color 150ms var(--ease-practical),
+    border-color 150ms var(--ease-practical);
+}
+
+.radioCard:hover {
+  background: var(--surface-hovered);
+}
+
+.radioCard input {
+  margin: 0;
+  accent-color: var(--brand);
+}
+
+.radioCard.radioOn {
+  border-color: var(--border-selected);
+  background: var(--selected);
+}
+
+.radioName {
+  font-weight: 500;
+}
+
+.radioHint {
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtlest);
+}
+
+/* ---------- Mobile (DESIGN §13): columns 85vw with scroll snap ---------- */
+@media (max-width: 760px) {
+  .boardScroll {
+    margin-inline: calc(var(--space-200) * -1);
+    padding-inline: var(--space-200);
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--space-200);
+  }
+
+  .boardGrid {
+    grid-template-columns: repeat(4, 85vw);
+    min-inline-size: 0;
+  }
+
+  .column {
+    scroll-snap-align: start;
+    min-block-size: 320px;
+  }
+
+  .moveHelp {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card:hover,
+  .card:focus-visible,
+  .preview {
+    transform: none;
+  }
+}
