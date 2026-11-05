@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { Logo } from '@/components/Logo/Logo';
 import { cx } from '@/lib/cx';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useTheme } from '@/stores/theme';
 import styles from './AuthLayout.module.css';
 
@@ -18,10 +19,10 @@ interface AuthLayoutProps {
 export function AuthLayout({ title, children }: AuthLayoutProps) {
   const theme = useTheme((s) => s.theme);
   const toggle = useTheme((s) => s.toggle);
+  useDocumentTitle(titleOf(title));
 
   return (
     <main id="main" tabIndex={-1} className={styles.page}>
-      <title>{`${title} · Kanbot`}</title>
       <IconButton
         icon="theme"
         aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
