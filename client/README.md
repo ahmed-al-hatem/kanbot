@@ -13,9 +13,7 @@
 
 ## 1. Overview
 
-![Kanbot board — screenshot to be added](docs/screenshot-board.png)
-
-_Screenshot placeholder: `client/docs/screenshot-board.png` (the board in light and dark)._
+The visual reference is the [design canvas](https://claude.ai/code/artifact/efe99d87-baac-4bb7-96e1-235363299397) (every screen, light and dark, 1440 and 390); the [demo](#12-demo) shows the app running.
 
 - **Auth** — register, log in, stay signed in across reloads, `?redirect=` back to the page you asked for, session-expiry dialog, log out.
 - **Projects** — grid with search, create / edit / delete with confirmation, a project switcher in the sidebar.
@@ -292,6 +290,7 @@ every PR and on `main`; `e2e` after it (server `npm ci` + `.env` from the exampl
 | `npm run e2e` (incl. axe, both themes) | First run: 8 / 12 passed. It found two app bugs, both fixed — the project switcher's name left out its visible key (axe `label-content-name-mismatch`, WCAG 2.5.3, on every project page in both themes), and a summary requested from Complete sprint could be dropped by an older sprint-list refetch — plus one wrong check in the mobile spec. Re-run: **12 / 12 passed**, axe clean in light and dark |
 | Lighthouse — Accessibility | **100** on login, projects, backlog, board and sprints, desktop and mobile, light and dark (production build, `npm run preview`) |
 | Lighthouse — Best Practices | **100** on the same pages, devices and themes |
+| Lighthouse — Performance (desktop, Lighthouse 13.5) | Login **97–98** · Projects **99** · Backlog **96** · Board **99** · Sprints **98**. LCP 0.5–0.9 s, TBT 80–140 ms, CLS 0 (Sprints 0.042) |
 
 ## 11. Known issues
 
