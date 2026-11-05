@@ -55,6 +55,7 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
         <Input
           id="backlog-search"
           type="search"
+          data-shortcut="search"
           className={styles.searchInput}
           placeholder="Search todos or keys"
           value={draft}

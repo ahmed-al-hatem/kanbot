@@ -68,6 +68,8 @@ export function ColumnComposer({ projectId, sprintId, status, columnName }: Colu
         icon="add"
         className={styles.composeButton}
         aria-label={`Create todo in ${columnName}`}
+        // The `c` shortcut opens the first column's composer.
+        data-shortcut={status === 'todo' ? 'create' : undefined}
         onClick={() => {
           setOpen(true);
         }}

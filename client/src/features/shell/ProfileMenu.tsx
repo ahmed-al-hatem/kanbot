@@ -3,18 +3,21 @@ import { IconButton } from '@/components/Button/Button';
 import { Icon } from '@/components/Icon/Icon';
 import { Menu, MenuItem, MenuLabel } from '@/components/Menu/Menu';
 import { useCurrentUser, useLogout } from '@/hooks/useAuth';
+import { useShortcuts } from '@/stores/shortcuts';
 import { useTheme } from '@/stores/theme';
 import styles from './AppShell.module.css';
 
 /**
  * Bottom of the sidebar (DESIGN §6): the profile menu with Log out (AUTH-4) and the theme
- * toggle. The trigger is named by its visible text (name and email).
+ * toggle. The trigger is named by its visible text (name and email). "Keyboard shortcuts" opens the
+ * same help as `?`, so the shortcuts can be found without knowing one.
  */
 export function ProfileMenu() {
   const { data: user } = useCurrentUser();
   const logout = useLogout();
   const theme = useTheme((s) => s.theme);
   const toggleTheme = useTheme((s) => s.toggle);
+  const themeLabel = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
 
   return (
     <div className={styles.profile}>
@@ -22,7 +25,7 @@ export function ProfileMenu() {
         label="Account"
         align="start"
         trigger={
-          <button type="button" className={styles.profileButton}>
+          <button type="button" className={styles.profileButton} data-tip={user?.name ?? 'Account'}>
             <Avatar name={user?.name ?? ''} size={32} decorative />
             <span className={styles.profileText}>
               <span className={styles.profileName}>{user?.name}</span>
@@ -33,13 +36,25 @@ export function ProfileMenu() {
         }
       >
         <MenuLabel>Signed in as {user?.email}</MenuLabel>
+        <MenuItem
+          icon="lightbulb"
+          onSelect={() => {
+            useShortcuts.getState().setHelpOpen(true);
+          }}
+        >
+          Keyboard shortcuts
+          <kbd className={styles.menuKbd} aria-hidden="true">
+            ?
+          </kbd>
+        </MenuItem>
         <MenuItem icon="log-out" onSelect={logout}>
           Log out
         </MenuItem>
       </Menu>
       <IconButton
         icon="theme"
-        aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+        aria-label={themeLabel}
+        data-tip={themeLabel}
         className={styles.themeToggle}
         onClick={toggleTheme}
       />
