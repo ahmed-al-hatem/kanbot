@@ -3,9 +3,11 @@ import { act, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { queryClient } from '@/app/queryClient';
+import { qk } from '@/hooks/queryKeys';
 import { useSession } from '@/stores/session';
 import { projectHandlers } from '@/test/projects';
-import { preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
+import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
 
 beforeAll(preloadPages, 30_000);
@@ -67,12 +69,27 @@ describe('shell landmarks and nav (DESIGN §6, §10.2)', () => {
     expect(router.state.location.pathname).toBe('/projects/p2/backlog');
   });
 
-  it('shows the page error for a project id the API does not know', async () => {
+  it('shows the 404 page for a project id the API does not know, with no project nav', async () => {
     renderApp('/projects/nope/backlog');
 
+    expect(await screen.findByRole('heading', { name: "This project doesn't exist", level: 1 })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Projects' })).toHaveAttribute('href', '/projects');
+    expect(within(nav()).queryByRole('link', { name: 'Backlog' })).not.toBeInTheDocument();
+    expect(within(nav()).queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the page error for a project that fails to load for another reason', async () => {
+    // The app retries 5xx twice with backoff; skip that here.
+    queryClient.setQueryDefaults(qk.project('p3'), { retry: false });
+    server.use(
+      http.get(apiUrl('/projects/p3'), () =>
+        HttpResponse.json(errorBody('INTERNAL_ERROR', 'Boom'), { status: 500 }),
+      ),
+    );
+    renderApp('/projects/p3/backlog');
+
     expect(await screen.findByRole('heading', { name: "We couldn't load this project" })).toBeInTheDocument();
-    expect(screen.getByText('Error 404 · NOT_FOUND')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Back to Projects' })).toHaveAttribute('href', '/projects');
+    expect(screen.getByText('Error 500 · Internal server error')).toBeInTheDocument();
   });
 });
 

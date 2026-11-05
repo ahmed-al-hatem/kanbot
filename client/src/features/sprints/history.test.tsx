@@ -162,10 +162,13 @@ describe('sprints page (SPR-7)', () => {
     expect(router.state.location.search).toBe('?todo=d1');
   });
 
-  it('shows the page error for a sprint id that is not in the project', async () => {
+  it('shows the 404 page for a sprint id that is not in the project', async () => {
     start(historyDb());
     renderApp('/projects/p1/sprints/nope');
-    expect(await screen.findByRole('heading', { name: "We couldn't load this sprint" }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: "This sprint doesn't exist", level: 1 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open Active Sprint' })).toHaveAttribute('href', '/projects/p1/board');
   });
 
   it('has an empty state when there are no sprints', async () => {

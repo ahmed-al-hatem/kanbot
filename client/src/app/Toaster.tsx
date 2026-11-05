@@ -1,13 +1,14 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
-import { Icon, type IconName } from '@/components/Icon/Icon';
 import { cx } from '@/lib/cx';
 import { useToast, type Toast, type ToastKind } from '@/stores/toast';
+import type { ToastIconName } from './toastIconPaths';
+import { ToastIcon } from './toastIcons';
 import styles from './Toaster.module.css';
 
 /** Matches `kbFlagOut` (200ms, DESIGN §8.2). */
 const EXIT_MS = 200;
 
-const ICONS: Record<ToastKind, { name: IconName; className: string | undefined }> = {
+const ICONS: Record<ToastKind, { name: ToastIconName; className: string | undefined }> = {
   success: { name: 'check-circle', className: styles.success },
   error: { name: 'status-error', className: styles.error },
   info: { name: 'lightbulb', className: styles.info },
@@ -80,7 +81,7 @@ function Flag({ toast }: { toast: Toast }) {
         setPaused(false);
       }}
     >
-      <Icon name={icon.name} className={cx(styles.icon, icon.className)} />
+      <ToastIcon name={icon.name} className={cx(styles.icon, icon.className)} />
       <span className={styles.message}>{toast.message}</span>
       {action && (
         <button
@@ -95,7 +96,7 @@ function Flag({ toast }: { toast: Toast }) {
         </button>
       )}
       <button type="button" className={styles.close} aria-label="Dismiss" onClick={close}>
-        <Icon name="cross" size={12} />
+        <ToastIcon name="cross" size={12} />
       </button>
     </div>
   );

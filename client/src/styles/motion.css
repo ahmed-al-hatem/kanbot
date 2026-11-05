@@ -42,7 +42,17 @@
 
 /* Stagger: set --i (item index) or --col (column index) inline. 45ms per item, 60ms per column. */
 .kb-stagger { animation-delay: calc(var(--i, 0) * 45ms + var(--col, 0) * 60ms); }
+/* A row or card that was just created, moved or dropped highlights at once, not after its stagger. */
+.kb-stagger.kb-added,
+.kb-stagger.kb-dropped { animation-delay: 0ms; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration:1ms !important; animation-iteration-count:1 !important; transition-duration:1ms !important; }
+  /*
+   * Added to §8.3: without this, staggered rows, cards and drafts still wait up to ~0.5s,
+   * invisible (`backwards` fill), before their 1ms animation. Other delays stay (the full-page
+   * loader's 150ms keeps a fast start from flashing). Smooth scrolling is motion too.
+   */
+  .kb-stagger, .kb-rise { animation-delay:0ms !important; }
+  html { scroll-behavior:auto !important; }
 }

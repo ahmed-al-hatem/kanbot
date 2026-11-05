@@ -1,0 +1,10 @@
+/*
+ * ≤ 760px the 56px top bar has its own Ask AI (DESIGN §13), so the page-header one is hidden
+ * instead of wrapping under the title. The doubled class outranks the Button's display rule,
+ * whichever stylesheet loads last.
+ */
+@media (max-width: 760px) {
+  .headerButton.headerButton {
+    display: none;
+  }
+}

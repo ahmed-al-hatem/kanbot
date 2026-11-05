@@ -112,10 +112,11 @@ export function BacklogGroup({
         <SortableContext id={group.id} items={rows.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
           {rows.length > 0 ? (
             <ul className={styles.rows} aria-label={`${group.name} todos`}>
-              {rows.map((todo) => (
+              {rows.map((todo, index) => (
                 <TodoRow
                   key={todo.id}
                   todo={todo}
+                  index={index}
                   groupId={group.id}
                   reorderable={reorderable}
                   moveTargets={moveTargets}

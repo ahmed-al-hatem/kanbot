@@ -18,6 +18,7 @@ import { todoNeighbourFocus } from '@/features/todos/todoFocus';
 import { useRemoveTodo } from '@/features/todos/useRemoveTodo';
 import { useBacklog, type BacklogGroup as Group } from '@/hooks/useBacklog';
 import { useCurrentProject } from '@/hooks/useProjects';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useDeleteSprint, useSprints } from '@/hooks/useSprints';
 import { cx } from '@/lib/cx';
 import { useDragSensors } from '@/lib/dnd/sensors';
@@ -77,6 +78,7 @@ export function BacklogPage() {
   const { projectId = '' } = useParams();
   const navigate = useNavigate();
   const { data: project } = useCurrentProject();
+  useDocumentTitle(titleOf('Backlog', project?.name));
   const backlog = useBacklog(projectId);
   const { data: sprints = [] } = useSprints(projectId);
   const showSkeleton = useDelayedLoading(backlog.isPending);
@@ -233,7 +235,6 @@ export function BacklogPage() {
 
   return (
     <div className="kb-page">
-      <title>{project ? `Backlog · ${project.name} · Kanbot` : 'Backlog · Kanbot'}</title>
       <PageHeader
         title="Backlog"
         meta={

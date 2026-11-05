@@ -3,7 +3,7 @@ import { useCallback } from 'react';
 import { useParams } from 'react-router';
 import { createProject, deleteProject, getProject, listProjects, updateProject } from '@/api/projects';
 import { queryClient } from '@/app/queryClient';
-import { pageChunks, type ProjectSection } from '@/routeChunks';
+import { prefetchChunk, type ProjectSection } from '@/routeChunks';
 import type { ProjectWithStats, UpdateProjectRequest } from '@/types/api';
 import { qk } from './queryKeys';
 import { boardQuery } from './useBoard';
@@ -54,8 +54,8 @@ export function usePrefetchProject() {
       // Fetches only when missing or stale; a failed prefetch is ignored (the page shows its own error).
       const project = client.query(projectQuery(projectId));
       void project.catch(() => undefined);
-      void pageChunks.project();
-      void pageChunks[section]();
+      prefetchChunk('project');
+      prefetchChunk(section);
       // The board needs the active sprint's id from the project; the history needs the sprint list.
       if (section === 'board') {
         void project

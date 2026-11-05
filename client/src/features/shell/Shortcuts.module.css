@@ -1,0 +1,56 @@
+/* Keyboard shortcuts help (Requirements §9). */
+.list {
+  display: flex;
+  flex-direction: column;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 112px 1fr;
+  align-items: center;
+  gap: var(--space-150);
+  padding-block: var(--space-100);
+  border-block-end: 1px solid var(--border);
+}
+
+.row:last-child {
+  border-block-end: none;
+}
+
+.keys {
+  display: flex;
+  align-items: center;
+  gap: var(--space-050);
+}
+
+.kbd {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 24px;
+  block-size: 24px;
+  padding-inline: var(--space-075);
+  border: 1px solid var(--border);
+  border-block-end-width: 2px;
+  border-radius: var(--radius-small);
+  background: var(--surface-sunken);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.then {
+  font-size: 11px;
+  color: var(--text-subtlest);
+}
+
+.label {
+  color: var(--text);
+}
+
+.note {
+  margin-block-start: var(--space-200);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--text-subtle);
+}

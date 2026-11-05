@@ -44,6 +44,7 @@ export function QuickCreate({ projectId, inputRef }: QuickCreateProps) {
         ref={inputRef}
         type="text"
         data-quick-create
+        data-shortcut="create"
         className={styles.quickCreateInput}
         placeholder="Create todo — type a title and press Enter"
         maxLength={TITLE_MAX}

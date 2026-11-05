@@ -5,6 +5,7 @@ import { safeStorage, STORAGE_KEYS } from '@/lib/storage';
 import { useAnnouncer } from './announcer';
 import { useAssistant } from './assistant';
 import { useHighlight } from './highlight';
+import { useShortcuts } from './shortcuts';
 import { useToast } from './toast';
 
 interface SessionState {
@@ -44,6 +45,7 @@ export const useSession = create<SessionState>()(
         useAnnouncer.getState().reset();
         useAssistant.getState().reset();
         useHighlight.getState().reset();
+        useShortcuts.getState().reset();
         queryClient.clear();
       },
       reset: () => {

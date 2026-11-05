@@ -10,6 +10,7 @@ import { useProject } from '@/hooks/useProjects';
 import { omitKey } from '@/lib/records';
 import { useSprints } from '@/hooks/useSprints';
 import { announce } from '@/stores/announcer';
+import { useNotFound } from '@/stores/notFound';
 import { CHAT_MAX_CONTENT, toChatRequest, useAssistant, type ChatEntry } from '@/stores/assistant';
 import { toast } from '@/stores/toast';
 import type { ChatMessage, Sprint } from '@/types/api';
@@ -54,7 +55,13 @@ export function AssistantDrawer() {
   const open = useAssistant((s) => s.open);
   const setOpen = useAssistant((s) => s.setOpen);
   const append = useAssistant((s) => s.append);
-  const projectId = useMatch('/projects/:projectId/*')?.params.projectId;
+  const routeProjectId = useMatch('/projects/:projectId/*')?.params.projectId;
+  const notFound = useNotFound((s) => s.cause);
+  const target = useAssistant((s) => s.target);
+  // The project in the URL. On the 404 page without a usable one (unknown route, missing
+  // project), the project "Ask AI to find it" chose.
+  const projectId =
+    notFound === 'project' || (notFound && !routeProjectId) ? (target ?? undefined) : routeProjectId;
   const section = useMatch('/projects/:projectId/:section/*')?.params.section ?? 'backlog';
   const returnFocus = useReturnFocus();
   const chat = useChat();

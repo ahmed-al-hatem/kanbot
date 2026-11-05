@@ -135,10 +135,6 @@
   border-radius: var(--radius-xlarge);
 }
 
-.detailError {
-  min-inline-size: 0;
-}
-
 .detailHead {
   display: flex;
   flex-direction: column;

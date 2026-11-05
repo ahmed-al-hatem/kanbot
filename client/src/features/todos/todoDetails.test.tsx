@@ -284,9 +284,11 @@ describe('delete from Todo details (BL-4)', () => {
     });
   });
 
-  it('shows "This todo doesn\'t exist" for an unknown id', async () => {
+  it('shows the 404 page for an unknown id', async () => {
     renderApp('/projects/p1/backlog?todo=nope');
 
-    expect(await screen.findByRole('heading', { name: "This todo doesn't exist" })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: "This todo doesn't exist", level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(document.title).toBe('Page not found · Kanbot');
   });
 });

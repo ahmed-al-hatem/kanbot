@@ -38,6 +38,11 @@ interface AssistantState {
   /** Text waiting in the composer per project, e.g. from "Improve this todo". Never sent by itself. */
   composer: Record<string, string>;
   dialog: AiDialog | null;
+  /**
+   * The project the drawer was last opened for with `openWith`. Used only when the URL has no
+   * (existing) project, e.g. "Ask AI to find it" on the 404 page; a project in the URL wins.
+   */
+  target: string | null;
   setOpen: (open: boolean) => void;
   /** Opens the drawer for a project, optionally with a prompt in the composer (not sent). */
   openWith: (projectId: string, prompt?: string) => void;
@@ -51,7 +56,7 @@ interface AssistantState {
   reset: () => void;
 }
 
-const initialState = { open: false, chats: {}, composer: {}, dialog: null } satisfies Partial<AssistantState>;
+const initialState = { open: false, chats: {}, composer: {}, dialog: null, target: null } satisfies Partial<AssistantState>;
 
 let nextId = 1;
 let nextDialogKey = 1;
@@ -68,6 +73,7 @@ export const useAssistant = create<AssistantState>()(
       openWith: (projectId, prompt) => {
         set((state) => ({
           open: true,
+          target: projectId,
           composer: prompt === undefined ? state.composer : { ...state.composer, [projectId]: prompt },
         }));
       },

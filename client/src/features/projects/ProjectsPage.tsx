@@ -10,6 +10,7 @@ import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { useDeleteProject, usePrefetchProject, useProjects } from '@/hooks/useProjects';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { neighbourFocus, refocusAfterRemoval } from '@/lib/refocus';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useAssistant } from '@/stores/assistant';
@@ -57,6 +58,7 @@ function matches(project: ProjectWithStats, needle: string) {
 export function ProjectsPage() {
   const navigate = useNavigate();
   const projects = useProjects();
+  useDocumentTitle(titleOf('Projects'));
   const removeProject = useDeleteProject();
   const prefetch = usePrefetchProject();
   const showSkeleton = useDelayedLoading(projects.isPending);
@@ -145,12 +147,11 @@ export function ProjectsPage() {
 
   return (
     <div className="kb-page">
-      <title>Projects · Kanbot</title>
       <PageHeader
         title="Projects"
         meta={count === undefined ? undefined : count === 1 ? '1 project' : `${count} projects`}
         actions={
-          <Button variant="primary" icon="add" onClick={openCreate} data-new-project>
+          <Button variant="primary" icon="add" onClick={openCreate} data-new-project data-shortcut="create">
             New project
           </Button>
         }
@@ -197,6 +198,7 @@ export function ProjectsPage() {
               <Input
                 id="project-search"
                 type="search"
+                data-shortcut="search"
                 className={styles.searchInput}
                 placeholder="Search by name or key"
                 value={query}

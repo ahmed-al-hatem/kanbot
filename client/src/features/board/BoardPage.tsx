@@ -16,6 +16,7 @@ import { useSprintSummaryRequest, useSummarizeSprint } from '@/hooks/useAi';
 import { useBoard } from '@/hooks/useBoard';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useDragSensors } from '@/lib/dnd/sensors';
 import { useListsDnd } from '@/lib/dnd/useListsDnd';
 import { plural } from '@/lib/format';
@@ -52,6 +53,7 @@ export function BoardPage() {
   const navigate = useNavigate();
   const [, setParams] = useSearchParams();
   const project = useCurrentProject();
+  useDocumentTitle(titleOf('Active Sprint', project.data?.name));
   const activeId = project.data?.stats.activeSprint?.id;
   const board = useBoard(activeId);
   const { data: sprints } = useSprints(projectId);
@@ -125,7 +127,6 @@ export function BoardPage() {
 
   return (
     <div className="kb-page">
-      <title>{project.data ? `Active Sprint · ${project.data.name} · Kanbot` : 'Active Sprint · Kanbot'}</title>
       <PageHeader
         title="Active Sprint"
         meta={<ProjectMeta project={project.data} />}

@@ -2,6 +2,8 @@ import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
 import { FullPageLoader } from '@/components/FullPageLoader/FullPageLoader';
 import { GuestRoute } from '@/features/auth/GuestRoute';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
+import { RootErrorBoundary, RouteErrorBoundary } from '@/features/errors/RouteErrorBoundary';
+import { NOT_FOUND_HANDLE } from '@/lib/routeHandle';
 import { pageChunks } from '@/routeChunks';
 
 /**
@@ -23,13 +25,18 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
 /**
  * Guest pages, then the private layout (plan §4, IMPLEMENTATION-PLAN §3.1): the guard, the
  * app shell, then Projects and the project pages. Every page is lazy-loaded (plan §5.4); the
- * guards are tiny and load with the app. Backlog, Board and Sprints are placeholders until
- * phases 4–6.
+ * guards are tiny and load with the app.
+ *
+ * Errors (plan §9.3): the pages under the shell share `RouteErrorBoundary`, so the sidebar
+ * stays; anything above it (guest pages, the shell chunk) reaches `RootErrorBoundary`. The
+ * catch-all renders the 404 page — in the shell when signed in, centered when signed out
+ * (`ProtectedRoute` checks `NOT_FOUND_HANDLE`) — instead of redirecting (DESIGN §9).
  */
 export const routes: RouteObject[] = [
   {
     // Shown while the first route chunk loads.
     hydrateFallbackElement: <FullPageLoader label="Loading Kanbot" />,
+    ErrorBoundary: RootErrorBoundary,
     children: [
       ...devRoutes,
       {
@@ -64,27 +71,37 @@ export const routes: RouteObject[] = [
           {
             lazy: async () => ({ Component: (await pageChunks.shell()).AppShell }),
             children: [
-              { path: '/', element: <Navigate to="/projects" replace /> },
               {
-                path: '/projects',
-                lazy: async () => ({ Component: (await pageChunks.projects()).ProjectsPage }),
-              },
-              {
-                path: '/projects/:projectId',
-                lazy: async () => ({ Component: (await pageChunks.project()).ProjectLayout }),
+                ErrorBoundary: RouteErrorBoundary,
                 children: [
-                  { index: true, element: <Navigate to="backlog" replace /> },
+                  { path: '/', element: <Navigate to="/projects" replace /> },
                   {
-                    path: 'backlog',
-                    lazy: async () => ({ Component: (await pageChunks.backlog()).BacklogPage }),
+                    path: '/projects',
+                    lazy: async () => ({ Component: (await pageChunks.projects()).ProjectsPage }),
                   },
                   {
-                    path: 'board',
-                    lazy: async () => ({ Component: (await pageChunks.board()).BoardPage }),
+                    path: '/projects/:projectId',
+                    lazy: async () => ({ Component: (await pageChunks.project()).ProjectLayout }),
+                    children: [
+                      { index: true, element: <Navigate to="backlog" replace /> },
+                      {
+                        path: 'backlog',
+                        lazy: async () => ({ Component: (await pageChunks.backlog()).BacklogPage }),
+                      },
+                      {
+                        path: 'board',
+                        lazy: async () => ({ Component: (await pageChunks.board()).BoardPage }),
+                      },
+                      {
+                        path: 'sprints/:sprintId?',
+                        lazy: async () => ({ Component: (await pageChunks.sprints()).SprintsPage }),
+                      },
+                    ],
                   },
                   {
-                    path: 'sprints/:sprintId?',
-                    lazy: async () => ({ Component: (await pageChunks.sprints()).SprintsPage }),
+                    path: '*',
+                    handle: NOT_FOUND_HANDLE,
+                    lazy: async () => ({ Component: (await pageChunks.notFound()).NotFoundPage }),
                   },
                 ],
               },
@@ -92,8 +109,6 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // The 404 page comes in phase 8; until then unknown paths go home (and through the guard).
-      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ];

@@ -30,6 +30,8 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
       type="button"
       className={styles.switcher}
       aria-label={project ? `Switch project, current: ${project.name}` : 'Choose a project'}
+      // The tablet rail's tooltip (AppShell.module.css).
+      data-tip={project ? project.name : 'Choose a project'}
     >
       {project ? (
         <>

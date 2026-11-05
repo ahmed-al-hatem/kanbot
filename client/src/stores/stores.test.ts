@@ -3,7 +3,7 @@ import { queryClient } from '@/app/queryClient';
 import { STORAGE_KEYS } from '@/lib/storage';
 import { useAnnouncer } from './announcer';
 import { listenForSessionChanges, useSession } from './session';
-import { useTheme } from './theme';
+import { followSystemTheme, useTheme } from './theme';
 import { toast, useToast } from './toast';
 
 describe('session store', () => {
@@ -87,10 +87,35 @@ describe('announcer store', () => {
   });
 });
 
+/** A `prefers-color-scheme: dark` query whose answer the test changes. */
+function stubColorScheme(initialDark: boolean) {
+  let listener: ((event: MediaQueryListEvent) => void) | null = null;
+  const query = {
+    matches: initialDark,
+    addEventListener: (_type: string, fn: (event: MediaQueryListEvent) => void) => {
+      listener = fn;
+    },
+    removeEventListener: () => {
+      listener = null;
+    },
+  };
+  vi.stubGlobal('matchMedia', () => query);
+  return {
+    change(dark: boolean) {
+      query.matches = dark;
+      listener?.({ matches: dark } as MediaQueryListEvent);
+    },
+    get listening() {
+      return listener !== null;
+    },
+  };
+}
+
 describe('theme store', () => {
   afterEach(() => {
     vi.useRealTimers();
-    useTheme.setState({ theme: 'light' });
+    vi.unstubAllGlobals();
+    useTheme.setState({ theme: 'light', source: 'system' });
     document.documentElement.className = 'light';
   });
 
@@ -111,6 +136,49 @@ describe('theme store', () => {
     const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEYS.theme) ?? '{}') as {
       state: Record<string, unknown>;
     };
-    expect(saved.state).toEqual({ theme: 'dark' });
+    expect(saved.state).toEqual({ theme: 'dark', source: 'user' });
+  });
+
+  it('follows the OS scheme live until the user picks a theme, then keeps the choice', () => {
+    const scheme = stubColorScheme(false);
+    const stop = followSystemTheme();
+    const root = document.documentElement;
+
+    scheme.change(true);
+    expect(useTheme.getState()).toMatchObject({ theme: 'dark', source: 'system' });
+    expect(root.classList.contains('dark')).toBe(true);
+    scheme.change(false);
+    expect(root.classList.contains('light')).toBe(true);
+
+    // An explicit choice stops the following.
+    useTheme.getState().toggle();
+    expect(useTheme.getState()).toMatchObject({ theme: 'dark', source: 'user' });
+    scheme.change(false);
+    scheme.change(true);
+    scheme.change(false);
+    expect(root.classList.contains('dark')).toBe(true);
+    expect(useTheme.getState().theme).toBe('dark');
+
+    stop();
+    expect(scheme.listening).toBe(false);
+  });
+
+  it('colours both theme-color meta tags with the current surface token', () => {
+    stubColorScheme(false);
+    const metas = ['light', 'dark'].map((scheme) => {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.media = `(prefers-color-scheme: ${scheme})`;
+      document.head.append(meta);
+      return meta;
+    });
+    document.documentElement.style.setProperty('--surface', 'rgb(31, 31, 33)');
+    try {
+      useTheme.getState().setTheme('dark');
+      expect(metas.map((meta) => meta.content)).toEqual(['rgb(31, 31, 33)', 'rgb(31, 31, 33)']);
+    } finally {
+      document.documentElement.style.removeProperty('--surface');
+      for (const meta of metas) meta.remove();
+    }
   });
 });

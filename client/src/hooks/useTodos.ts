@@ -40,15 +40,16 @@ function findCachedTodo(todoId: string): { todo: Todo; updatedAt: number } | und
 
 /**
  * `GET /todos/:id` (BL-3). Seeded from the list cache, so a click paints the dialog at once;
- * a deep link (`?todo=<id>` on a cold page) fetches it.
+ * a deep link (`?todo=<id>` on a cold page) fetches it. `null` (no `?todo=`) fetches nothing.
  */
-export function useTodo(todoId: string) {
+export function useTodo(todoId: string | null) {
+  const id = todoId ?? '';
   return useQuery({
-    queryKey: qk.todo(todoId),
-    queryFn: ({ signal }) => getTodo(todoId, signal),
-    initialData: () => findCachedTodo(todoId)?.todo,
-    initialDataUpdatedAt: () => findCachedTodo(todoId)?.updatedAt,
-    enabled: !isTempTodo(todoId),
+    queryKey: qk.todo(id),
+    queryFn: ({ signal }) => getTodo(id, signal),
+    initialData: () => (id ? findCachedTodo(id)?.todo : undefined),
+    initialDataUpdatedAt: () => (id ? findCachedTodo(id)?.updatedAt : undefined),
+    enabled: Boolean(id) && !isTempTodo(id),
   });
 }
 

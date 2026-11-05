@@ -8,8 +8,10 @@ import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { ProjectMeta } from '@/components/PageHeader/ProjectMeta';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { SprintSummaryCard } from '@/features/ai/lazy';
+import { NotFoundPage } from '@/features/errors/NotFoundPage';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { plural } from '@/lib/format';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { toast } from '@/stores/toast';
@@ -24,7 +26,7 @@ import styles from './Sprints.module.css';
  * `/projects/:projectId/sprints/:sprintId?` (DESIGN §9 10; SPR-7): every sprint in a 380px list
  * next to the selected sprint's details (stacked below 864px). The selection is the URL; with no
  * `sprintId` the most recent sprint is shown (plan §9.3). An id that isn't one of this project's
- * sprints shows the page error until the 404 page (phase 8). Todo details opens from `?todo=`.
+ * sprints shows the 404 page (DESIGN §9). Todo details opens from `?todo=`.
  */
 export function SprintsPage() {
   const { projectId = '', sprintId } = useParams();
@@ -37,6 +39,9 @@ export function SprintsPage() {
 
   const list = sprints.data;
   const selected = list && (sprintId ? list.find((sprint) => sprint.id === sprintId) : mostRecentSprint(list));
+  // The list loaded and the id isn't in it: a deleted sprint or another project's (DESIGN §9).
+  const missing = Boolean(list && sprintId && !selected);
+  useDocumentTitle(missing ? null : titleOf(selected?.name, 'Sprints', project?.name));
 
   const openTodo = useCallback(
     (todoId: string) => {
@@ -55,9 +60,10 @@ export function SprintsPage() {
     void navigate(`/projects/${projectId}/sprints/${sprint.id}`);
   };
 
+  if (missing) return <NotFoundPage cause="sprint" />;
+
   return (
     <div className="kb-page">
-      <title>{project ? `Sprints · ${project.name} · Kanbot` : 'Sprints · Kanbot'}</title>
       <PageHeader
         title="Sprints"
         meta={
@@ -104,7 +110,7 @@ export function SprintsPage() {
         ) : (
           <div className={styles.history}>
             <SprintList projectId={projectId} sprints={list} selectedId={selected?.id} />
-            {selected ? (
+            {selected && (
               // Keyed, so the panel and its tiles play their entrance for each sprint.
               <SprintDetail
                 key={selected.id}
@@ -118,15 +124,6 @@ export function SprintsPage() {
                     </Suspense>
                   )
                 }
-              />
-            ) : (
-              <PageError
-                page="this sprint"
-                className={styles.detailError}
-                onRetry={() => {
-                  void sprints.refetch();
-                }}
-                retrying={sprints.isRefetching}
               />
             )}
           </div>

@@ -22,6 +22,7 @@ export async function preloadPages() {
     import('@/features/auth/ForgotPasswordPage'),
     import('@/features/auth/SessionExpiredDialog'),
     import('@/components/PageError/PageError'),
+    import('@/features/errors/RenderErrorPage'),
     import('@/features/ai/AssistantDrawer'),
     import('@/features/ai/GenerateTodosDialog'),
     import('@/features/ai/PlanSprintDialog'),
