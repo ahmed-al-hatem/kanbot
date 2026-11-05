@@ -1,10 +1,13 @@
 import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
 import { NavigationType, Outlet, ScrollRestoration, useLocation, useMatch, useNavigationType } from 'react-router';
 import { useAssistant } from '@/stores/assistant';
+import { useNotFound } from '@/stores/notFound';
 import { MobileTopBar } from './MobileTopBar';
 import { OfflineBanner } from './OfflineBanner';
+import { ShortcutsDialog } from './ShortcutsDialog';
 import { Sidebar } from './Sidebar';
 import { SkipLink } from './SkipLink';
+import { useKeyboardShortcuts, type ShortcutNavState } from './useKeyboardShortcuts';
 import styles from './AppShell.module.css';
 
 // The drawer's chunk loads on the first "Ask AI" (plan §5.4), then stays mounted so an answer
@@ -20,18 +23,23 @@ const AssistantDrawer = lazy(async () => {
  * the first Tab stop), not for redirects, and not when only the query string changes.
  */
 function useFocusOnRouteChange(mainRef: RefObject<HTMLElement | null>) {
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  // `location.state` is `any` in React Router's types; narrowed below.
+  const state: unknown = location.state;
   const navigationType = useNavigationType();
   const previous = useRef(pathname);
+  // A keyboard shortcut that navigates focuses its own target (e.g. `c` → quick create).
+  const keepFocus = (state as Partial<ShortcutNavState> | null)?.keepFocus === true;
 
   useEffect(() => {
     if (previous.current === pathname) return;
     previous.current = pathname;
-    if (navigationType === NavigationType.Replace) return;
+    if (navigationType === NavigationType.Replace || keepFocus) return;
     const main = mainRef.current;
     const target = main?.querySelector<HTMLElement>('h1') ?? main;
     target?.focus({ preventScroll: true });
-  }, [pathname, navigationType, mainRef]);
+  }, [pathname, navigationType, keepFocus, mainRef]);
 }
 
 /**
@@ -40,7 +48,10 @@ function useFocusOnRouteChange(mainRef: RefObject<HTMLElement | null>) {
  */
 export function AppShell() {
   const { pathname } = useLocation();
-  const projectId = useMatch('/projects/:projectId/*')?.params.projectId;
+  const routeProjectId = useMatch('/projects/:projectId/*')?.params.projectId;
+  // A project the API doesn't know (404 page) isn't a current project: no project nav, no Ask AI.
+  const missingProject = useNotFound((s) => s.cause === 'project');
+  const projectId = missingProject ? undefined : routeProjectId;
   const mainRef = useRef<HTMLElement>(null);
   const hamburgerRef = useRef<HTMLButtonElement>(null);
   const drawerOpen = useAssistant((s) => s.open);
@@ -57,6 +68,7 @@ export function AppShell() {
   if (drawerOpen && !drawerLoaded) setDrawerLoaded(true);
 
   useFocusOnRouteChange(mainRef);
+  useKeyboardShortcuts();
 
   useEffect(() => {
     if (!navOpen) return;
@@ -91,6 +103,7 @@ export function AppShell() {
         </main>
       </div>
       <ScrollRestoration />
+      <ShortcutsDialog />
       {drawerLoaded && (
         <Suspense fallback={null}>
           <AssistantDrawer />

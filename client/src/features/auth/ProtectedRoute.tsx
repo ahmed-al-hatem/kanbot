@@ -1,7 +1,8 @@
 import { lazy, Suspense } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router';
+import { Navigate, Outlet, useLocation, useMatches } from 'react-router';
 import { FullPageLoader } from '@/components/FullPageLoader/FullPageLoader';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { isNotFoundMatch } from '@/lib/routeHandle';
 import { useSession } from '@/stores/session';
 import { loginPath } from './redirect';
 import styles from './AuthLayout.module.css';
@@ -21,9 +22,15 @@ const PageError = lazy(async () => {
   return { default: Component };
 });
 
+const SignedOutNotFoundPage = lazy(async () => {
+  const { SignedOutNotFoundPage: Component } = await import('@/features/errors/NotFoundPage');
+  return { default: Component };
+});
+
 /**
  * Layout route for every private page (AUTH-3, AUTH-5, AUTH-6):
- * - no token → `/login?redirect=<this page>` (plain `/login` right after Log out);
+ * - no token → `/login?redirect=<this page>` (plain `/login` right after Log out); an unknown
+ *   path shows the signed-out 404 instead (DESIGN §9: the same page, centered, not a redirect);
  * - token, `/auth/me` running → full-page loader; failing for another reason → page error;
  * - session expired mid-use → the page stays behind the non-dismissable dialog;
  * - session expired before the user ever loaded (stale token on startup) → straight to login.
@@ -34,6 +41,7 @@ export function ProtectedRoute() {
   const sessionExpired = useSession((s) => s.sessionExpired);
   const signedOut = useSession((s) => s.signedOut);
   const me = useCurrentUser();
+  const notFound = isNotFoundMatch(useMatches());
   const here = `${location.pathname}${location.search}${location.hash}`;
 
   if (!token) {
@@ -48,7 +56,15 @@ export function ProtectedRoute() {
         </>
       );
     }
-    return <Navigate to={signedOut ? '/login' : loginPath(here)} replace />;
+    if (signedOut) return <Navigate to="/login" replace />;
+    if (notFound) {
+      return (
+        <Suspense fallback={<FullPageLoader />}>
+          <SignedOutNotFoundPage />
+        </Suspense>
+      );
+    }
+    return <Navigate to={loginPath(here)} replace />;
   }
 
   if (me.data) return <Outlet />;

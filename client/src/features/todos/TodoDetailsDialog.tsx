@@ -8,15 +8,16 @@ import { ConfirmBar } from '@/components/Banner/ConfirmBar';
 import { Button } from '@/components/Button/Button';
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog';
 import { Dialog } from '@/components/Dialog/Dialog';
-import { EmptyState } from '@/components/EmptyState/EmptyState';
 import { Field } from '@/components/Field/Field';
 import { Input, Textarea } from '@/components/Field/Input';
 import { DateInput, Select } from '@/components/Field/Select';
 import { TagInput } from '@/components/Field/TagInput';
 import { PageError } from '@/components/PageError/PageError';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
+import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
 import { useTodo, useUpdateTodo } from '@/hooks/useTodos';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { applyServerErrors, onInvalidSubmit } from '@/lib/formErrors';
 import { formatTimestamp, overdueDays, plural } from '@/lib/format';
 import { announce } from '@/stores/announcer';
@@ -86,19 +87,23 @@ interface TodoDetailsDialogProps {
   onClose: () => void;
 }
 
-/** Loading, not-found and error states around the editor (DESIGN §11). */
+/**
+ * Loading and error states around the editor (DESIGN §11). A missing todo (404, or another
+ * project's id) never gets here: the project layout shows the 404 page for it.
+ */
 function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
   const { projectId = '' } = useParams();
   const todo = useTodo(todoId);
   const sprints = useSprints(projectId);
-  // A todo of another project (a hand-edited link) is treated like a missing one.
+  const { data: project } = useCurrentProject();
   const data = todo.data?.projectId === projectId ? todo.data : undefined;
+  // A dialog-backed route: "KAN-12 · Kanbot Web · Kanbot" over the page's title while open.
+  useDocumentTitle(open ? titleOf(data?.key ?? 'Todo details', project?.name) : null, 1);
 
   if (data) {
     return <TodoEditor todo={data} sprints={sprints.data} open={open} onClose={onClose} />;
   }
 
-  const notFound = todo.data !== undefined || (isApiError(todo.error) && todo.error.status === 404);
   const onOpenChange = (next: boolean) => {
     if (!next) onClose();
   };
@@ -107,23 +112,11 @@ function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={notFound ? 'Todo not found' : 'Todo details'}
+      title="Todo details"
       size="todo"
       fallbackFocus={todoOrPageFocus(todoId)}
     >
-      {notFound ? (
-        <EmptyState
-          icon="search"
-          headingLevel={3}
-          title="This todo doesn't exist"
-          description="It may have been deleted, or the link is wrong."
-          actions={
-            <Button variant="primary" onClick={onClose}>
-              Close
-            </Button>
-          }
-        />
-      ) : todo.isError ? (
+      {todo.isError ? (
         <PageError
           page="this todo"
           error={todo.error}

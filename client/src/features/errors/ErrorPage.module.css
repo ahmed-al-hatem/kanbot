@@ -1,0 +1,142 @@
+/* DESIGN §9 Global — 404 Not found (artboards S09, M04); the error boundaries reuse the layout. */
+.page {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-200);
+  padding: 64px var(--space-300);
+  text-align: center;
+}
+
+.illustration {
+  flex: none;
+  max-inline-size: 100%;
+  block-size: auto;
+}
+
+.title {
+  font-size: 24px;
+  line-height: 28px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.body {
+  max-inline-size: 460px;
+  color: var(--text-subtle);
+}
+
+/* The requested path: 12px monospace on --neutral, one line with an ellipsis. */
+.path {
+  display: block;
+  max-inline-size: min(100%, 560px);
+  padding: var(--space-050) var(--space-100);
+  border-radius: var(--radius-small);
+  background: var(--neutral);
+  color: var(--text-subtle);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 16px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-100);
+  margin-block-start: var(--space-050);
+}
+
+/* Signed out: the same content centered on --surface-sunken with the logo, like the auth pages. */
+.standalone {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
+  background: var(--surface-sunken);
+}
+
+.standalone:focus {
+  outline: none;
+}
+
+.standaloneLogo {
+  display: flex;
+  justify-content: center;
+  padding-block-start: var(--space-400);
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: var(--space-400) var(--space-200);
+  }
+}
+
+/*
+ * The update and crash screens are in the startup bundle and must not need a chunk, so they use
+ * these plain buttons (same look as the design-system Button, md) instead of importing it.
+ */
+.plainButton,
+.plainLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  block-size: var(--size-button);
+  padding-inline: var(--space-150);
+  border: none;
+  border-radius: var(--radius-medium);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background-color 150ms var(--ease-practical);
+}
+
+.plainButton {
+  background: var(--brand);
+  color: var(--text-inverse);
+}
+
+.plainButton:hover {
+  background: var(--brand-hover);
+}
+
+.plainButton:active {
+  background: var(--brand-pressed);
+}
+
+.plainLink,
+.plainLink:hover {
+  background: var(--neutral);
+  color: var(--text);
+}
+
+.plainLink:hover {
+  background: var(--neutral-hover);
+}
+
+/* "Update" tag on the new-version screen (the gray / blue lozenge look, without the component). */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  block-size: 20px;
+  padding-inline: var(--space-075);
+  border-radius: var(--radius-small);
+  background: var(--lz-blue-bg);
+  color: var(--lz-blue-fg);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+}

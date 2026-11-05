@@ -3,7 +3,8 @@ import { Icon, type IconName } from '@/components/Icon/Icon';
 import { Logo } from '@/components/Logo/Logo';
 import { usePrefetchProject } from '@/hooks/useProjects';
 import { cx } from '@/lib/cx';
-import { pageChunks, type ProjectSection } from '@/routeChunks';
+import { prefetchChunk, type ProjectSection } from '@/routeChunks';
+import { useNotFound } from '@/stores/notFound';
 import { ProfileMenu } from './ProfileMenu';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import styles from './AppShell.module.css';
@@ -16,7 +17,10 @@ const SECTIONS: { section: ProjectSection; label: string; icon: IconName }[] = [
   { section: 'sprints', label: 'Sprints', icon: 'sprint' },
 ];
 
-const navClass = ({ isActive }: { isActive: boolean }) => cx(styles.navItem, isActive && styles.navItemActive);
+const navClass =
+  (notFound: boolean) =>
+  ({ isActive }: { isActive: boolean }) =>
+    cx(styles.navItem, isActive && !notFound && styles.navItemActive);
 
 interface SidebarProps {
   projectId: string | undefined;
@@ -34,6 +38,9 @@ export function Sidebar({ projectId, open }: SidebarProps) {
   const sectionMatch = useMatch('/projects/:projectId/:section/*');
   const current = sectionMatch?.params.section;
   const section: ProjectSection = current === 'board' || current === 'sprints' ? current : 'backlog';
+  // DESIGN §9 404: the sidebar stays, with no item current.
+  const notFound = useNotFound((s) => s.cause !== null);
+  const linkProps = { className: navClass(notFound), 'aria-current': notFound ? false : 'page' } as const;
 
   return (
     <nav id={NAV_ID} aria-label="Main" className={cx(styles.nav, open && styles.navOpen)}>
@@ -54,7 +61,8 @@ export function Sidebar({ projectId, open }: SidebarProps) {
               <li key={item.section}>
                 <NavLink
                   to={`/projects/${projectId}/${item.section}`}
-                  className={navClass}
+                  data-tip={item.label}
+                  {...linkProps}
                   onPointerEnter={() => {
                     prefetch(projectId, item.section);
                   }}
@@ -77,9 +85,14 @@ export function Sidebar({ projectId, open }: SidebarProps) {
           <NavLink
             to="/projects"
             end
-            className={navClass}
-            onPointerEnter={() => void pageChunks.projects()}
-            onFocus={() => void pageChunks.projects()}
+            data-tip="Projects"
+            {...linkProps}
+            onPointerEnter={() => {
+              prefetchChunk('projects');
+            }}
+            onFocus={() => {
+              prefetchChunk('projects');
+            }}
           >
             <Icon name="spaces" className={styles.navIcon} />
             <span className={styles.navLabel}>Projects</span>

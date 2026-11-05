@@ -37,6 +37,11 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
+/** A 404: the id doesn't exist, or belongs to another user (the API doesn't tell them apart). */
+export function isNotFoundError(error: unknown): boolean {
+  return isApiError(error) && error.status === 404;
+}
+
 /** True for 4xx responses: retrying won't help (wrong input, not found, rate limited…). */
 export function isClientError(error: unknown): boolean {
   return isApiError(error) && error.status >= 400 && error.status < 500;
