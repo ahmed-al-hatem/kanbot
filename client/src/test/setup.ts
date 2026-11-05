@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { stopRefocus } from '@/lib/refocus';
@@ -9,6 +9,12 @@ import { useHighlight } from '@/stores/highlight';
 import { useSession } from '@/stores/session';
 import { useToast } from '@/stores/toast';
 import { server } from './server';
+
+// The page tests render the real routes, whose pages are lazy chunks: the first render of each
+// file compiles and loads them cold. On a busy machine that alone took longer than Testing
+// Library's default 1s wait, so every findBy* / waitFor gets 4s (they still resolve as soon as
+// the element appears). The per-test limit is raised to match in vitest.config.ts.
+configure({ asyncUtilTimeout: 4000 });
 
 // jsdom has no ResizeObserver; Radix popper content (menus) measures itself with one.
 class ResizeObserverStub implements ResizeObserver {

@@ -115,12 +115,19 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
     const user = userEvent.setup();
     let inFlight = 0;
     let maxInFlight = 0;
+    // The first answer waits for the second key press, not for a timer: under a slow full run a
+    // fixed delay could elapse before the second ↓, and the test would no longer test overlap.
+    const gate: { release?: () => void } = {};
+    const secondKeyPressed = new Promise<void>((resolve) => {
+      gate.release = resolve;
+    });
     server.use(
       http.post(apiUrl('/todos/:todoId/move'), async ({ params, request }) => {
         inFlight += 1;
         maxInFlight = Math.max(maxInFlight, inFlight);
         const body = (await request.json()) as MoveTodoRequest;
-        await delay(150);
+        await secondKeyPressed;
+        await delay(50);
         const todo = db.todos.find((item) => item.id === params.todoId)!;
         db.calls.move.push({ todoId: todo.id, body });
         serverMove(db, todo, { sprintId: body.sprintId ?? null, status: todo.status, position: body.position });
@@ -141,6 +148,7 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
     });
     expect(db.calls.move).toEqual([]);
     await user.keyboard('{ArrowDown}');
+    gate.release?.();
 
     // Both moves show at once…
     await waitFor(() => {

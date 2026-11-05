@@ -8,6 +8,8 @@ export default defineConfig((env) =>
       setupFiles: ['./src/test/setup.ts'],
       include: ['src/**/*.test.{ts,tsx}'],
       restoreMocks: true,
+      // Page tests render real lazy routes and wait on several async steps (see test/setup.ts).
+      testTimeout: 15_000,
       css: { modules: { classNameStrategy: 'non-scoped' } },
     },
   }),

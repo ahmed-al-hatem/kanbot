@@ -32,7 +32,7 @@ describe('backlog list (BL-1)', () => {
   it('shows the active sprint, planned sprints and the backlog with counts, points and rows', async () => {
     renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
     const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent);
     expect(headings).toEqual(['Sprint 3', 'Sprint 4', 'Backlog']);
 
@@ -177,7 +177,7 @@ describe('search and filters (BL-6)', () => {
       expect(router.state.location.search).toBe('?q=login');
     });
     // The rows follow the URL through useDeferredValue, a render later.
-    expect(await screen.findByText('Showing 1 of 4')).toBeInTheDocument();
+    expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Login screen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fix crash on save' })).not.toBeInTheDocument();
     expect(within(group('Sprint 3')).getByText('No todos in Sprint 3 match your filters')).toBeInTheDocument();
@@ -207,7 +207,7 @@ describe('search and filters (BL-6)', () => {
 
     await user.type(search, 'crashes');
     await searchIs('?q=crashes');
-    expect(await screen.findByText('Showing 1 of 4')).toBeInTheDocument();
+    expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     await user.clear(search);
     await user.type(search, 'frontend');
     await searchIs('?q=frontend');
@@ -218,7 +218,7 @@ describe('search and filters (BL-6)', () => {
 
     await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by priority' }), 'urgent');
     await searchIs('?priority=urgent');
-    expect(await screen.findByText('Showing 1 of 4')).toBeInTheDocument();
+    expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by type' }), 'story');
     await searchIs('?priority=urgent&type=story');
     expect(await screen.findByText('Showing 0 of 4')).toBeInTheDocument();
@@ -228,7 +228,7 @@ describe('search and filters (BL-6)', () => {
   it('reads the filters from the URL on load', async () => {
     renderApp('/projects/p1/backlog?type=bug');
 
-    expect(await screen.findByText('Showing 1 of 4')).toBeInTheDocument();
+    expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByRole('combobox', { name: 'Filter by type' })).toHaveValue('bug');
     expect(screen.getByRole('button', { name: 'Fix crash on save' })).toBeInTheDocument();
   });
