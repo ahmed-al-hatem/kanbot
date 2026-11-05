@@ -10,7 +10,7 @@ const HEX_COLOR = '^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$';
 
 export default defineConfig([
   // api.ts is a verbatim copy of the server contract; icons.ts is generated.
-  globalIgnores(['dist', 'coverage', 'src/types/api.ts', 'src/components/Icon/icons.ts']),
+  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results', 'src/types/api.ts','src/components/Icon/icons.ts']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -63,11 +63,16 @@ export default defineConfig([
     rules: { 'no-restricted-globals': 'off' },
   },
   {
-    files: ['**/*.test.{ts,tsx}', 'src/test/**'],
+    files: ['**/*.test.{ts,tsx}', 'src/test/**', 'e2e/**'],
     rules: {
       'no-restricted-globals': 'off',
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
+  },
+  {
+    // Playwright runs specs in Node; `page.evaluate` callbacks run in the browser.
+    files: ['e2e/**'],
+    languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {
     files: ['*.config.ts'],
