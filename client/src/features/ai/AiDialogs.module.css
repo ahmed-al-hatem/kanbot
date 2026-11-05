@@ -169,11 +169,25 @@
   padding-block: var(--space-075);
   border-radius: var(--radius-large);
   background: var(--surface-sunken);
-  transition: opacity 150ms var(--ease-practical);
+  transition: background-color 150ms var(--ease-practical);
 }
 
+/*
+ * Left-out drafts and plan rows look dimmed without fading their text: the canvas's
+ * `opacity: .55` put titles and inputs near 3.4:1, under WCAG AA (NFR-5). The row loses its
+ * fill, its icons fade, and the plan's key and title drop to --text-subtlest (≥ 4.5:1).
+ */
 .unchecked {
+  background: transparent;
+}
+
+.unchecked svg {
   opacity: 0.55;
+}
+
+.unchecked .candidateKey,
+.unchecked .candidateTitle {
+  color: var(--text-subtlest);
 }
 
 .control {
@@ -287,7 +301,7 @@
 
 .candidate {
   border-block-end: 1px solid var(--border);
-  transition: opacity 150ms var(--ease-practical);
+  transition: color 150ms var(--ease-practical);
 }
 
 .candidateLabel {

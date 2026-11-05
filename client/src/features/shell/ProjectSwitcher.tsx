@@ -29,7 +29,9 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
     <button
       type="button"
       className={styles.switcher}
-      aria-label={project ? `Switch project, current: ${project.name}` : 'Choose a project'}
+      // The label contains all the visible text, name and key (WCAG 2.5.3 Label in Name): without
+      // the key it failed axe's label-content-name-mismatch.
+      aria-label={project ? `Switch project, current: ${project.name} ${project.key}` : 'Choose a project'}
       // The tablet rail's tooltip (AppShell.module.css).
       data-tip={project ? project.name : 'Choose a project'}
     >
@@ -37,8 +39,10 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
         <>
           <ProjectAvatar id={project.id} name={project.name} />
           <span className={styles.switcherText}>
-            <span className={styles.switcherName}>{project.name}</span>
-            <span className={styles.switcherKey}>{project.key}</span>
+            {/* The spaces keep name and key separate words for axe's visible text (a flex
+                container doesn't render whitespace-only text, so the layout is unchanged). */}
+            <span className={styles.switcherName}>{project.name}</span>{' '}
+            <span className={styles.switcherKey}>{project.key}</span>{' '}
           </span>
         </>
       ) : projectId ? (

@@ -9,7 +9,7 @@ A **1-week frontend project**. The backend is done. You build the React app.
 | Folder | Status | What it is |
 |---|---|---|
 | [`server/`](server/) | ✅ Complete | Express 5 + TypeScript API: auth (JWT), projects, backlog, sprints, board, AI assistant (mock or real LLM) |
-| `client/` | 🛠 To build | React + TypeScript + Vite. **UI and design are your choice** |
+| [`client/`](client/) | ✅ Complete | React 19 + TypeScript + Vite: backlog, sprints, board, AI assistant, light/dark, e2e tests. See [client/README.md](client/README.md) |
 | [`docs/`](docs/) | 📄 | Requirements and implementation plan, in English and Arabic |
 | [`design/`](design/) | 🎨 | Low-fidelity wireframes (no visual design) + logo |
 

@@ -3,6 +3,8 @@ coverage
 node_modules
 package-lock.json
 stats.html
+playwright-report
+test-results
 # Verbatim copies / generated files
 src/types/api.ts
 src/components/Icon/icons.ts
