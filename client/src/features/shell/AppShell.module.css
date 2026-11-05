@@ -341,6 +341,38 @@
     inline-size: 64px;
     padding-inline: var(--space-100);
     align-items: center;
+    /* The rail's few items fit the viewport; visible overflow lets the tooltips stick out. */
+    overflow: visible;
+  }
+
+  /*
+   * Visible names for the icon-only rail, on hover and keyboard focus. The text is already the
+   * element's accessible name, so the generated content has empty alt text (`/ ''`) and isn't
+   * read twice; the first `content` is the fallback for browsers without that syntax.
+   */
+  .nav [data-tip] {
+    position: relative;
+  }
+
+  .nav [data-tip]:hover::after,
+  .nav [data-tip]:focus-visible::after {
+    content: attr(data-tip);
+    content: attr(data-tip) / '';
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: calc(100% + var(--space-150));
+    z-index: 40;
+    padding: var(--space-050) var(--space-100);
+    border-radius: var(--radius-small);
+    background: var(--flag);
+    color: var(--flag-fg);
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+    pointer-events: none;
+    transform: translateY(-50%);
+    animation: global(kbFade) 150ms var(--ease-practical) backwards;
   }
 
   .brand {
@@ -427,4 +459,15 @@
   .navOpen .brand {
     display: none;
   }
+}
+
+/* "Keyboard shortcuts ?" in the profile menu. */
+.menuKbd {
+  margin-inline-start: auto;
+  padding-inline: var(--space-075);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-subtle);
 }
