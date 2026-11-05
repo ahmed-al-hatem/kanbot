@@ -3,17 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Kanbot — your sprint board with an AI teammate." />
+    <meta
+      name="description"
+      content="Kanbot is a sprint board with an AI teammate: plan sprints from your backlog, move todos across the board, and let the assistant draft todos, plans and sprint summaries."
+    />
+    <!--
+      Address-bar colour per OS theme (= --surface in src/styles/tokens.css, the only other place
+      these values appear). stores/theme.ts rewrites both from the token once the app runs, so a
+      theme chosen in the app wins over the OS.
+    -->
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#1F1F21" media="(prefers-color-scheme: dark)" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Kanbot</title>
     <script>
-      // Set the theme class before first paint (no flash). Saved choice wins, then the OS.
-      // Mirrors stores/theme.ts, which persists { state: { theme } } under "kanbot.theme".
+      // Set the theme class before first paint (no flash). A theme the user chose wins, then the OS.
+      // Mirrors stores/theme.ts, which persists { state: { theme, source } } under "kanbot.theme";
+      // source "system" means "follow the OS" (a value saved without source was a choice).
       (function () {
         var theme;
         try {
           var saved = JSON.parse(localStorage.getItem('kanbot.theme') || 'null');
-          theme = saved && saved.state && saved.state.theme;
+          var state = saved && saved.state;
+          if (state && state.source !== 'system') theme = state.theme;
         } catch (e) {}
         if (theme !== 'light' && theme !== 'dark') {
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
