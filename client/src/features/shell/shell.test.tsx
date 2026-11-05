@@ -98,7 +98,7 @@ describe('project switcher (PRJ-5)', () => {
     const user = userEvent.setup();
     const { router } = renderApp('/projects/p1/board');
 
-    const switcher = await screen.findByRole('button', { name: 'Switch project, current: Kanbot App' });
+    const switcher = await screen.findByRole('button', { name: /^Switch project, current: Kanbot App/ });
     await user.click(switcher);
     const menu = await screen.findByRole('menu', { name: 'Projects' });
     const current = within(menu).getByRole('menuitem', { name: /Kanbot App/ });
@@ -106,7 +106,7 @@ describe('project switcher (PRJ-5)', () => {
 
     await user.click(within(menu).getByRole('menuitem', { name: /Portfolio Site/ }));
 
-    expect(await screen.findByRole('button', { name: 'Switch project, current: Portfolio Site' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Switch project, current: Portfolio Site/ })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/projects/p2/board');
     expect(navLink('Active Sprint')).toHaveAttribute('href', '/projects/p2/board');
   });
@@ -115,7 +115,7 @@ describe('project switcher (PRJ-5)', () => {
     const user = userEvent.setup();
     const { router } = renderApp('/projects/p1/backlog');
 
-    await user.click(await screen.findByRole('button', { name: 'Switch project, current: Kanbot App' }));
+    await user.click(await screen.findByRole('button', { name: /^Switch project, current: Kanbot App/ }));
     await user.click(await screen.findByRole('menuitem', { name: 'View all projects' }));
 
     expect(await screen.findByRole('heading', { name: 'Projects', level: 1 })).toBeInTheDocument();

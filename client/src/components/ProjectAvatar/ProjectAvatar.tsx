@@ -27,8 +27,13 @@ export function ProjectAvatar({ id, name, size = 24, className }: ProjectAvatarP
   const tone = TONES[hash(id) % TONES.length] ?? 'blue';
   const letter = name.trim().charAt(0).toUpperCase() || '?';
   return (
-    <span className={cx(styles.avatar, styles[`s${size}`], styles[tone], className)} aria-hidden="true">
-      {letter}
-    </span>
+    // The letter is drawn by CSS (`::before`), not a text node: axe's label-content-name-mismatch
+    // counts every on-screen text node, aria-hidden or not, so a letter here made the project
+    // switcher's visible text "AKanbot App…" and no label could contain it (WCAG 2.5.3).
+    <span
+      className={cx(styles.avatar, styles[`s${size}`], styles[tone], className)}
+      data-letter={letter}
+      aria-hidden="true"
+    />
   );
 }
