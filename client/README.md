@@ -202,7 +202,7 @@ what the Playwright specs add on top (results in [§10](#10-testing--ci)).
 | NFR-2 | ✅ | Loading (skeleton after 150 ms, ≥ 300 ms), empty and error (PageError + Try again) on every view; 404 for unknown routes, projects, sprints and todos; error boundaries; no unhandled rejections from prefetches |
 | NFR-3 | ✅ | Every mutation: toast, inline error, optimistic rollback or a loading button; destructive actions confirm |
 | NFR-4 | ⚠️ | Sidebar ≥ 1024, icon rail 761–1023, top bar + hamburger ≤ 760; board scrolls sideways (980px min), 85vw snapping columns on phones. E2E checks 390px (nav, 85vw, no page overflow) and runs at 1440; 1024 / 768 were checked by hand in phases 3–7, and the phase 8 rail tooltips at 768–1023 in code and unit tests only |
-| NFR-5 | ⚠️ | Landmarks, one h1, skip link, labelled fields, `:focus-visible`, Radix dialogs (trap, Esc, restore), keyboard moves with announcements, priority as icon + text. axe in unit tests and in e2e (WCAG 2.1 AA, colour contrast on) on 9 surfaces in both themes. axe: no violations on any of them (e2e). **Pending:** the Lighthouse scores ([§10](#10-testing--ci)) |
+| NFR-5 | ✅ | Landmarks, one h1, skip link, labelled fields, `:focus-visible`, Radix dialogs (trap, Esc, restore), keyboard moves with announcements, priority as icon + text. axe in unit tests and in e2e (WCAG 2.1 AA, colour contrast on) on 9 surfaces in both themes. axe: no violations on any of them (e2e); Lighthouse Accessibility 100 on every page, device and theme ([§10](#10-testing--ci)) |
 | NFR-6 | ✅ | No avoidable waterfalls; search filters the cached list (no request per keystroke); optimistic drag and drop; initial JS 121.5 KB gz (`npm run analyze`) |
 | NFR-7 | ✅ | Only the JWT is persisted as a credential; `no-console`; AI Markdown without raw HTML, `javascript:` URLs dropped, links `rel="noopener noreferrer"` |
 | NFR-8 | ✅ | Plan §4 structure; API layer typed from `types/api.ts`; `fetch` only in `src/api/`; Conventional Commits, one PR per phase |
@@ -290,8 +290,8 @@ every PR and on `main`; `e2e` after it (server `npm ci` + `.env` from the exampl
 |---|---|
 | `lint`, `typecheck`, unit tests, `build` | Pass locally (281 unit tests) |
 | `npm run e2e` (incl. axe, both themes) | First run: 8 / 12 passed. It found two app bugs, both fixed — the project switcher's name left out its visible key (axe `label-content-name-mismatch`, WCAG 2.5.3, on every project page in both themes), and a summary requested from Complete sprint could be dropped by an older sprint-list refetch — plus one wrong check in the mobile spec. Re-run: **12 / 12 passed**, axe clean in light and dark |
-| Lighthouse Accessibility — desktop, light / dark | _To be recorded_ |
-| Lighthouse Accessibility — mobile, light / dark | _To be recorded_ |
+| Lighthouse — Accessibility | **100** on login, projects, backlog, board and sprints, desktop and mobile, light and dark (production build, `npm run preview`) |
+| Lighthouse — Best Practices | **100** on the same pages, devices and themes |
 
 ## 11. Known issues
 
