@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { memo, useEffect, useRef, type KeyboardEvent, type KeyboardEventHandler } from 'react';
+import { memo, useEffect, useRef, type CSSProperties, type KeyboardEvent, type KeyboardEventHandler } from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { Chip } from '@/components/Chip/Chip';
 import { PointsPill } from '@/components/Chip/PointsPill';
@@ -20,6 +20,8 @@ import type { DropData } from '@/lib/dnd/sensors';
 const HIGHLIGHT_MS = 1400;
 /** Labels shown in the row before "+N" (the title keeps the room). */
 const MAX_LABELS = 2;
+/** A long backlog doesn't wait seconds for its last rows: the stagger stops growing here. */
+const MAX_STAGGER = 12;
 
 export const ROW_HELP_ID = 'backlog-row-help';
 /** Why dragging and ↑/↓ are off; the drag handles point at it while a filter is on. */
@@ -41,6 +43,8 @@ const NO_LISTENERS: Record<string, never> = {};
 
 interface TodoRowProps {
   todo: Todo;
+  /** Position in its list: the mount stagger (DESIGN §8.2, 45ms per row, capped). */
+  index: number;
   groupId: string;
   /** Reorder inside the group (Move to top / bottom) — not in the active sprint (the board's job). */
   reorderable: boolean;
@@ -65,6 +69,7 @@ interface TodoRowProps {
  */
 export const TodoRow = memo(function TodoRow({
   todo,
+  index,
   groupId,
   reorderable,
   moveTargets,
@@ -117,9 +122,16 @@ export const TodoRow = memo(function TodoRow({
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={
+        {
+          transform: CSS.Translate.toString(transform),
+          transition,
+          '--i': Math.min(index, MAX_STAGGER),
+        } as CSSProperties
+      }
       className={cx(
         styles.row,
+        'kb-rise kb-stagger',
         !dragDisabled && !saving && styles.draggable,
         highlighted && 'kb-added',
         saving && styles.saving,

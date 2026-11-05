@@ -96,7 +96,8 @@
 }
 
 .toggle svg {
-  transition: rotate 200ms var(--ease-practical);
+  /* DESIGN §8.2 "Collapse chevron": rotate −90°, 200ms inout. */
+  transition: rotate 200ms var(--ease-inout);
 }
 
 .toggle[aria-expanded='false'] svg {
@@ -378,6 +379,11 @@ button.title:hover {
 
 /* DESIGN §13 mobile: rows drop priority, points (and labels); the filter bar stacks. */
 @media (max-width: 760px) {
+  /* Phones: the search takes the whole first line, the two selects share the next. */
+  .search {
+    inline-size: 100%;
+  }
+
   .row {
     grid-template-columns: 16px 16px 56px minmax(0, 1fr) 32px;
   }
