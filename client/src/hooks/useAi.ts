@@ -76,8 +76,15 @@ export function useSummarizeSprint() {
   return useMutation({
     mutationKey: SUMMARY_KEY,
     mutationFn: ({ sprint }: SummaryVariables) => summarizeSprint(sprint.id),
-    onSuccess: (response) => {
-      putSummary(response.sprint);
+    onSuccess: async ({ sprint }) => {
+      // A refetch that started before the server saved the summary (Complete sprint invalidates
+      // the sprint list right before asking for it) would resolve after this write and drop the
+      // summary again, leaving "No summary yet" (found by the e2e demo flow). Cancel those first,
+      // write, then refetch the list once: that request starts after the save, so it has it.
+      const keys = [qk.sprints(sprint.projectId), qk.sprint(sprint.id), qk.board(sprint.id)];
+      await Promise.all(keys.map((queryKey) => queryClient.cancelQueries({ queryKey })));
+      putSummary(sprint);
+      void queryClient.invalidateQueries({ queryKey: qk.sprints(sprint.projectId) });
     },
     onError: (error, { sprint, notify }) => {
       if (notify) toast.error(`${sprint.name} is completed, but its AI summary failed. ${error.message}`);
