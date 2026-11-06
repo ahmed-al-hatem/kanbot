@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useMatch, useNavigate } from 'react-router';
+import { getT } from '@/i18n';
 import { announce } from '@/stores/announcer';
 import { useNotFound } from '@/stores/notFound';
 import { useShortcuts } from '@/stores/shortcuts';
@@ -43,7 +44,7 @@ export function useKeyboardShortcuts() {
     const go = (section: 'board' | 'backlog' | 'sprints') => {
       const id = current.current.projectId;
       if (!id) {
-        announce('Open a project first to use this shortcut');
+        announce(getT().shell.shortcuts.needProject);
         return;
       }
       void navigate(`/projects/${id}/${section}`);
@@ -58,7 +59,7 @@ export function useKeyboardShortcuts() {
       const { projectId: id, pathname: path } = current.current;
       const backlog = id && `/projects/${id}/backlog`;
       if (!backlog || path === backlog) {
-        announce('There is nothing to create here');
+        announce(getT().shell.shortcuts.nothingToCreate);
         return;
       }
       // Elsewhere in a project: the Backlog's quick create, once the page has it.
@@ -70,7 +71,7 @@ export function useKeyboardShortcuts() {
     const search = () => {
       const target = document.querySelector<HTMLElement>(SEARCH_TARGET);
       if (target) activate(target);
-      else announce('There is no search on this page');
+      else announce(getT().shell.shortcuts.noSearch);
     };
 
     const onKeyDown = (event: KeyboardEvent) => {

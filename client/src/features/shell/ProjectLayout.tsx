@@ -7,6 +7,7 @@ import { NotFoundPage } from '@/features/errors/NotFoundPage';
 import { TodoDetailsHost } from '@/features/todos/TodoDetailsDialog';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useTodo } from '@/hooks/useTodos';
+import { useT } from '@/i18n';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 
 /**
@@ -44,13 +45,14 @@ export function ProjectLayout() {
 }
 
 function ProjectError({ project }: { project: ReturnType<typeof useCurrentProject> }) {
-  useDocumentTitle(titleOf('Project'));
+  const t = useT();
+  useDocumentTitle(titleOf(t.shell.project));
   return (
     <div className="kb-page">
-      <PageHeader title="Project" />
+      <PageHeader title={t.shell.project} />
       <div className="page-body">
         <PageError
-          page="this project"
+          page={t.shell.thisProject}
           error={project.error}
           onRetry={() => {
             void project.refetch();
