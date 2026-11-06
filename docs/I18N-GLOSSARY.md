@@ -127,3 +127,33 @@ term is added here first. Plan: [FRONTEND-PLAN.en.md §11](FRONTEND-PLAN.en.md#1
 | {n} projects · {n} backlog todos | مشروع واحد · مشروعان · 3 مشاريع · 11 مشروعًا · 100 مشروع · «… في قائمة الانتظار» | |
 | {sprint} active (lozenge) | {sprint} نشط | |
 | Your workspace · your projects · this project | مساحة عملك · مشاريعك · هذا المشروع | «تعذّر تحميل …» |
+| Your backlog is empty | قائمة الانتظار فارغة | Canvas (Plan sprint's empty note) |
+| Active · Planned · Completed (sprint) | نشط · مخطط · مكتمل | Lozenges; «Sprint 4 (مخطط)» in the Sprint select (R3) |
+| Toggle {group} | إظهار أو إخفاء {group} | Group chevron (canvas) |
+| Drag todos here to plan {sprint} | اسحب البنود إلى هنا للتخطيط لـ {sprint} | Empty planned sprint (canvas) |
+| No todos in {group} match your filters · … yet | لا توجد بنود في {group} تطابق عوامل التصفية · لا توجد بنود في {group} بعد | |
+| Showing X of Y | عرض X من Y | Filter summary (canvas) |
+| Filter todos (search landmark) | تصفية البنود | |
+| Search todos or keys | ابحث في البنود أو المفاتيح | Backlog search placeholder (canvas) |
+| Open (row menu) · Move to bottom | فتح التفاصيل · نقل إلى الأسفل | «فتح التفاصيل» from the canvas row menu |
+| Drag {key} (handle) | اسحب {key} | |
+| Undo | تراجع | Toast action (canvas) |
+| {key} moved to {group}, position N of M | {key} نُقل إلى {group}، الموضع N من M | Live region (canvas); «{key} أُعيد إلى …» after Undo |
+| Picked up {key} · {key} is over {list} · Move cancelled | التُقط {key} · {key} فوق {list} · أُلغي النقل. عاد {key} إلى مكانه. | dnd-kit announcements |
+| Drag and drop is off while filters are on | السحب والإفلات متوقف أثناء التصفية | |
+| Complete {sprint} first · Complete {a} before starting {b} | أكمل {sprint} أولًا · أكمل {a} قبل بدء {b} | Start blocked (canvas toast) |
+| Go to board | الذهاب إلى اللوحة | Board = **اللوحة** |
+| {sprint} started · {name} saved | {sprint} بدأ · {name} حُفظ | Toasts, name first |
+| Edit sprint · Delete sprint · Save sprint · Sprint name | تعديل السبرنت · حذف السبرنت · حفظ السبرنت · اسم السبرنت | |
+| Sprint length hint | أسبوع واحد · أسبوعان · 3 أسابيع · 11 أسبوعًا · 100 أسبوع | `count.weeks`; days use `count.days` |
+| Dates are optional | التواريخ اختيارية | |
+| Todo details | تفاصيل البند | Dialog title while loading (canvas aria-label) |
+| Improve this todo | حسّن هذا البند | Todo details' AI button |
+| None (story points) | غير مقدّر | Same word as Not estimated |
+| Overdue by {n} days | متأخر يومًا واحدًا · متأخر يومين · متأخر 3 أيام | Canvas wording, all plural forms |
+| Add a label | أضف وسمًا | Tag input placeholder (canvas) |
+| Retry (save-error bar) | إعادة المحاولة | Same as Try again buttons |
+| Delete todo | حذف البند | Confirm button |
+| A todo needs a title · Give the sprint a name | يحتاج البند إلى عنوان · امنح السبرنت اسمًا | Validation (canvas) |
+| End date must be after start date | يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء | Validation (canvas) |
+| Key caps (Enter, Esc, Backspace, ↑ ↓) | stay Latin | Inside sentences through `{enter}` tokens (`components/KeyHint`) |
