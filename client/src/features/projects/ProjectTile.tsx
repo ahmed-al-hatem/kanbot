@@ -4,6 +4,7 @@ import { IconButton } from '@/components/Button/Button';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
 import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
 import { ProjectAvatar } from '@/components/ProjectAvatar/ProjectAvatar';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import type { ProjectWithStats } from '@/types/api';
 import styles from './ProjectsPage.module.css';
@@ -21,10 +22,6 @@ interface ProjectTileProps {
   onPrefetch: (projectId: string) => void;
 }
 
-function backlogText(count: number) {
-  return count === 1 ? '1 backlog todo' : `${count} backlog todos`;
-}
-
 /**
  * DESIGN §7 Project tile (PRJ-1): avatar, name, key, description, backlog count and the
  * active sprint. The name is a stretched link, so the whole tile opens the backlog; the ⋯
@@ -38,6 +35,7 @@ export const ProjectTile = memo(function ProjectTile({
   onDelete,
   onPrefetch,
 }: ProjectTileProps) {
+  const t = useT();
   const navigate = useNavigate();
   const backlogPath = `/projects/${project.id}/backlog`;
   // Edit and Delete open a dialog once the menu has handed focus back to ⋯ (see Menu).
@@ -66,14 +64,16 @@ export const ProjectTile = memo(function ProjectTile({
         </div>
         <div className={styles.over}>
           <Menu
-            label={`${project.name} actions`}
+            label={t.projects.tile.menu(project.name)}
             onCloseAutoFocus={() => {
               const action = pendingAction.current;
               pendingAction.current = null;
               if (action === 'edit') onEdit(project);
               if (action === 'delete') onDelete(project);
             }}
-            trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={`Actions for ${project.name}`} />}
+            trigger={
+              <IconButton size="sm" icon="show-more-horizontal" aria-label={t.projects.tile.actions(project.name)} />
+            }
           >
             <MenuItem
               icon="arrow-right"
@@ -81,7 +81,7 @@ export const ProjectTile = memo(function ProjectTile({
                 void navigate(backlogPath);
               }}
             >
-              Open
+              {t.common.open}
             </MenuItem>
             <MenuItem
               icon="pencil"
@@ -89,7 +89,7 @@ export const ProjectTile = memo(function ProjectTile({
                 pendingAction.current = 'edit';
               }}
             >
-              Edit
+              {t.common.edit}
             </MenuItem>
             <MenuSeparator />
             <MenuItem
@@ -99,24 +99,24 @@ export const ProjectTile = memo(function ProjectTile({
                 pendingAction.current = 'delete';
               }}
             >
-              Delete
+              {t.common.delete}
             </MenuItem>
           </Menu>
         </div>
       </div>
 
       <p className={cx(styles.tileDescription, !project.description && styles.tileDescriptionEmpty)}>
-        {project.description || 'No description yet.'}
+        {project.description || t.projects.tile.noDescription}
       </p>
 
       <div className={styles.tileFooter}>
-        <span>{backlogText(project.stats.backlogCount)}</span>
+        <span>{t.count.backlogTodos(project.stats.backlogCount)}</span>
         {activeSprint ? (
           <Lozenge tone="blue" live>
-            {`${activeSprint.name} active`}
+            {t.projects.tile.activeSprint(activeSprint.name)}
           </Lozenge>
         ) : (
-          <span>No active sprint</span>
+          <span>{t.projects.tile.noActiveSprint}</span>
         )}
       </div>
     </article>

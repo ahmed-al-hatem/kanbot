@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useId, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import { isApiError } from '@/api/errors';
 import { Banner } from '@/components/Banner/Banner';
@@ -11,14 +11,21 @@ import { Icon } from '@/components/Icon/Icon';
 import { Input, Textarea } from '@/components/Field/Input';
 import { ProjectAvatar } from '@/components/ProjectAvatar/ProjectAvatar';
 import { useCreateProject, useUpdateProject } from '@/hooks/useProjects';
-import { applyServerErrors, onInvalidSubmit } from '@/lib/formErrors';
+import { useT } from '@/i18n';
+import { errorMessage } from '@/i18n/errors';
+import {
+  announceInvalid,
+  applyLocalizedServerErrors,
+  onInvalidSubmit,
+  useLocalizedErrors,
+} from '@/lib/formErrors';
 import { generatedKey, normalizeKey, PROJECT_KEY_MAX } from '@/lib/projectKey';
-import { announce } from '@/stores/announcer';
 import type { ProjectWithStats } from '@/types/api';
 import { projectFormSchema } from './projectSchema';
 import styles from './ProjectsPage.module.css';
 
-export const KEY_TAKEN = 'This key is already used';
+/** The preview avatar's id before the project exists (it only seeds the avatar's color). */
+const NEW_PROJECT_ID = 'new';
 
 interface ProjectFormDialogProps {
   open: boolean;
@@ -41,22 +48,27 @@ interface ProjectFormDialogProps {
  * Mount it fresh for every open (`key`), so it starts from the project's current values.
  */
 export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSaved }: ProjectFormDialogProps) {
+  const t = useT();
   const isEdit = Boolean(project);
   const formId = useId();
   const create = useCreateProject();
   const update = useUpdateProject();
   const saving = create.isPending || update.isPending;
-  const [formError, setFormError] = useState<string | null>(null);
+  /** The failed request behind the banner (null: no banner); its text is read at render. */
+  const [formError, setFormError] = useState<unknown>(null);
   const [starter, setStarter] = useState(false);
+
+  const schema = useMemo(() => projectFormSchema(isEdit ? 'edit' : 'create', t), [isEdit, t]);
 
   const {
     register,
     handleSubmit,
     setError,
+    trigger,
     control,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(projectFormSchema(isEdit ? 'edit' : 'create')),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: {
       name: project?.name ?? '',
@@ -64,6 +76,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
       description: project?.description ?? '',
     },
   });
+  const setServerError = useLocalizedErrors({ errors, setError, trigger });
   const name = useWatch({ control, name: 'name' });
   const typedKey = normalizeKey(useWatch({ control, name: 'key' }));
   const previewKey = typedKey || (project ? project.key : generatedKey(name, takenKeys));
@@ -74,12 +87,12 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
   const onError = (error: unknown) => {
     // PRJ-2: a duplicate key is a 409 and always goes under Key.
     if (isApiError(error) && error.status === 409) {
-      setError('key', { type: 'server', message: KEY_TAKEN }, { shouldFocus: true });
-      announce('1 field needs attention');
+      setServerError('key', (messages) => messages.projects.form.keyTaken, { shouldFocus: true });
+      announceInvalid(1);
       return;
     }
-    if (applyServerErrors(error, setError, ['name', 'key', 'description'])) return;
-    setFormError(isApiError(error) ? error.message : 'Something went wrong. Please try again.');
+    if (applyLocalizedServerErrors(error, setServerError, ['name', 'key', 'description'])) return;
+    setFormError(error);
   };
 
   const onSubmit = handleSubmit((values) => {
@@ -114,7 +127,7 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title={isEdit ? 'Edit project' : 'Create project'}
+      title={isEdit ? t.projects.form.editTitle : t.projects.form.createTitle}
       size="project"
       footer={
         <>
@@ -124,16 +137,16 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
               onOpenChange(false);
             }}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             type="submit"
             form={formId}
             variant="primary"
             loading={saving}
-            loadingText={isEdit ? 'Saving…' : 'Creating…'}
+            loadingText={isEdit ? t.common.saving : t.common.creating}
           >
-            {isEdit ? 'Save changes' : 'Create project'}
+            {isEdit ? t.common.saveChanges : t.projects.form.create}
           </Button>
         </>
       }
@@ -146,36 +159,32 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
           void onSubmit(event);
         }}
       >
-        {formError && (
+        {formError !== null && (
           <Banner tone="danger" layout="inline">
-            {formError}
+            {errorMessage(formError, t)}
           </Banner>
         )}
 
         {/* Live preview (canvas): avatar, name and the key todos will be numbered with. */}
         <div className={styles.preview}>
-          <ProjectAvatar id={project?.id ?? 'new'} name={name || 'New project'} size={40} />
+          <ProjectAvatar id={project?.id ?? NEW_PROJECT_ID} name={name || t.projects.form.untitled} size={40} />
           <span className={styles.previewText}>
-            <span className={styles.previewName}>{name.trim() || 'New project'}</span>
+            <span className={styles.previewName}>{name.trim() || t.projects.form.untitled}</span>
             <span className="meta">
-              {isEdit ? `New todos will be numbered ${previewKey}-…` : `Todos will be numbered ${previewKey}-1`}
+              {isEdit ? t.projects.form.previewEdit(previewKey) : t.projects.form.previewCreate(previewKey)}
             </span>
           </span>
         </div>
 
-        <Field label="Project name" required error={errors.name?.message}>
-          <Input data-autofocus placeholder="e.g. Kanbot Mobile" maxLength={80} {...nameField} />
+        <Field label={t.projects.form.name} required error={errors.name?.message}>
+          <Input data-autofocus placeholder={t.projects.form.namePlaceholder} maxLength={80} {...nameField} />
         </Field>
 
         <Field
-          label="Key"
+          label={t.projects.form.key}
           required={isEdit}
           error={errors.key?.message}
-          help={
-            isEdit
-              ? "Changing the key doesn't change existing todo keys."
-              : 'Optional · 2–6 letters. Leave it empty to generate one from the name.'
-          }
+          help={isEdit ? t.projects.form.keyHelpEdit : t.projects.form.keyHelpCreate}
         >
           <Input
             className={styles.keyInput}
@@ -194,8 +203,8 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
           />
         </Field>
 
-        <Field label="Description" error={errors.description?.message}>
-          <Textarea rows={3} placeholder="What is this project about?" {...register('description')} />
+        <Field label={t.projects.form.description} error={errors.description?.message}>
+          <Textarea rows={3} placeholder={t.projects.form.descriptionPlaceholder} {...register('description')} />
         </Field>
 
         {!isEdit && (
@@ -208,10 +217,10 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
             label={
               <span className={styles.starterLabel}>
                 <Icon name="ai-sparkle" size={12} className={styles.starterIcon} />
-                Generate a starter backlog with AI
+                {t.projects.form.starter}
               </span>
             }
-            description="Uses the description to draft first todos. You review them before anything is added."
+            description={t.projects.form.starterHelp}
           />
         )}
       </form>
