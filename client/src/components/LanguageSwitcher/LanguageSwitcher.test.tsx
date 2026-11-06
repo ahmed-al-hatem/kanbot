@@ -25,8 +25,8 @@ describe('LanguageSwitcher (auth top bar)', () => {
     const { container } = render(<LanguageSwitcher />);
 
     const group = screen.getByRole('group', { name: 'Language' });
-    const arabic = screen.getByRole('button', { name: 'العربية' });
-    const english = screen.getByRole('button', { name: 'English' });
+    const arabic = screen.getByRole('button', { name: 'ع — العربية' });
+    const english = screen.getByRole('button', { name: 'EN — English' });
     expect(group).toContainElement(arabic);
     expect(arabic).toHaveTextContent('ع');
     expect(arabic).toHaveAttribute('lang', 'ar');
@@ -37,7 +37,10 @@ describe('LanguageSwitcher (auth top bar)', () => {
     await user.click(arabic);
 
     expect(await screen.findByRole('group', { name: 'اللغة' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'العربية' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'ع — العربية' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     expect(document.documentElement).toHaveAttribute('dir', 'rtl');
     expect(useLocaleStore.getState().locale).toBe('ar');
   });

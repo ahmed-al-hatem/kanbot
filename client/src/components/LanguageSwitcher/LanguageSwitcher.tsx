@@ -9,7 +9,8 @@ const SEGMENTS: readonly Locale[] = ['ar', 'en'];
 
 /**
  * Segmented "ع / EN" control next to the theme toggle on the auth pages (Arabic canvas, auth
- * top bar). Each segment is a toggle button named by its language in that language (`lang` set,
+ * top bar). Each segment is a toggle button named by its language in that language plus its
+ * visible text, «EN — English» (`lang` set,
  * so screen readers switch voice); the current one is pressed. Hidden with the Arabic flag off.
  */
 export function LanguageSwitcher({ className }: { className?: string }) {
@@ -31,7 +32,7 @@ export function LanguageSwitcher({ className }: { className?: string }) {
             lang={option}
             className={styles.option}
             aria-pressed={current}
-            aria-label={language.name}
+            aria-label={language.label}
             aria-busy={pending === option || undefined}
             title={current ? undefined : language.switchTo}
             onClick={() => {
