@@ -22,14 +22,22 @@ const clamp = (value: number, max: number) => Math.max(0, Math.min(Math.trunc(va
  * lists are new arrays; the others keep their identity. An unknown item or target list returns
  * `lists` unchanged.
  */
-export function moveInLists<T extends Identified>(lists: Lists<T>, itemId: string, toList: string, position: number): Lists<T> {
+export function moveInLists<T extends Identified>(
+  lists: Lists<T>,
+  itemId: string,
+  toList: string,
+  position: number,
+): Lists<T> {
   const fromList = Object.keys(lists).find((key) => lists[key]?.some((item) => item.id === itemId));
   if (fromList === undefined || !(toList in lists)) return lists;
   const source = lists[fromList] ?? [];
   const item = source.find((entry) => entry.id === itemId);
   if (!item) return lists;
 
-  const next: Record<string, readonly T[]> = { ...lists, [fromList]: source.filter((entry) => entry.id !== itemId) };
+  const next: Record<string, readonly T[]> = {
+    ...lists,
+    [fromList]: source.filter((entry) => entry.id !== itemId),
+  };
   const target = [...(next[toList] ?? [])];
   target.splice(clamp(position, target.length), 0, item);
   next[toList] = target;
@@ -44,7 +52,9 @@ export interface MoveTarget {
 }
 
 const BACKLOG_LIST = 'backlog';
-const STATUS_RANK = Object.fromEntries(TODO_STATUSES.map((status, index) => [status, index])) as Record<TodoStatus, number>;
+const STATUS_RANK = Object.fromEntries(
+  TODO_STATUSES.map((status, index) => [status, index]),
+) as Record<TodoStatus, number>;
 
 /** The server's list for a todo: the backlog (status ignored), or `<sprintId>:<status>`. */
 export function listKeyOf(todo: Pick<Todo, 'sprintId' | 'status'>): string {
@@ -81,7 +91,11 @@ export function applyMove(todos: readonly Todo[], todoId: string, target: MoveTa
       let next = todo;
       if (todo.id === todoId) {
         const completedAt =
-          target.status === 'done' ? (todo.status === 'done' ? todo.completedAt : new Date().toISOString()) : null;
+          target.status === 'done'
+            ? todo.status === 'done'
+              ? todo.completedAt
+              : new Date().toISOString()
+            : null;
         next = { ...todo, sprintId: target.sprintId, status: target.status, completedAt };
       }
       if (renumber && next.order !== index) next = { ...next, order: index };
@@ -97,7 +111,11 @@ export function currentPlace(todos: readonly Todo[], todoId: string): MoveTarget
   if (!todo) return undefined;
   const key = listKeyOf(todo);
   const list = todos.filter((item) => listKeyOf(item) === key).sort(compareTodos);
-  return { sprintId: todo.sprintId, status: todo.status, position: list.findIndex((item) => item.id === todoId) };
+  return {
+    sprintId: todo.sprintId,
+    status: todo.status,
+    position: list.findIndex((item) => item.id === todoId),
+  };
 }
 
 /**
@@ -106,7 +124,12 @@ export function currentPlace(todos: readonly Todo[], todoId: string): MoveTarget
  * status columns one after another, and a move keeps the status, so the position counts only
  * the same-status todos above the drop point.
  */
-export function dropTarget(groupTodos: readonly Todo[], todo: Todo, sprintId: string | null, index: number): MoveTarget {
+export function dropTarget(
+  groupTodos: readonly Todo[],
+  todo: Todo,
+  sprintId: string | null,
+  index: number,
+): MoveTarget {
   const rest = groupTodos.filter((item) => item.id !== todo.id);
   const at = clamp(index, rest.length);
   if (sprintId === null) return { sprintId, status: todo.status, position: at };

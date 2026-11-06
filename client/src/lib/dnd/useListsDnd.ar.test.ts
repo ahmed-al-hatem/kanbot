@@ -12,7 +12,11 @@ beforeAll(async () => {
 }, 30_000);
 
 const LISTS: DndList[] = [
-  { id: 's3', name: 'Sprint 3', todos: [makeTodo({ id: 't1', key: 'KAN-28', title: 'Drag', sprintId: 's3' })] },
+  {
+    id: 's3',
+    name: 'Sprint 3',
+    todos: [makeTodo({ id: 't1', key: 'KAN-28', title: 'Drag', sprintId: 's3' })],
+  },
   { id: 'backlog', name: 'قائمة الانتظار', todos: [] },
 ];
 
@@ -52,14 +56,19 @@ describe('drag and drop announcements in Arabic', () => {
     expect(say.onDragStart(event<'onDragStart'>({ active: { id: 'gone' } }))).toBe('التُقط البند.');
     expect(
       say.onDragOver(
-        event<'onDragOver'>({ active: { id: 't1' }, over: { id: 'x', data: { current: { type: 'group', groupId: 'x' } } } }),
+        event<'onDragOver'>({
+          active: { id: 't1' },
+          over: { id: 'x', data: { current: { type: 'group', groupId: 'x' } } },
+        }),
       ),
     ).toBe('KAN-28 فوق القائمة.');
   });
 
   it('English keeps the old wording', () => {
     const say = announcements();
-    expect(say.onDragStart(event<'onDragStart'>({ active: { id: 't1' } }))).toBe('Picked up KAN-28.');
+    expect(say.onDragStart(event<'onDragStart'>({ active: { id: 't1' } }))).toBe(
+      'Picked up KAN-28.',
+    );
     expect(say.onDragCancel(event<'onDragCancel'>({ active: { id: 't1' }, over: null }))).toBe(
       'Move cancelled. KAN-28 is back where it was.',
     );

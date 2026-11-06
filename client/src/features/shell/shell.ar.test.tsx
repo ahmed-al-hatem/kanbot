@@ -21,7 +21,10 @@ beforeAll(async () => {
 beforeEach(async () => {
   useShortcuts.setState({ helpOpen: false });
   useSession.setState({ token: 'test.jwt.token' });
-  server.use(http.get(apiUrl('/auth/me'), () => HttpResponse.json({ user: TEST_USER })), ...projectHandlers());
+  server.use(
+    http.get(apiUrl('/auth/me'), () => HttpResponse.json({ user: TEST_USER })),
+    ...projectHandlers(),
+  );
   await switchToArabic();
 });
 
@@ -37,9 +40,18 @@ describe('shell in Arabic', () => {
 
     const main = await nav();
     const links = within(main);
-    expect(await links.findByRole('link', { name: 'السبرنت النشط' })).toHaveAttribute('aria-current', 'page');
-    expect(links.getByRole('link', { name: 'قائمة الانتظار' })).toHaveAttribute('href', '/projects/p1/backlog');
-    expect(links.getByRole('link', { name: 'السبرنتات' })).toHaveAttribute('href', '/projects/p1/sprints');
+    expect(await links.findByRole('link', { name: 'السبرنت النشط' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(links.getByRole('link', { name: 'قائمة الانتظار' })).toHaveAttribute(
+      'href',
+      '/projects/p1/backlog',
+    );
+    expect(links.getByRole('link', { name: 'السبرنتات' })).toHaveAttribute(
+      'href',
+      '/projects/p1/sprints',
+    );
     expect(links.getByRole('link', { name: 'المشاريع' })).not.toHaveAttribute('aria-current');
     expect(links.getByText('المشروع')).toBeInTheDocument();
     expect(
@@ -48,9 +60,17 @@ describe('shell in Arabic', () => {
     expect(links.getByRole('button', { name: 'English — تغيير اللغة' })).toBeInTheDocument();
     expect(links.getByRole('button', { name: /^التبديل إلى الوضع/ })).toBeInTheDocument();
 
-    expect(screen.getByRole('link', { name: 'تخطَّ إلى المحتوى الرئيسي' })).toHaveAttribute('href', '#main');
-    expect(screen.getByRole('button', { name: 'التنقل' })).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getAllByRole('button', { name: 'اسأل الذكاء الاصطناعي' }).length).toBeGreaterThan(0);
+    expect(screen.getByRole('link', { name: 'تخطَّ إلى المحتوى الرئيسي' })).toHaveAttribute(
+      'href',
+      '#main',
+    );
+    expect(screen.getByRole('button', { name: 'التنقل' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
+    expect(screen.getAllByRole('button', { name: 'اسأل الذكاء الاصطناعي' }).length).toBeGreaterThan(
+      0,
+    );
 
     await expectNoAxeViolations(main);
   });
@@ -59,7 +79,9 @@ describe('shell in Arabic', () => {
     const user = userEvent.setup();
     renderApp('/projects/p1/backlog');
 
-    await user.click(await screen.findByRole('button', { name: /^تبديل المشروع، الحالي: Kanbot App/ }));
+    await user.click(
+      await screen.findByRole('button', { name: /^تبديل المشروع، الحالي: Kanbot App/ }),
+    );
     const menu = await screen.findByRole('menu', { name: 'المشاريع' });
     expect(within(menu).getByText('مشاريعك')).toBeInTheDocument();
     const current = within(menu).getByRole('menuitem', { name: /Kanbot App/ });
@@ -104,7 +126,9 @@ describe('shell in Arabic', () => {
     act(() => {
       onlineManager.setOnline(false);
     });
-    expect(await screen.findByText('أنت غير متصل. لا يمكن حفظ التغييرات حتى يعود الاتصال.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('أنت غير متصل. لا يمكن حفظ التغييرات حتى يعود الاتصال.'),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'أعد المحاولة الآن' })).toBeInTheDocument();
 
     act(() => {

@@ -45,7 +45,14 @@ interface SprintFormDialogProps {
  * until it is edited); a hint gives the length; goal ≤ 300 (the API limit, plan §2 #12). Dates
  * are optional, but the end can't come before the start. Mount it fresh for every open (`key`).
  */
-export function SprintFormDialog({ open, onOpenChange, projectId, sprint, sprints, onSaved }: SprintFormDialogProps) {
+export function SprintFormDialog({
+  open,
+  onOpenChange,
+  projectId,
+  sprint,
+  sprints,
+  onSaved,
+}: SprintFormDialogProps) {
   const t = useT();
   const format = useFormat();
   const { form } = t.sprints;
@@ -82,7 +89,9 @@ export function SprintFormDialog({ open, onOpenChange, projectId, sprint, sprint
     onChange: (event: { target: { value: string } }) => {
       const value = event.target.value;
       if (!sprint && value && !dirtyFields.endDate) {
-        setValue('endDate', addDays(value, SPRINT_LENGTH_DAYS), { shouldValidate: Boolean(touchedFields.endDate) });
+        setValue('endDate', addDays(value, SPRINT_LENGTH_DAYS), {
+          shouldValidate: Boolean(touchedFields.endDate),
+        });
       }
     },
   });
@@ -144,7 +153,13 @@ export function SprintFormDialog({ open, onOpenChange, projectId, sprint, sprint
           >
             {t.common.cancel}
           </Button>
-          <Button type="submit" form={formId} variant="primary" loading={saving} loadingText={t.common.saving}>
+          <Button
+            type="submit"
+            form={formId}
+            variant="primary"
+            loading={saving}
+            loadingText={t.common.saving}
+          >
             {sprint ? form.save : form.create}
           </Button>
         </>
@@ -165,7 +180,12 @@ export function SprintFormDialog({ open, onOpenChange, projectId, sprint, sprint
         )}
 
         <Field label={form.name} required error={errors.name?.message}>
-          <Input data-autofocus maxLength={SPRINT_NAME_MAX} autoComplete="off" {...register('name')} />
+          <Input
+            data-autofocus
+            maxLength={SPRINT_NAME_MAX}
+            autoComplete="off"
+            {...register('name')}
+          />
         </Field>
 
         <div className={styles.dates}>

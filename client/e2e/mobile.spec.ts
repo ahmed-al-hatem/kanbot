@@ -12,7 +12,9 @@ test('390px: mobile nav and 85vw board columns (NFR-4)', async ({ page, request 
   await expect(page.getByRole('heading', { name: 'Sprint 1', level: 2 })).toBeVisible();
 
   // The page itself never scrolls sideways; only the board does.
-  const pageOverflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  const pageOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
   expect(pageOverflow).toBeLessThanOrEqual(0);
 
   const todo = column(page, 'To Do');
@@ -26,7 +28,10 @@ test('390px: mobile nav and 85vw board columns (NFR-4)', async ({ page, request 
     let node = el.parentElement;
     while (node && !/auto|scroll/.test(getComputedStyle(node).overflowX)) node = node.parentElement;
     return node
-      ? { snap: getComputedStyle(node).scrollSnapType, scrolls: node.scrollWidth > node.clientWidth }
+      ? {
+          snap: getComputedStyle(node).scrollSnapType,
+          scrolls: node.scrollWidth > node.clientWidth,
+        }
       : null;
   });
   expect(scroller?.scrolls).toBe(true);

@@ -33,7 +33,13 @@ import { toast } from '@/stores/toast';
 import type { Sprint, Todo } from '@/types/api';
 import styles from './Backlog.module.css';
 import { BacklogGroup } from './BacklogGroup';
-import { isFiltering, matchesFilters, readFilters, writeFilters, type BacklogFilters } from './backlogFilters';
+import {
+  isFiltering,
+  matchesFilters,
+  readFilters,
+  writeFilters,
+  type BacklogFilters,
+} from './backlogFilters';
 import { FilterBar } from './FilterBar';
 import { QuickCreate } from './QuickCreate';
 import { SprintActions } from './SprintActions';
@@ -91,10 +97,21 @@ export function BacklogPage() {
   const reducedMotion = useReducedMotion();
   const quickCreateRef = useRef<HTMLInputElement>(null);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [toDelete, setToDelete] = useState<DeleteState>({ open: false, todo: null, focus: undefined });
-  const [sprintForm, setSprintForm] = useState<SprintFormState>({ open: false, sprint: null, key: 0 });
+  const [toDelete, setToDelete] = useState<DeleteState>({
+    open: false,
+    todo: null,
+    focus: undefined,
+  });
+  const [sprintForm, setSprintForm] = useState<SprintFormState>({
+    open: false,
+    sprint: null,
+    key: 0,
+  });
   const [toStart, setToStart] = useState<GroupDialogState>({ open: false, group: null });
-  const [sprintToDelete, setSprintToDelete] = useState<GroupDialogState>({ open: false, group: null });
+  const [sprintToDelete, setSprintToDelete] = useState<GroupDialogState>({
+    open: false,
+    group: null,
+  });
   const deleteSprint = useDeleteSprint(projectId);
   const openAiDialog = useAssistant((s) => s.openDialog);
   const boardPath = `/projects/${projectId}/board`;
@@ -106,7 +123,10 @@ export function BacklogPage() {
   const filtering = isFiltering(filters);
   const { groups } = backlog;
   const visible = useMemo(
-    () => groups?.map((group) => (filtering ? group.todos.filter((todo) => matchesFilters(todo, filters)) : group.todos)),
+    () =>
+      groups?.map((group) =>
+        filtering ? group.todos.filter((todo) => matchesFilters(todo, filters)) : group.todos,
+      ),
     [groups, filters, filtering],
   );
   const moveTargets = useMemo<MoveTargetGroup[]>(
@@ -117,7 +137,10 @@ export function BacklogPage() {
 
   const { moveTo, onKeyMove, onMenuMove } = useBacklogMoves(projectId, groups, filtering);
   const sensors = useDragSensors({ keyboard: true });
-  const instructions = useMemo(() => ({ draggable: copy.dragInstructions }), [copy.dragInstructions]);
+  const instructions = useMemo(
+    () => ({ draggable: copy.dragInstructions }),
+    [copy.dragInstructions],
+  );
   const dnd = useListsDnd(groups, moveTo, { sensors, instructions, reorderable: isReorderable });
 
   const total = groups?.reduce((count, group) => count + group.todos.length, 0) ?? 0;
@@ -173,7 +196,9 @@ export function BacklogPage() {
     setSprintForm((state) => ({ ...state, open: false }));
     const { toast: toasts } = getT().backlog;
     // The toast region is role="status", so it is announced; no second announcement.
-    toast.success(mode === 'create' ? toasts.sprintCreated(sprint.name) : toasts.sprintSaved(sprint.name));
+    toast.success(
+      mode === 'create' ? toasts.sprintCreated(sprint.name) : toasts.sprintSaved(sprint.name),
+    );
   };
 
   /** SPR-3 and DESIGN §9 04: blocked while another sprint is active, and when the sprint is empty. */
@@ -242,7 +267,9 @@ export function BacklogPage() {
         meta={
           <>
             <ProjectMeta project={project} />
-            {groups && <span className={styles.headerTotals}>{format.todosAndPoints(total, points)}</span>}
+            {groups && (
+              <span className={styles.headerTotals}>{format.todosAndPoints(total, points)}</span>
+            )}
           </>
         }
         actions={
@@ -290,7 +317,13 @@ export function BacklogPage() {
           />
         ) : !groups || !visible ? null : (
           <div className={styles.backlog}>
-            <FilterBar filters={urlFilters} onChange={updateFilters} onClear={clearFilters} shown={shown} total={total} />
+            <FilterBar
+              filters={urlFilters}
+              onChange={updateFilters}
+              onClear={clearFilters}
+              shown={shown}
+              total={total}
+            />
             {filtering && (
               <p id={DRAG_OFF_ID} className={cx(styles.dragOff, 'kb-pop')}>
                 <Icon name="drag-handle-vertical" />
@@ -341,7 +374,11 @@ export function BacklogPage() {
                       />
                     ) : undefined
                   }
-                  footer={group.kind === 'backlog' && <QuickCreate projectId={projectId} inputRef={quickCreateRef} />}
+                  footer={
+                    group.kind === 'backlog' && (
+                      <QuickCreate projectId={projectId} inputRef={quickCreateRef} />
+                    )
+                  }
                 />
               ))}
               {createPortal(
@@ -417,7 +454,9 @@ export function BacklogPage() {
         onOpenChange={(open) => {
           setSprintToDelete((state) => ({ ...state, open }));
         }}
-        title={copy.deleteSprint.title(sprintToDelete.group?.name ?? copy.deleteSprint.fallbackName)}
+        title={copy.deleteSprint.title(
+          sprintToDelete.group?.name ?? copy.deleteSprint.fallbackName,
+        )}
         description={
           sprintToDelete.group && sprintToDelete.group.todos.length > 0
             ? copy.deleteSprint.withTodos(sprintToDelete.group.todos.length)

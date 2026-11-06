@@ -24,7 +24,8 @@ beforeEach(() => {
 });
 
 // The header button; the dashed new-project tile has the same name.
-const newProjectButton = async () => (await screen.findAllByRole('button', { name: 'New project' }))[0]!;
+const newProjectButton = async () =>
+  (await screen.findAllByRole('button', { name: 'New project' }))[0]!;
 
 const tile = (name: string) => screen.getByRole('heading', { name }).closest('article')!;
 
@@ -43,7 +44,10 @@ describe('projects list (PRJ-1)', () => {
 
     const kanbot = await screen.findByRole('heading', { name: 'Kanbot App' }, { timeout: 2000 });
     const card = within(kanbot.closest('article')!);
-    expect(card.getByRole('link', { name: 'Kanbot App' })).toHaveAttribute('href', '/projects/p1/backlog');
+    expect(card.getByRole('link', { name: 'Kanbot App' })).toHaveAttribute(
+      'href',
+      '/projects/p1/backlog',
+    );
     expect(card.getByText('KAN')).toBeInTheDocument();
     expect(card.getByText('Frontend for the Kanbot sprint board.')).toBeInTheDocument();
     expect(card.getByText('12 backlog todos')).toBeInTheDocument();
@@ -73,7 +77,9 @@ describe('projects list (PRJ-1)', () => {
       );
       renderApp('/projects');
 
-      expect(await screen.findByRole('heading', { name: "We couldn't load your projects" })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: "We couldn't load your projects" }),
+      ).toBeInTheDocument();
       expect(screen.getByText('Error 500 · Internal server error')).toBeInTheDocument();
 
       server.use(...projectHandlers(db));
@@ -198,7 +204,9 @@ describe('edit project (PRJ-3)', () => {
     const dialog = await screen.findByRole('dialog', { name: 'Edit project' });
 
     expect(within(dialog).getByLabelText(/Project name/)).toHaveValue('Kanbot App');
-    expect(within(dialog).getByText("Changing the key doesn't change existing todo keys.")).toBeInTheDocument();
+    expect(
+      within(dialog).getByText("Changing the key doesn't change existing todo keys."),
+    ).toBeInTheDocument();
 
     await user.clear(within(dialog).getByLabelText(/Project name/));
     await user.type(within(dialog).getByLabelText(/Project name/), 'Kanbot Web');
@@ -262,10 +270,14 @@ describe('delete project (PRJ-4)', () => {
     await user.click(await screen.findByRole('button', { name: 'Actions for Kanbot App' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
     await user.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete project' }),
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: 'Delete project',
+      }),
     );
 
-    expect(await screen.findByText("Couldn't delete Kanbot App. Something went wrong")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Couldn't delete Kanbot App. Something went wrong"),
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Kanbot App' })).toBeInTheDocument();
   });
 });

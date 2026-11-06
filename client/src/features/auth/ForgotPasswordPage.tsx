@@ -147,7 +147,12 @@ export function ForgotPasswordPage() {
         }}
       >
         <Field label={t.auth.email} error={errors.email?.message}>
-          <Input type="email" autoComplete="email" placeholder={t.auth.emailPlaceholder} {...register('email')} />
+          <Input
+            type="email"
+            autoComplete="email"
+            placeholder={t.auth.emailPlaceholder}
+            {...register('email')}
+          />
         </Field>
         <Button
           type="submit"

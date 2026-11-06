@@ -11,7 +11,15 @@ import { switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
-import { makeTodo, makeTodoDb, seedTodos, SPRINT_3, SPRINT_4, todoHandlers, type TodoDb } from '@/test/todos';
+import {
+  makeTodo,
+  makeTodoDb,
+  seedTodos,
+  SPRINT_3,
+  SPRINT_4,
+  todoHandlers,
+  type TodoDb,
+} from '@/test/todos';
 
 /** Arabic (R3): the backlog page — counts with plurals, groups, rows, filters, quick create, moves, sprints. */
 
@@ -40,7 +48,13 @@ const BACKLOG = 'قائمة الانتظار';
 /** `n` backlog todos of one point each, so todos and points take the same plural form. */
 function backlogOf(n: number) {
   return Array.from({ length: n }, (_, i) =>
-    makeTodo({ id: `b${i + 1}`, key: `KAN-${i + 1}`, title: `Todo ${i + 1}`, storyPoints: 1, order: i }),
+    makeTodo({
+      id: `b${i + 1}`,
+      key: `KAN-${i + 1}`,
+      title: `Todo ${i + 1}`,
+      storyPoints: 1,
+      order: i,
+    }),
   );
 }
 
@@ -55,7 +69,9 @@ describe('backlog counts in Arabic', () => {
     start(makeTodoDb(backlogOf(n), []));
     renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: BACKLOG, level: 2 }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: BACKLOG, level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     // The page header's totals and the Backlog group's meta.
     expect(screen.getAllByText(text)).toHaveLength(2);
   });
@@ -64,7 +80,9 @@ describe('backlog counts in Arabic', () => {
     start(makeTodoDb([], []));
     const { container } = renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: 'قائمة الانتظار فارغة' }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'قائمة الانتظار فارغة' }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getAllByText('لا بنود · لا نقاط')).toHaveLength(2);
     expect(screen.getByText(ar.backlog.empty.text)).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'توليد البنود' })).toHaveLength(2);
@@ -79,7 +97,9 @@ describe('backlog page in Arabic', () => {
     start(makeTodoDb());
     const { container } = renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: BACKLOG, level: 1 })).toBeInTheDocument();
     expect(document.title).toBe('قائمة الانتظار · Kanbot App · Kanbot');
     expect(screen.getByText('4 بنود · 10 نقاط')).toBeInTheDocument();
@@ -87,13 +107,20 @@ describe('backlog page in Arabic', () => {
       expect(screen.getByRole('button', { name })).toBeInTheDocument();
     }
     // The page renders more than one Ask AI entry point.
-    expect(screen.getAllByRole('button', { name: 'اسأل الذكاء الاصطناعي' }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole('button', { name: 'اسأل الذكاء الاصطناعي' }).length).toBeGreaterThan(
+      0,
+    );
 
     // Groups: lozenges, dates with Levantine months, counts, actions.
     const active = within(group('Sprint 3'));
     expect(active.getByText('نشط')).toBeInTheDocument();
-    expect(active.getByText('2 تشرين الثاني – 15 تشرين الثاني · بند واحد · 5 نقاط')).toBeInTheDocument();
-    expect(active.getByRole('button', { name: 'إظهار أو إخفاء Sprint 3' })).toHaveAttribute('aria-expanded', 'true');
+    expect(
+      active.getByText('2 تشرين الثاني – 15 تشرين الثاني · بند واحد · 5 نقاط'),
+    ).toBeInTheDocument();
+    expect(active.getByRole('button', { name: 'إظهار أو إخفاء Sprint 3' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
     expect(active.getByRole('link', { name: 'إكمال السبرنت' })).toBeInTheDocument();
     const planned = within(group('Sprint 4'));
     expect(planned.getByText('مخطط')).toBeInTheDocument();
@@ -108,12 +135,18 @@ describe('backlog page in Arabic', () => {
     expect(row.getByText('3 نقاط قصة')).toBeInTheDocument();
     expect(row.getByText('+1')).toHaveTextContent('+1 وسوم أخرى: forms');
     expect(row.getByRole('button', { name: 'اسحب KAN-31' })).toBeInTheDocument();
-    expect(within(screen.getByRole('button', { name: 'Fix crash on save' }).closest('li')!).getByText('عاجلة')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('button', { name: 'Fix crash on save' }).closest('li')!).getByText(
+        'عاجلة',
+      ),
+    ).toBeInTheDocument();
 
     expect(screen.getByText(/اسحب الصفوف بين المجموعات/)).toHaveTextContent(
       'اسحب الصفوف بين المجموعات، أو حدّد عنوانًا واستخدم ↑ ↓ لنقله.',
     );
-    expect(screen.getByRole('button', { name: 'Login screen' })).toHaveAccessibleDescription(ar.backlog.rowHelp);
+    expect(screen.getByRole('button', { name: 'Login screen' })).toHaveAccessibleDescription(
+      ar.backlog.rowHelp,
+    );
     await expectNoAxeViolations(container);
 
     await user.click(row.getByRole('button', { name: 'إجراءات KAN-31' }));
@@ -121,7 +154,14 @@ describe('backlog page in Arabic', () => {
     const items = within(menu)
       .getAllByRole('menuitem')
       .map((item) => item.textContent);
-    expect(items).toEqual(['فتح التفاصيل', 'نقل إلى الأعلى', 'نقل إلى الأسفل', 'نقل إلى Sprint 3', 'نقل إلى Sprint 4', 'حذف']);
+    expect(items).toEqual([
+      'فتح التفاصيل',
+      'نقل إلى الأعلى',
+      'نقل إلى الأسفل',
+      'نقل إلى Sprint 3',
+      'نقل إلى Sprint 4',
+      'حذف',
+    ]);
   });
 
   it('shows the skeleton, then the page error, in Arabic', async () => {
@@ -131,13 +171,21 @@ describe('backlog page in Arabic', () => {
       server.use(
         http.get(apiUrl('/projects/:projectId/todos'), async () => {
           await delay(600);
-          return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), { status: 500 });
+          return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), {
+            status: 500,
+          });
         }),
       );
       renderApp('/projects/p1/backlog');
 
       expect(await screen.findByText('جارٍ تحميل قائمة الانتظار')).toBeInTheDocument();
-      expect(await screen.findByRole('heading', { name: 'تعذّر تحميل قائمة الانتظار' }, { timeout: 3000 })).toBeInTheDocument();
+      expect(
+        await screen.findByRole(
+          'heading',
+          { name: 'تعذّر تحميل قائمة الانتظار' },
+          { timeout: 3000 },
+        ),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'إعادة المحاولة' })).toBeInTheDocument();
       expect(screen.getByText('خطأ 500 · خطأ داخلي في الخادم')).toBeInTheDocument();
     } finally {
@@ -150,30 +198,35 @@ describe('backlog page in Arabic', () => {
     start(makeTodoDb());
     const { container } = renderApp('/projects/p1/backlog');
 
-    const search = await screen.findByRole('searchbox', { name: 'ابحث في البنود' }, { timeout: 3000 });
+    const search = await screen.findByRole(
+      'searchbox',
+      { name: 'ابحث في البنود' },
+      { timeout: 3000 },
+    );
     expect(search).toHaveAttribute('placeholder', 'ابحث في البنود أو المفاتيح');
     expect(screen.getByRole('search', { name: 'تصفية البنود' })).toBeInTheDocument();
     const priority = screen.getByRole('combobox', { name: 'تصفية حسب الأولوية' });
-    expect(within(priority).getAllByRole('option').map((option) => option.textContent)).toEqual([
-      'كل الأولويات',
-      'عاجلة',
-      'عالية',
-      'متوسطة',
-      'منخفضة',
-    ]);
+    expect(
+      within(priority)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['كل الأولويات', 'عاجلة', 'عالية', 'متوسطة', 'منخفضة']);
     const type = screen.getByRole('combobox', { name: 'تصفية حسب النوع' });
-    expect(within(type).getAllByRole('option').map((option) => option.textContent)).toEqual([
-      'كل الأنواع',
-      'قصة',
-      'مهمة',
-      'خلل',
-    ]);
+    expect(
+      within(type)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['كل الأنواع', 'قصة', 'مهمة', 'خلل']);
 
     await user.type(search, 'zzz');
     expect(await screen.findByText('عرض 0 من 4', {}, { timeout: 3000 })).toBeInTheDocument();
-    expect(within(group('Sprint 3')).getByText('لا توجد بنود في Sprint 3 تطابق عوامل التصفية')).toBeInTheDocument();
+    expect(
+      within(group('Sprint 3')).getByText('لا توجد بنود في Sprint 3 تطابق عوامل التصفية'),
+    ).toBeInTheDocument();
     expect(within(group('Sprint 4')).getByText('لا توجد بنود في Sprint 4 بعد')).toBeInTheDocument();
-    expect(within(group(BACKLOG)).getByText('لا توجد بنود في قائمة الانتظار تطابق عوامل التصفية')).toBeInTheDocument();
+    expect(
+      within(group(BACKLOG)).getByText('لا توجد بنود في قائمة الانتظار تطابق عوامل التصفية'),
+    ).toBeInTheDocument();
     expect(screen.getByText(ar.backlog.dragOff)).toBeInTheDocument();
     await expectNoAxeViolations(container);
 
@@ -190,7 +243,9 @@ describe('quick create in Arabic', () => {
     server.use(
       http.post(apiUrl('/projects/:projectId/todos'), () =>
         HttpResponse.json(
-          errorBody('VALIDATION_ERROR', 'Invalid request body', [{ path: 'title', message: 'Title is required' }]),
+          errorBody('VALIDATION_ERROR', 'Invalid request body', [
+            { path: 'title', message: 'Title is required' },
+          ]),
           { status: 400 },
         ),
       ),
@@ -209,7 +264,9 @@ describe('quick create in Arabic', () => {
     await user.keyboard('{Enter}');
 
     expect(
-      await screen.findByText('تعذّر إنشاء «Bad title». بعض القيم غير صالحة. تحقق من الحقول وحاول مجددًا.'),
+      await screen.findByText(
+        'تعذّر إنشاء «Bad title». بعض القيم غير صالحة. تحقق من الحقول وحاول مجددًا.',
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Invalid request body|Title is required/)).not.toBeInTheDocument();
     expect(input).toHaveValue('Bad title');
@@ -257,14 +314,18 @@ describe('moves and drag and drop in Arabic', () => {
     start(makeTodoDb());
     server.use(
       http.post(apiUrl('/todos/:todoId/move'), () =>
-        HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong on our side.'), { status: 500 }),
+        HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong on our side.'), {
+          status: 500,
+        }),
       ),
     );
     renderApp('/projects/p1/backlog');
 
     (await screen.findByRole('button', { name: 'Login screen' }, { timeout: 3000 })).focus();
     await user.keyboard('{ArrowDown}');
-    expect(await screen.findByText('تعذّر نقل KAN-31. حدث خطأ من جهتنا. حاول مجددًا.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('تعذّر نقل KAN-31. حدث خطأ من جهتنا. حاول مجددًا.'),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/on our side/)).not.toBeInTheDocument();
   });
 });
@@ -288,7 +349,9 @@ describe('sprint actions in Arabic', () => {
     start(makeTodoDb(todos, [SPRINT_3, SPRINT_4]));
     renderApp('/projects/p1/backlog');
 
-    await user.click(await screen.findByRole('button', { name: 'إجراءات Sprint 4' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'إجراءات Sprint 4' }, { timeout: 3000 }),
+    );
     const menu = await screen.findByRole('menu', { name: 'إجراءات Sprint 4' });
     expect(within(menu).getByRole('menuitem', { name: 'تعديل السبرنت' })).toBeInTheDocument();
     await user.click(within(menu).getByRole('menuitem', { name: 'حذف السبرنت' }));
@@ -298,7 +361,9 @@ describe('sprint actions in Arabic', () => {
     await expectNoAxeViolations(confirm);
     await user.click(within(confirm).getByRole('button', { name: 'حذف السبرنت' }));
 
-    expect(await screen.findByText('Sprint 4 حُذف · نُقل بند واحد إلى قائمة الانتظار')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Sprint 4 حُذف · نُقل بند واحد إلى قائمة الانتظار'),
+    ).toBeInTheDocument();
     expect(db.calls.deleteSprint).toEqual(['s4']);
   });
 });

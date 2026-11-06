@@ -27,7 +27,15 @@ export function TypeIcon({ type, size = 16, decorative = false }: TypeIconProps)
   }
   const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true };
   return (
-    <svg className={className} width={size} height={size} viewBox="0 0 16 16" fill="none" focusable="false" {...a11y}>
+    <svg
+      className={className}
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      focusable="false"
+      {...a11y}
+    >
       <path
         fill="currentColor"
         fillRule="evenodd"

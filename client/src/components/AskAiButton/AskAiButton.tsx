@@ -15,9 +15,14 @@ interface AskAiButtonProps {
 export function AskAiButton({ compact = false }: AskAiButtonProps) {
   const t = useT();
   const open = useAssistant((s) => s.open);
-  const common = { 'aria-haspopup': 'dialog', 'aria-expanded': open, onClick: openAssistant } as const;
+  const common = {
+    'aria-haspopup': 'dialog',
+    'aria-expanded': open,
+    onClick: openAssistant,
+  } as const;
 
-  if (compact) return <IconButton variant="ai" icon="ai-sparkle" aria-label={t.common.askAi} {...common} />;
+  if (compact)
+    return <IconButton variant="ai" icon="ai-sparkle" aria-label={t.common.askAi} {...common} />;
   return (
     <Button variant="ai" className={styles.headerButton} {...common}>
       {t.common.askAi}

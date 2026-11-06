@@ -7,7 +7,15 @@ import { expectNoAxeViolations } from '@/test/axe';
 import { projectHandlers } from '@/test/projects';
 import { preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
-import { makeSprint, makeTodo, makeTodoDb, SPRINT_3, SPRINT_4, todoHandlers, type TodoDb } from '@/test/todos';
+import {
+  makeSprint,
+  makeTodo,
+  makeTodoDb,
+  SPRINT_3,
+  SPRINT_4,
+  todoHandlers,
+  type TodoDb,
+} from '@/test/todos';
 import { mostRecentSprint, sprintNumbers } from './sprintHistory';
 
 let db: TodoDb;
@@ -46,10 +54,38 @@ const SPRINT_1 = makeSprint({
 function historyDb(sprints = [SPRINT_3, SPRINT_4, SPRINT_2, SPRINT_1]) {
   return makeTodoDb(
     [
-      makeTodo({ id: 'a1', key: 'KAN-21', title: 'Validate signup form', sprintId: 's3', storyPoints: 3 }),
-      makeTodo({ id: 'a2', key: 'KAN-15', title: 'Set up routing', sprintId: 's3', status: 'done', storyPoints: 5 }),
-      makeTodo({ id: 'd1', key: 'KAN-10', title: 'Board columns', sprintId: 's2', status: 'done', storyPoints: 5 }),
-      makeTodo({ id: 'd2', key: 'KAN-11', title: 'Card layout', sprintId: 's2', status: 'done', storyPoints: 5, order: 1 }),
+      makeTodo({
+        id: 'a1',
+        key: 'KAN-21',
+        title: 'Validate signup form',
+        sprintId: 's3',
+        storyPoints: 3,
+      }),
+      makeTodo({
+        id: 'a2',
+        key: 'KAN-15',
+        title: 'Set up routing',
+        sprintId: 's3',
+        status: 'done',
+        storyPoints: 5,
+      }),
+      makeTodo({
+        id: 'd1',
+        key: 'KAN-10',
+        title: 'Board columns',
+        sprintId: 's2',
+        status: 'done',
+        storyPoints: 5,
+      }),
+      makeTodo({
+        id: 'd2',
+        key: 'KAN-11',
+        title: 'Card layout',
+        sprintId: 's2',
+        status: 'done',
+        storyPoints: 5,
+        order: 1,
+      }),
     ],
     sprints,
   );
@@ -67,22 +103,43 @@ beforeEach(() => {
 
 /** A stat tile of the detail panel, by its label (the Completed lozenge has the same text). */
 const tile = (label: string) =>
-  within(screen.getByRole('region', { name: /^Sprint/ })).getByText(label, { selector: '.label' }).parentElement;
+  within(screen.getByRole('region', { name: /^Sprint/ })).getByText(label, { selector: '.label' })
+    .parentElement;
 const sprintList = () => screen.getByRole('navigation', { name: 'All sprints' });
 
 describe('sprint history helpers (SPR-7)', () => {
   it('uses the completion snapshot for completed sprints and live stats otherwise', () => {
-    expect(sprintNumbers({ ...SPRINT_2, stats: { ...SPRINT_2.stats, donePoints: 10, totalPoints: 10 } })).toMatchObject({
+    expect(
+      sprintNumbers({ ...SPRINT_2, stats: { ...SPRINT_2.stats, donePoints: 10, totalPoints: 10 } }),
+    ).toMatchObject({
       doneTodos: 4,
       donePoints: 15,
       totalPoints: 20,
       completion: 75,
       carriedOver: 2,
     });
-    const live = { ...SPRINT_3, stats: { totalTodos: 2, doneTodos: 1, totalPoints: 8, donePoints: 5, byStatus: SPRINT_3.stats.byStatus } };
-    expect(sprintNumbers(live)).toMatchObject({ donePoints: 5, totalPoints: 8, completion: 63, carriedOver: null, unfinished: 1 });
+    const live = {
+      ...SPRINT_3,
+      stats: {
+        totalTodos: 2,
+        doneTodos: 1,
+        totalPoints: 8,
+        donePoints: 5,
+        byStatus: SPRINT_3.stats.byStatus,
+      },
+    };
+    expect(sprintNumbers(live)).toMatchObject({
+      donePoints: 5,
+      totalPoints: 8,
+      completion: 63,
+      carriedOver: null,
+      unfinished: 1,
+    });
     // No estimates: completion by todos.
-    expect(sprintNumbers({ ...live, stats: { ...live.stats, totalPoints: 0, donePoints: 0 } }).completion).toBe(50);
+    expect(
+      sprintNumbers({ ...live, stats: { ...live.stats, totalPoints: 0, donePoints: 0 } })
+        .completion,
+    ).toBe(50);
   });
 
   it('picks the active sprint, else the last completed, else the first planned', () => {
@@ -98,7 +155,9 @@ describe('sprints page (SPR-7)', () => {
     start(historyDb());
     renderApp('/projects/p1/sprints');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     const links = within(sprintList()).getAllByRole('link');
     expect(links.map((link) => link.textContent)).toEqual([
       expect.stringMatching(/^Sprint 3Active.*5 \/ 8 pts$/),
@@ -124,23 +183,33 @@ describe('sprints page (SPR-7)', () => {
   it('without an active sprint, opens the last completed one', async () => {
     start(historyDb([SPRINT_4, SPRINT_2, SPRINT_1]));
     renderApp('/projects/p1/sprints');
-    expect(await screen.findByRole('heading', { name: 'Sprint 2', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
-    expect(within(sprintList()).getByRole('link', { current: 'page' })).toHaveTextContent(/^Sprint 2/);
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 2', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(within(sprintList()).getByRole('link', { current: 'page' })).toHaveTextContent(
+      /^Sprint 2/,
+    );
   });
 
   it('shows the completion snapshot for a completed sprint, not its live numbers', async () => {
     start(historyDb());
     renderApp('/projects/p1/sprints/s2');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 2', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
-    expect(within(sprintList()).getByRole('link', { current: 'page' })).toHaveTextContent(/^Sprint 2/);
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 2', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(within(sprintList()).getByRole('link', { current: 'page' })).toHaveTextContent(
+      /^Sprint 2/,
+    );
     expect(screen.getByText(/Board MVP/)).toHaveTextContent('Goal: Board MVP');
     // Live: 2 todos, 10 of 10 points. Snapshot: 4 of 6 todos, 15 of 20 points, 2 carried over.
     expect(tile('Completed')).toHaveTextContent('4 todos');
     expect(tile('Points done')).toHaveTextContent('15 / 20');
     expect(tile('Completion')).toHaveTextContent('75%');
     expect(tile('Carried over')).toHaveTextContent('2 todos');
-    expect(screen.getByText('Numbers as they were when the sprint was completed.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Numbers as they were when the sprint was completed.'),
+    ).toBeInTheDocument();
     // Its todos are the ones that stayed: the Done ones.
     expect(await screen.findByRole('button', { name: 'Board columns' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Card layout' })).toBeInTheDocument();
@@ -166,15 +235,27 @@ describe('sprints page (SPR-7)', () => {
     start(historyDb());
     renderApp('/projects/p1/sprints/nope');
     expect(
-      await screen.findByRole('heading', { name: "This sprint doesn't exist", level: 1 }, { timeout: 3000 }),
+      await screen.findByRole(
+        'heading',
+        { name: "This sprint doesn't exist", level: 1 },
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open Active Sprint' })).toHaveAttribute('href', '/projects/p1/board');
+    expect(screen.getByRole('link', { name: 'Open Active Sprint' })).toHaveAttribute(
+      'href',
+      '/projects/p1/board',
+    );
   });
 
   it('has an empty state when there are no sprints', async () => {
     start(makeTodoDb([], []));
     renderApp('/projects/p1/sprints');
-    expect(await screen.findByRole('heading', { name: 'No sprints yet' }, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Backlog' })).toHaveAttribute('href', '/projects/p1/backlog');
+    expect(
+      await screen.findByRole('heading', { name: 'No sprints yet' }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Backlog' })).toHaveAttribute(
+      'href',
+      '/projects/p1/backlog',
+    );
   });
 });

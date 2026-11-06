@@ -12,7 +12,13 @@ export function keyFromName(name: string): string {
     .replace(/[^A-Z ]/g, ' ')
     .split(/\s+/)
     .filter(Boolean);
-  const key = words.length > 1 ? words.map((word) => word[0]).join('').slice(0, 4) : (words[0] ?? '').slice(0, 3);
+  const key =
+    words.length > 1
+      ? words
+          .map((word) => word[0])
+          .join('')
+          .slice(0, 4)
+      : (words[0] ?? '').slice(0, 3);
   return key.length >= 2 ? key : 'PRJ';
 }
 

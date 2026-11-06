@@ -11,7 +11,10 @@ interface DelayedLoadingOptions {
  * Skeleton timing from DESIGN §11 (plan §5.5): appears after 150ms of loading and, once
  * shown, stays at least 300ms. Returns whether the skeleton should be visible.
  */
-export function useDelayedLoading(loading: boolean, { delay = 150, minDuration = 300 }: DelayedLoadingOptions = {}) {
+export function useDelayedLoading(
+  loading: boolean,
+  { delay = 150, minDuration = 300 }: DelayedLoadingOptions = {},
+) {
   const [visible, setVisible] = useState(false);
   const shownAt = useRef(0);
 

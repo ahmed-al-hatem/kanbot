@@ -55,11 +55,17 @@ export function findBoardTodo(todoId: string): { todo: Todo; updatedAt: number }
  * it go, when it leaves the sprint); the target sprint's board takes it in, using `incoming` as
  * the todo when it wasn't on that board yet. Returns the target sprint's board after the move.
  */
-export function moveInCachedBoards(todoId: string, incoming: Todo, target: MoveTarget): SprintBoardResponse | undefined {
+export function moveInCachedBoards(
+  todoId: string,
+  incoming: Todo,
+  target: MoveTarget,
+): SprintBoardResponse | undefined {
   updateCachedBoards((todos, board) => {
     const has = todos.some((todo) => todo.id === todoId);
     if (!has && target.sprintId !== board.sprint.id) return todos;
     return applyMove(has ? todos : [...todos, incoming], todoId, target);
   });
-  return target.sprintId ? queryClient.getQueryData<SprintBoardResponse>(qk.board(target.sprintId)) : undefined;
+  return target.sprintId
+    ? queryClient.getQueryData<SprintBoardResponse>(qk.board(target.sprintId))
+    : undefined;
 }

@@ -134,7 +134,13 @@ describe('Dialog', () => {
   });
 });
 
-function DeleteProject({ onConfirm, pending = false }: { onConfirm: () => void; pending?: boolean }) {
+function DeleteProject({
+  onConfirm,
+  pending = false,
+}: {
+  onConfirm: () => void;
+  pending?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <>

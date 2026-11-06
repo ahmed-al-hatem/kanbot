@@ -12,7 +12,12 @@ import { errorMessage } from '@/i18n/errors';
 import { addDays, todayIso } from '@/lib/dates';
 import { applyLocalizedServerErrors, onInvalidSubmit, useLocalizedErrors } from '@/lib/formErrors';
 import type { Sprint } from '@/types/api';
-import { durationHint, SPRINT_LENGTH_DAYS, startSprintSchema, type StartSprintValues } from './sprintForm';
+import {
+  durationHint,
+  SPRINT_LENGTH_DAYS,
+  startSprintSchema,
+  type StartSprintValues,
+} from './sprintForm';
 import styles from './Sprints.module.css';
 
 interface StartSprintDialogProps {
@@ -31,7 +36,15 @@ interface StartSprintDialogProps {
  * date (today) and the end date (+14 days). A 409 (another sprint was started meanwhile, e.g. in
  * another tab) shows above the fields: the server's message in English, the meaning in Arabic.
  */
-export function StartSprintDialog({ open, onOpenChange, projectId, sprint, todoCount, points, onStarted }: StartSprintDialogProps) {
+export function StartSprintDialog({
+  open,
+  onOpenChange,
+  projectId,
+  sprint,
+  todoCount,
+  points,
+  onStarted,
+}: StartSprintDialogProps) {
   const t = useT();
   const format = useFormat();
   const { form, start: copy } = t.sprints;
@@ -91,7 +104,13 @@ export function StartSprintDialog({ open, onOpenChange, projectId, sprint, todoC
           >
             {t.common.cancel}
           </Button>
-          <Button type="submit" form={formId} variant="primary" loading={start.isPending} loadingText={copy.starting}>
+          <Button
+            type="submit"
+            form={formId}
+            variant="primary"
+            loading={start.isPending}
+            loadingText={copy.starting}
+          >
             {copy.submit}
           </Button>
         </>
@@ -114,7 +133,12 @@ export function StartSprintDialog({ open, onOpenChange, projectId, sprint, todoC
           <Field label={form.startDate} required error={errors.startDate?.message}>
             <DateInput data-autofocus {...register('startDate', { deps: ['endDate'] })} />
           </Field>
-          <Field label={form.endDate} required error={errors.endDate?.message} help={hint ?? undefined}>
+          <Field
+            label={form.endDate}
+            required
+            error={errors.endDate?.message}
+            help={hint ?? undefined}
+          >
             <DateInput {...register('endDate')} />
           </Field>
         </div>

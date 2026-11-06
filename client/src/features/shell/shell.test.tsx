@@ -14,7 +14,10 @@ beforeAll(preloadPages, 30_000);
 
 beforeEach(() => {
   useSession.setState({ token: 'test.jwt.token' });
-  server.use(http.get(apiUrl('/auth/me'), () => HttpResponse.json({ user: TEST_USER })), ...projectHandlers());
+  server.use(
+    http.get(apiUrl('/auth/me'), () => HttpResponse.json({ user: TEST_USER })),
+    ...projectHandlers(),
+  );
 });
 
 afterEach(() => {
@@ -28,10 +31,15 @@ describe('shell landmarks and nav (DESIGN §6, §10.2)', () => {
   it('has the skip link first, one h1, <main id="main"> and aria-current on the active page', async () => {
     renderApp('/projects/p1/board');
 
-    expect(await screen.findByRole('heading', { name: 'Active Sprint', level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Active Sprint', level: 1 }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('main')).toHaveAttribute('id', 'main');
-    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute('href', '#main');
+    expect(screen.getByRole('link', { name: 'Skip to main content' })).toHaveAttribute(
+      'href',
+      '#main',
+    );
 
     expect(navLink('Active Sprint')).toHaveAttribute('aria-current', 'page');
     expect(navLink('Backlog')).not.toHaveAttribute('aria-current');
@@ -72,8 +80,13 @@ describe('shell landmarks and nav (DESIGN §6, §10.2)', () => {
   it('shows the 404 page for a project id the API does not know, with no project nav', async () => {
     renderApp('/projects/nope/backlog');
 
-    expect(await screen.findByRole('heading', { name: "This project doesn't exist", level: 1 })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Projects' })).toHaveAttribute('href', '/projects');
+    expect(
+      await screen.findByRole('heading', { name: "This project doesn't exist", level: 1 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Projects' })).toHaveAttribute(
+      'href',
+      '/projects',
+    );
     expect(within(nav()).queryByRole('link', { name: 'Backlog' })).not.toBeInTheDocument();
     expect(within(nav()).queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
   });
@@ -88,7 +101,9 @@ describe('shell landmarks and nav (DESIGN §6, §10.2)', () => {
     );
     renderApp('/projects/p3/backlog');
 
-    expect(await screen.findByRole('heading', { name: "We couldn't load this project" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: "We couldn't load this project" }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Error 500 · Internal server error')).toBeInTheDocument();
   });
 });
@@ -98,7 +113,9 @@ describe('project switcher (PRJ-5)', () => {
     const user = userEvent.setup();
     const { router } = renderApp('/projects/p1/board');
 
-    const switcher = await screen.findByRole('button', { name: /^Switch project, current: Kanbot App/ });
+    const switcher = await screen.findByRole('button', {
+      name: /^Switch project, current: Kanbot App/,
+    });
     await user.click(switcher);
     const menu = await screen.findByRole('menu', { name: 'Projects' });
     const current = within(menu).getByRole('menuitem', { name: /Kanbot App/ });
@@ -106,7 +123,9 @@ describe('project switcher (PRJ-5)', () => {
 
     await user.click(within(menu).getByRole('menuitem', { name: /Portfolio Site/ }));
 
-    expect(await screen.findByRole('button', { name: /^Switch project, current: Portfolio Site/ })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('button', { name: /^Switch project, current: Portfolio Site/ }),
+    ).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/projects/p2/board');
     expect(navLink('Active Sprint')).toHaveAttribute('href', '/projects/p2/board');
   });
@@ -115,7 +134,9 @@ describe('project switcher (PRJ-5)', () => {
     const user = userEvent.setup();
     const { router } = renderApp('/projects/p1/backlog');
 
-    await user.click(await screen.findByRole('button', { name: /^Switch project, current: Kanbot App/ }));
+    await user.click(
+      await screen.findByRole('button', { name: /^Switch project, current: Kanbot App/ }),
+    );
     await user.click(await screen.findByRole('menuitem', { name: 'View all projects' }));
 
     expect(await screen.findByRole('heading', { name: 'Projects', level: 1 })).toBeInTheDocument();
@@ -175,13 +196,17 @@ describe('mobile nav, Ask AI and offline', () => {
     act(() => {
       onlineManager.setOnline(false);
     });
-    expect(await screen.findByText("You're offline. Changes can't be saved until you reconnect.")).toBeInTheDocument();
+    expect(
+      await screen.findByText("You're offline. Changes can't be saved until you reconnect."),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Retry now' })).toBeInTheDocument();
 
     act(() => {
       onlineManager.setOnline(true);
     });
     expect(await screen.findByText('Back online')).toBeInTheDocument();
-    expect(screen.queryByText("You're offline. Changes can't be saved until you reconnect.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("You're offline. Changes can't be saved until you reconnect."),
+    ).not.toBeInTheDocument();
   });
 });

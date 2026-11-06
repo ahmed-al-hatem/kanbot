@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { expectNoA11yViolations, openSignedIn, registerViaApi, SAMPLE_TODOS, type Api } from './support';
+import {
+  expectNoA11yViolations,
+  openSignedIn,
+  registerViaApi,
+  SAMPLE_TODOS,
+  type Api,
+} from './support';
 
 /**
  * axe (WCAG 2.1 A + AA, color-contrast on) on every main surface, in light and dark (DESIGN §15,
@@ -12,20 +18,40 @@ async function seed(api: Api) {
   const project = await api.project('Accessibility Check');
   const todos = await api.todos(project.id, [
     ...SAMPLE_TODOS,
-    { title: 'Write the onboarding copy', type: 'task', priority: 'low', storyPoints: 1, dueDate: '2020-01-01' },
-    { title: 'Dark mode toggle', type: 'story', priority: 'high', storyPoints: 3, labels: ['ui', 'theme', 'polish'] },
+    {
+      title: 'Write the onboarding copy',
+      type: 'task',
+      priority: 'low',
+      storyPoints: 1,
+      dueDate: '2020-01-01',
+    },
+    {
+      title: 'Dark mode toggle',
+      type: 'story',
+      priority: 'high',
+      storyPoints: 3,
+      labels: ['ui', 'theme', 'polish'],
+    },
     { title: 'Profile page', type: 'task', priority: 'medium', storyPoints: null },
     { title: 'Crash on empty search', type: 'bug', priority: 'urgent', storyPoints: 2 },
   ]);
   const id = (i: number) => todos[i]?.id ?? '';
 
-  const done = await api.sprint(project.id, { name: 'Sprint 1', goal: 'Get the basics in', todoIds: [id(0), id(1)] });
+  const done = await api.sprint(project.id, {
+    name: 'Sprint 1',
+    goal: 'Get the basics in',
+    todoIds: [id(0), id(1)],
+  });
   await api.start(done.id);
   await api.move(id(0), { status: 'done', position: 0 });
   await api.complete(done.id);
   await api.summarize(done.id);
 
-  const active = await api.sprint(project.id, { name: 'Sprint 2', goal: 'Polish', todoIds: [id(2), id(3), id(4)] });
+  const active = await api.sprint(project.id, {
+    name: 'Sprint 2',
+    goal: 'Polish',
+    todoIds: [id(2), id(3), id(4)],
+  });
   await api.start(active.id);
   await api.move(id(3), { status: 'in_progress', position: 0 });
   await api.move(id(4), { status: 'done', position: 0 });
@@ -63,7 +89,10 @@ for (const scheme of ['light', 'dark'] as const) {
       );
     });
 
-    test(`app pages, the todo dialog and the AI drawer are axe-clean (${scheme})`, async ({ page, request }) => {
+    test(`app pages, the todo dialog and the AI drawer are axe-clean (${scheme})`, async ({
+      page,
+      request,
+    }) => {
       test.setTimeout(120_000);
       const { api } = await registerViaApi(request);
       const { project, completedId, todoId } = await seed(api);
@@ -84,14 +113,18 @@ for (const scheme of ['light', 'dark'] as const) {
       await page.goto(`${base}/backlog?todo=${todoId}`);
       await check(page, `todo dialog (${scheme})`, async () => {
         const dialog = page.getByRole('dialog', { name: /Crash on empty search|-\d+/ });
-        await expect(dialog.getByRole('textbox', { name: /^Title/ })).toHaveValue('Crash on empty search');
+        await expect(dialog.getByRole('textbox', { name: /^Title/ })).toHaveValue(
+          'Crash on empty search',
+        );
       });
 
       await page.goto(`${base}/backlog`);
       await check(page, `AI drawer with a chat (${scheme})`, async () => {
         await page.getByRole('button', { name: 'Ask AI', exact: true }).click();
         const drawer = page.getByRole('dialog', { name: 'Kanbot Assistant' });
-        await drawer.getByRole('textbox', { name: 'Message Kanbot' }).fill('What should I work on next?');
+        await drawer
+          .getByRole('textbox', { name: 'Message Kanbot' })
+          .fill('What should I work on next?');
         await page.keyboard.press('Enter');
         const log = drawer.getByRole('log', { name: 'Conversation' });
         await expect(log.getByRole('button', { name: 'Copy' })).toBeVisible({ timeout: 45_000 });

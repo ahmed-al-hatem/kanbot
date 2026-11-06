@@ -27,16 +27,32 @@ function hash(text: string): number {
 }
 
 /** DESIGN §7 Avatar: round, initials at 700 in `--av-fg` on `--av-N`, spring scale on hover. */
-export function Avatar({ name, size = 24, colorIndex, decorative = false, className }: AvatarProps) {
+export function Avatar({
+  name,
+  size = 24,
+  colorIndex,
+  decorative = false,
+  className,
+}: AvatarProps) {
   const t = useT();
-  const a11y = decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name ?? t.common.unassigned };
+  const a11y = decorative
+    ? { 'aria-hidden': true }
+    : { role: 'img', 'aria-label': name ?? t.common.unassigned };
 
   if (!name) {
-    return <span className={cx(styles.avatar, styles[`s${size}`], styles.unassigned, className)} {...a11y} />;
+    return (
+      <span
+        className={cx(styles.avatar, styles[`s${size}`], styles.unassigned, className)}
+        {...a11y}
+      />
+    );
   }
   const tone = ((colorIndex ?? hash(name)) % 4) + 1;
   return (
-    <span className={cx(styles.avatar, styles[`s${size}`], styles[`av${tone}`], className)} {...a11y}>
+    <span
+      className={cx(styles.avatar, styles[`s${size}`], styles[`av${tone}`], className)}
+      {...a11y}
+    >
       <span aria-hidden="true">{initials(name)}</span>
     </span>
   );

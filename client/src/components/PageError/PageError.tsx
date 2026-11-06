@@ -38,7 +38,14 @@ function errorCode(error: unknown, t: Messages): string | null {
  * DESIGN §11 "Page load error" (artboard S04): status-error icon, "We couldn't load …",
  * reassurance, Try again (primary), Back to Projects and a small error code. `role="alert"`.
  */
-export function PageError({ page, error, onRetry, retrying = false, backTo = '/projects', className }: PageErrorProps) {
+export function PageError({
+  page,
+  error,
+  onRetry,
+  retrying = false,
+  backTo = '/projects',
+  className,
+}: PageErrorProps) {
   const t = useT();
   const code = errorCode(error, t);
   return (
@@ -49,7 +56,13 @@ export function PageError({ page, error, onRetry, retrying = false, backTo = '/p
       <h2 className={styles.title}>{t.pageError.title(page)}</h2>
       <p className={styles.text}>{t.pageError.text}</p>
       <div className={styles.actions}>
-        <Button variant="primary" icon="refresh" loading={retrying} loadingText={t.common.retrying} onClick={onRetry}>
+        <Button
+          variant="primary"
+          icon="refresh"
+          loading={retrying}
+          loadingText={t.common.retrying}
+          onClick={onRetry}
+        >
           {t.common.tryAgain}
         </Button>
         {backTo !== false && (

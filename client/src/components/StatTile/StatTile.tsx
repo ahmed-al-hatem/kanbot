@@ -15,10 +15,23 @@ interface StatTileProps {
 }
 
 /** DESIGN §7 Stat tile: sunken, radius 8, label 12 subtlest above a 28/32/700 value; lifts 2px on hover. */
-export function StatTile({ label, value, tone = 'default', size = 'md', index, className }: StatTileProps) {
+export function StatTile({
+  label,
+  value,
+  tone = 'default',
+  size = 'md',
+  index,
+  className,
+}: StatTileProps) {
   return (
     <div
-      className={cx(styles.tile, styles[size], 'kb-rise', index !== undefined && 'kb-stagger', className)}
+      className={cx(
+        styles.tile,
+        styles[size],
+        'kb-rise',
+        index !== undefined && 'kb-stagger',
+        className,
+      )}
       style={index !== undefined ? ({ '--i': index } as CSSProperties) : undefined}
     >
       <span className={styles.label}>{label}</span>

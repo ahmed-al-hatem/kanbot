@@ -81,7 +81,9 @@ export function TodoDetailsHost() {
   };
 
   if (!shownId) return null;
-  return <TodoDetailsDialog key={shownId} todoId={shownId} open={todoId === shownId} onClose={close} />;
+  return (
+    <TodoDetailsDialog key={shownId} todoId={shownId} open={todoId === shownId} onClose={close} />
+  );
 }
 
 interface TodoDetailsDialogProps {
@@ -102,7 +104,10 @@ function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
   const { data: project } = useCurrentProject();
   const data = todo.data?.projectId === projectId ? todo.data : undefined;
   // A dialog-backed route: "KAN-12 · Kanbot Web · Kanbot" over the page's title while open.
-  useDocumentTitle(open ? titleOf(data?.key ?? t.todos.details.dialogTitle, project?.name) : null, 1);
+  useDocumentTitle(
+    open ? titleOf(data?.key ?? t.todos.details.dialogTitle, project?.name) : null,
+    1,
+  );
 
   if (data) {
     return <TodoEditor todo={data} sprints={sprints.data} open={open} onClose={onClose} />;
@@ -204,7 +209,8 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       !leaving.current &&
       hasChanges() &&
       (currentLocation.pathname !== nextLocation.pathname ||
-        new URLSearchParams(currentLocation.search).get('todo') !== new URLSearchParams(nextLocation.search).get('todo')),
+        new URLSearchParams(currentLocation.search).get('todo') !==
+          new URLSearchParams(nextLocation.search).get('todo')),
   );
   const blocked = blocker.state === 'blocked';
   const confirming = askingDiscard || blocked;
@@ -249,9 +255,12 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
   };
 
   const activeSprint = sprints?.find((sprint) => sprint.status === 'active');
-  const currentSprint = todo.sprintId ? sprints?.find((sprint) => sprint.id === todo.sprintId) : undefined;
+  const currentSprint = todo.sprintId
+    ? sprints?.find((sprint) => sprint.id === todo.sprintId)
+    : undefined;
   const inCompletedSprint = currentSprint?.status === 'completed';
-  const statusEnabled = !inCompletedSprint && Boolean(activeSprint) && sprintId === activeSprint?.id;
+  const statusEnabled =
+    !inCompletedSprint && Boolean(activeSprint) && sprintId === activeSprint?.id;
   const overdue = status === 'done' ? 0 : overdueDays(dueDate || null);
 
   const onSaveError = (error: unknown) => {
@@ -380,7 +389,13 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           <Button variant="subtle" onClick={requestClose}>
             {t.common.cancel}
           </Button>
-          <Button type="submit" form={formId} variant="primary" loading={update.isPending} loadingText={t.common.saving}>
+          <Button
+            type="submit"
+            form={formId}
+            variant="primary"
+            loading={update.isPending}
+            loadingText={t.common.saving}
+          >
             {t.common.saveChanges}
           </Button>
         </>
@@ -397,7 +412,12 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       >
         <div className={styles.main}>
           <Field label={details.title} required error={errors.title?.message}>
-            <Input data-autofocus maxLength={TODO_TITLE_MAX} className={styles.titleInput} {...register('title')} />
+            <Input
+              data-autofocus
+              maxLength={TODO_TITLE_MAX}
+              className={styles.titleInput}
+              {...register('title')}
+            />
           </Field>
           <Field label={details.description} error={errors.description?.message}>
             <Textarea
@@ -488,7 +508,11 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
             </Field>
           </div>
 
-          <Field label={details.labels} error={errors.labels?.message} help={<KeyHint text={details.labelsHelp} />}>
+          <Field
+            label={details.labels}
+            error={errors.labels?.message}
+            help={<KeyHint text={details.labelsHelp} />}
+          >
             <Controller
               control={control}
               name="labels"
@@ -506,7 +530,11 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           <Field
             label={details.dueDate}
             error={errors.dueDate?.message}
-            help={overdue > 0 ? <span className={styles.overdue}>{details.overdueBy(overdue)}</span> : undefined}
+            help={
+              overdue > 0 ? (
+                <span className={styles.overdue}>{details.overdueBy(overdue)}</span>
+              ) : undefined
+            }
           >
             <DateInput aria-invalid={overdue > 0 || undefined} {...register('dueDate')} />
           </Field>
@@ -536,7 +564,10 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
 function sprintOptions(sprints: Sprint[] | undefined, todo: Todo, t: Messages) {
   const options = (sprints ?? [])
     .filter((sprint) => sprint.status !== 'completed' || sprint.id === todo.sprintId)
-    .map((sprint) => ({ value: sprint.id, label: t.todos.sprintOption[sprint.status](sprint.name) }));
+    .map((sprint) => ({
+      value: sprint.id,
+      label: t.todos.sprintOption[sprint.status](sprint.name),
+    }));
   // Sprints still loading: keep the current value selectable.
   if (todo.sprintId && !options.some((option) => option.value === todo.sprintId)) {
     options.push({ value: todo.sprintId, label: t.todos.details.currentSprint });
@@ -547,7 +578,12 @@ function sprintOptions(sprints: Sprint[] | undefined, todo: Todo, t: Messages) {
 /** Read at render from the failed request, so a bar already on screen follows a language switch. */
 function saveErrorText(key: string, error: unknown, t: Messages) {
   // A message from the API itself (409, 404…) is worth showing; otherwise use the canvas copy.
-  if (isApiError(error) && error.code !== 'NETWORK_ERROR' && error.code !== 'TIMEOUT' && error.status < 500) {
+  if (
+    isApiError(error) &&
+    error.code !== 'NETWORK_ERROR' &&
+    error.code !== 'TIMEOUT' &&
+    error.status < 500
+  ) {
     return t.todos.details.saveFailed(key, todoErrorMessage(error, t));
   }
   return t.todos.details.saveFailedOffline(key);

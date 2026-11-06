@@ -34,7 +34,11 @@ describe('isClientError()', () => {
 describe('toApiError()', () => {
   it('keeps code, message and details from an ApiErrorBody', () => {
     const body = { error: { code: 'CONFLICT', message: 'Key taken', details: [] } };
-    expect(toApiError(409, body)).toMatchObject({ status: 409, code: 'CONFLICT', message: 'Key taken' });
+    expect(toApiError(409, body)).toMatchObject({
+      status: 409,
+      code: 'CONFLICT',
+      message: 'Key taken',
+    });
   });
 
   it('derives the code from the status when the body is not an ApiErrorBody', () => {

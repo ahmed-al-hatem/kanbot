@@ -19,7 +19,9 @@ function meOk() {
 
 function me401() {
   return http.get(apiUrl('/auth/me'), () =>
-    HttpResponse.json(errorBody('UNAUTHORIZED', 'Your session has expired. Please log in again.'), { status: 401 }),
+    HttpResponse.json(errorBody('UNAUTHORIZED', 'Your session has expired. Please log in again.'), {
+      status: 401,
+    }),
   );
 }
 
@@ -49,7 +51,9 @@ describe('guards (AUTH-5)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/login');
-    expect(router.state.location.search).toBe(`?redirect=${encodeURIComponent('/projects/p1/board?todo=t1')}`);
+    expect(router.state.location.search).toBe(
+      `?redirect=${encodeURIComponent('/projects/p1/board?todo=t1')}`,
+    );
   });
 
   it('sends a signed-in user away from /login, to ?redirect= when present', async () => {
@@ -82,7 +86,9 @@ describe('login (AUTH-2)', () => {
     const user = userEvent.setup();
     server.use(
       http.post(apiUrl('/auth/login'), () =>
-        HttpResponse.json(errorBody('UNAUTHORIZED', 'Incorrect email or password.'), { status: 401 }),
+        HttpResponse.json(errorBody('UNAUTHORIZED', 'Incorrect email or password.'), {
+          status: 401,
+        }),
       ),
     );
     renderApp('/login');
@@ -149,7 +155,9 @@ describe('register (AUTH-1)', () => {
     const message = 'An account with this email already exists.';
     server.use(
       http.post(apiUrl('/auth/register'), () =>
-        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), { status: 409 }),
+        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), {
+          status: 409,
+        }),
       ),
     );
     renderApp('/register');
@@ -171,7 +179,9 @@ describe('register (AUTH-1)', () => {
     server.use(
       http.post(apiUrl('/auth/register'), () =>
         HttpResponse.json(
-          errorBody('VALIDATION_ERROR', 'Invalid request', [{ path: 'name', message: 'Name is too long' }]),
+          errorBody('VALIDATION_ERROR', 'Invalid request', [
+            { path: 'name', message: 'Name is too long' },
+          ]),
           { status: 400 },
         ),
       ),
@@ -214,7 +224,9 @@ describe('register (AUTH-1)', () => {
   it('signs the user in, opens Projects and shows a welcome toast', async () => {
     const user = userEvent.setup();
     server.use(
-      http.post(apiUrl('/auth/register'), () => HttpResponse.json({ token: TOKEN, user: TEST_USER }, { status: 201 })),
+      http.post(apiUrl('/auth/register'), () =>
+        HttpResponse.json({ token: TOKEN, user: TEST_USER }, { status: 201 }),
+      ),
     );
     const { router } = renderApp('/register');
 
@@ -231,7 +243,9 @@ describe('register (AUTH-1)', () => {
 describe('staying logged in (AUTH-3)', () => {
   it('persists the token on log in', async () => {
     const user = userEvent.setup();
-    server.use(http.post(apiUrl('/auth/login'), () => HttpResponse.json({ token: TOKEN, user: TEST_USER })));
+    server.use(
+      http.post(apiUrl('/auth/login'), () => HttpResponse.json({ token: TOKEN, user: TEST_USER })),
+    );
     renderApp('/login');
 
     await user.type(await screen.findByLabelText('Email'), 'sara@example.com');
@@ -244,7 +258,10 @@ describe('staying logged in (AUTH-3)', () => {
 
   it('after a reload, reads the saved token and shows a full-page loader during /auth/me', async () => {
     // What a previous visit left in storage; the in-memory store starts empty as after a reload.
-    window.localStorage.setItem(STORAGE_KEYS.token, JSON.stringify({ state: { token: 'saved.jwt' }, version: 0 }));
+    window.localStorage.setItem(
+      STORAGE_KEYS.token,
+      JSON.stringify({ state: { token: 'saved.jwt' }, version: 0 }),
+    );
     await act(async () => {
       await useSession.persist.rehydrate();
     });
@@ -283,7 +300,9 @@ describe('staying logged in (AUTH-3)', () => {
       );
       renderApp('/projects');
 
-      expect(await screen.findByRole('heading', { name: "We couldn't load your workspace" })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: "We couldn't load your workspace" }),
+      ).toBeInTheDocument();
       expect(useSession.getState().token).toBe(TOKEN);
 
       server.use(meOk());
@@ -356,7 +375,9 @@ describe('expired session (AUTH-6)', () => {
   it('logging in again returns to the page and clears the message', async () => {
     const user = userEvent.setup();
     useSession.setState({ sessionExpired: true });
-    server.use(http.post(apiUrl('/auth/login'), () => HttpResponse.json({ token: TOKEN, user: TEST_USER })));
+    server.use(
+      http.post(apiUrl('/auth/login'), () => HttpResponse.json({ token: TOKEN, user: TEST_USER })),
+    );
     const { router } = renderApp('/login?redirect=%2Fprojects%2Fp1%2Fboard');
 
     expect(await screen.findByText(EXPIRED_MESSAGE)).toBeInTheDocument();
@@ -378,7 +399,9 @@ describe('forgot password (frontend only)', () => {
     await user.type(await screen.findByLabelText('Email'), 'not-an-email');
     await user.click(screen.getByRole('button', { name: 'Send reset link' }));
 
-    expect(await screen.findByText('Enter a valid email, like name@example.com')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Enter a valid email, like name@example.com'),
+    ).toBeInTheDocument();
     expect(screen.getByText(/Demo only/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Back to log in' })).toHaveAttribute('href', '/login');
   });

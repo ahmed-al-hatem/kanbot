@@ -39,7 +39,11 @@ describe('session store', () => {
     useSession.getState().signOut();
     expect(useSession.getState().signedOut).toBe(true);
     useSession.getState().signIn('abc');
-    expect(useSession.getState()).toMatchObject({ token: 'abc', signedOut: false, sessionExpired: false });
+    expect(useSession.getState()).toMatchObject({
+      token: 'abc',
+      signedOut: false,
+      sessionExpired: false,
+    });
   });
 
   it('follows a log out in another tab', async () => {

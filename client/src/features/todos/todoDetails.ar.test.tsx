@@ -45,7 +45,10 @@ describe('Todo details in Arabic', () => {
     expect(await details.findByRole('textbox', { name: /^العنوان/ })).toHaveValue('Login screen');
     expect(details.getByText('مهمة · أُنشئ في 2 تشرين الثاني 2026')).toBeInTheDocument();
     expect(document.title).toBe('KAN-31 · Kanbot App · Kanbot');
-    expect(details.getByRole('textbox', { name: 'الوصف' })).toHaveAttribute('placeholder', 'أضف مزيدًا من التفاصيل…');
+    expect(details.getByRole('textbox', { name: 'الوصف' })).toHaveAttribute(
+      'placeholder',
+      'أضف مزيدًا من التفاصيل…',
+    );
     expect(details.getByRole('button', { name: 'حسّن هذا البند' })).toBeInTheDocument();
 
     const sprint = details.getByRole('combobox', { name: 'السبرنت' });
@@ -54,8 +57,17 @@ describe('Todo details in Arabic', () => {
     expect(status).toBeDisabled();
     expect(status).toHaveAccessibleDescription('انقله إلى السبرنت النشط لتحديد حالته');
     expect(options(status)).toEqual(['للتنفيذ', 'قيد التنفيذ', 'قيد المراجعة', 'منجز']);
-    expect(options(details.getByRole('combobox', { name: 'الأولوية' }))).toEqual(['عاجلة', 'عالية', 'متوسطة', 'منخفضة']);
-    expect(options(details.getByRole('combobox', { name: 'النوع' }))).toEqual(['قصة', 'مهمة', 'خلل']);
+    expect(options(details.getByRole('combobox', { name: 'الأولوية' }))).toEqual([
+      'عاجلة',
+      'عالية',
+      'متوسطة',
+      'منخفضة',
+    ]);
+    expect(options(details.getByRole('combobox', { name: 'النوع' }))).toEqual([
+      'قصة',
+      'مهمة',
+      'خلل',
+    ]);
     expect(options(details.getByRole('combobox', { name: 'نقاط القصة' }))).toEqual([
       'غير مقدّر',
       '1',
@@ -66,7 +78,9 @@ describe('Todo details in Arabic', () => {
       '13',
     ]);
     expect(details.getByRole('button', { name: 'إزالة الوسم auth' })).toBeInTheDocument();
-    expect(details.getByText(/لإضافة وسم/)).toHaveTextContent('اضغط Enter أو , لإضافة وسم، وBackspace لإزالة الأخير');
+    expect(details.getByText(/لإضافة وسم/)).toHaveTextContent(
+      'اضغط Enter أو , لإضافة وسم، وBackspace لإزالة الأخير',
+    );
     expect(details.getByLabelText('تاريخ الاستحقاق')).toHaveValue('');
     expect(details.getByText('للإغلاق')).toHaveTextContent('Esc للإغلاق');
     for (const name of ['حذف', 'إلغاء', 'حفظ التغييرات', 'إغلاق']) {
@@ -109,7 +123,9 @@ describe('Todo details in Arabic', () => {
     await user.click(details.getByRole('button', { name: 'حفظ التغييرات' }));
 
     expect(
-      await details.findByText('تعذّر حفظ KAN-31. لم نعد نجد هذا البند، ربما حُذف. تعديلاتك ما زالت هنا.'),
+      await details.findByText(
+        'تعذّر حفظ KAN-31. لم نعد نجد هذا البند، ربما حُذف. تعديلاتك ما زالت هنا.',
+      ),
     ).toBeInTheDocument();
     expect(details.getByRole('button', { name: 'إعادة المحاولة' })).toBeInTheDocument();
     expect(screen.queryByText(/Todo not found/)).not.toBeInTheDocument();
@@ -121,7 +137,9 @@ describe('Todo details in Arabic', () => {
     server.use(
       http.patch(apiUrl('/todos/:todoId'), () =>
         HttpResponse.json(
-          errorBody('VALIDATION_ERROR', 'Invalid request body', [{ path: 'title', message: 'Title is too long' }]),
+          errorBody('VALIDATION_ERROR', 'Invalid request body', [
+            { path: 'title', message: 'Title is too long' },
+          ]),
           { status: 400 },
         ),
       ),
@@ -146,7 +164,9 @@ describe('Todo details in Arabic', () => {
 
     await user.click(await details.findByRole('button', { name: 'حذف' }));
     const confirm = await screen.findByRole('alertdialog', { name: 'حذف KAN-31؟' });
-    expect(confirm).toHaveTextContent('سيُحذف KAN-31 «Login screen» نهائيًا. لا يمكن التراجع عن ذلك.');
+    expect(confirm).toHaveTextContent(
+      'سيُحذف KAN-31 «Login screen» نهائيًا. لا يمكن التراجع عن ذلك.',
+    );
     expect(within(confirm).getByRole('button', { name: 'إلغاء' })).toHaveFocus();
     await expectNoAxeViolations(confirm);
 
@@ -169,7 +189,9 @@ describe('Todo details in Arabic', () => {
     const confirm = await screen.findByRole('alertdialog', { name: 'حذف KAN-31؟' });
     await user.click(within(confirm).getByRole('button', { name: 'حذف البند' }));
 
-    expect(await screen.findByText('تعذّر حذف KAN-31. لم نعد نجد هذا البند، ربما حُذف.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('تعذّر حذف KAN-31. لم نعد نجد هذا البند، ربما حُذف.'),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/Todo not found/)).not.toBeInTheDocument();
   });
 });

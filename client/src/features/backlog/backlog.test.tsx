@@ -32,16 +32,24 @@ describe('backlog list (BL-1)', () => {
   it('shows the active sprint, planned sprints and the backlog with counts, points and rows', async () => {
     renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
-    const headings = screen.getAllByRole('heading', { level: 2 }).map((heading) => heading.textContent);
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
     expect(headings).toEqual(['Sprint 3', 'Sprint 4', 'Backlog']);
 
     // Header: every open todo and its points.
     expect(screen.getByText('4 todos · 10 pts')).toBeInTheDocument();
     expect(within(group('Sprint 3')).getByText('Active')).toBeInTheDocument();
-    expect(within(group('Sprint 3')).getByText('Nov 2 – Nov 15 · 1 todo · 5 pts')).toBeInTheDocument();
+    expect(
+      within(group('Sprint 3')).getByText('Nov 2 – Nov 15 · 1 todo · 5 pts'),
+    ).toBeInTheDocument();
     expect(within(group('Sprint 4')).getByText('Planned')).toBeInTheDocument();
-    expect(within(group('Sprint 4')).getByText('Drag todos here to plan Sprint 4')).toBeInTheDocument();
+    expect(
+      within(group('Sprint 4')).getByText('Drag todos here to plan Sprint 4'),
+    ).toBeInTheDocument();
     expect(within(group('Backlog')).getByText('3 todos · 5 pts')).toBeInTheDocument();
 
     const row = screen.getByRole('button', { name: 'Login screen' }).closest('li')!;
@@ -52,7 +60,11 @@ describe('backlog list (BL-1)', () => {
     expect(cells.getByText('3 story points')).toBeInTheDocument();
     expect(cells.getByText('auth')).toBeInTheDocument();
     expect(cells.getByText('+1')).toBeInTheDocument();
-    expect(within(screen.getByRole('button', { name: 'Fix crash on save' }).closest('li')!).getByText('Urgent')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('button', { name: 'Fix crash on save' }).closest('li')!).getByText(
+        'Urgent',
+      ),
+    ).toBeInTheDocument();
 
     // One request for all todos, split client-side (plan §5.3).
     expect(db.calls.list).toBe(1);
@@ -66,7 +78,9 @@ describe('backlog list (BL-1)', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
     await user.click(toggle);
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByRole('button', { name: 'Drag and drop on the board' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Drag and drop on the board' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows "Your backlog is empty"; Create todo focuses quick create', async () => {
@@ -74,7 +88,9 @@ describe('backlog list (BL-1)', () => {
     db.todos = db.todos.filter((todo) => todo.sprintId !== null);
     renderApp('/projects/p1/backlog');
 
-    expect(await screen.findByRole('heading', { name: 'Your backlog is empty' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Your backlog is empty' }),
+    ).toBeInTheDocument();
     // The page header's and the empty state's.
     expect(screen.getAllByRole('button', { name: 'Generate todos' })).toHaveLength(2);
     await user.click(screen.getByRole('button', { name: 'Create todo' }));
@@ -92,7 +108,9 @@ describe('backlog list (BL-1)', () => {
       );
       renderApp('/projects/p1/backlog');
 
-      expect(await screen.findByRole('heading', { name: "We couldn't load the backlog" })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: "We couldn't load the backlog" }),
+      ).toBeInTheDocument();
       server.use(...todoHandlers(db));
       await user.click(screen.getByRole('button', { name: 'Try again' }));
       expect(await screen.findByRole('button', { name: 'Login screen' })).toBeInTheDocument();
@@ -110,7 +128,14 @@ describe('quick create (BL-2)', () => {
         await delay(300);
         const body = (await request.json()) as { title: string };
         db.calls.create.push(body);
-        const todo = { ...db.todos[1]!, id: 'new-40', key: 'KAN-40', title: body.title, labels: [], storyPoints: null };
+        const todo = {
+          ...db.todos[1]!,
+          id: 'new-40',
+          key: 'KAN-40',
+          title: body.title,
+          labels: [],
+          storyPoints: null,
+        };
         db.todos.push(todo);
         return HttpResponse.json({ todo }, { status: 201 });
       }),
@@ -160,7 +185,9 @@ describe('quick create (BL-2)', () => {
     await user.click(input);
     await user.type(input, 'Doomed todo{Enter}');
 
-    expect(await screen.findByText("Couldn't create “Doomed todo”. Something went wrong")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Couldn't create “Doomed todo”. Something went wrong"),
+    ).toBeInTheDocument();
     expect(within(group('Backlog')).queryByText('Doomed todo')).not.toBeInTheDocument();
     expect(input).toHaveValue('Doomed todo');
   });
@@ -180,7 +207,9 @@ describe('search and filters (BL-6)', () => {
     expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Login screen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fix crash on save' })).not.toBeInTheDocument();
-    expect(within(group('Sprint 3')).getByText('No todos in Sprint 3 match your filters')).toBeInTheDocument();
+    expect(
+      within(group('Sprint 3')).getByText('No todos in Sprint 3 match your filters'),
+    ).toBeInTheDocument();
     // Filtering runs over the cached list: no request per keystroke.
     expect(db.calls.list).toBe(1);
 
@@ -216,13 +245,18 @@ describe('search and filters (BL-6)', () => {
     await user.clear(search);
     await searchIs('');
 
-    await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by priority' }), 'urgent');
+    await user.selectOptions(
+      screen.getByRole('combobox', { name: 'Filter by priority' }),
+      'urgent',
+    );
     await searchIs('?priority=urgent');
     expect(await screen.findByText('Showing 1 of 4', {}, { timeout: 3000 })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Filter by type' }), 'story');
     await searchIs('?priority=urgent&type=story');
     expect(await screen.findByText('Showing 0 of 4')).toBeInTheDocument();
-    expect(within(group('Backlog')).getByText('No todos in Backlog match your filters')).toBeInTheDocument();
+    expect(
+      within(group('Backlog')).getByText('No todos in Backlog match your filters'),
+    ).toBeInTheDocument();
   });
 
   it('reads the filters from the URL on load', async () => {
@@ -262,21 +296,27 @@ describe('delete from the row menu (BL-4)', () => {
     server.use(
       http.delete(apiUrl('/todos/:todoId'), async () => {
         await delay(100);
-        return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), { status: 500 });
+        return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), {
+          status: 500,
+        });
       }),
     );
     renderApp('/projects/p1/backlog');
 
     await user.click(await screen.findByRole('button', { name: 'Actions for KAN-31' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Delete' }));
-    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete todo' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Delete todo' }),
+    );
 
     // Gone while the request runs (optimistic)…
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: 'Login screen' })).not.toBeInTheDocument();
     });
     // …and back when it fails.
-    expect(await screen.findByText("Couldn't delete KAN-31. Something went wrong")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Couldn't delete KAN-31. Something went wrong"),
+    ).toBeInTheDocument();
     expect(await screen.findByRole('button', { name: 'Login screen' })).toBeInTheDocument();
   });
 

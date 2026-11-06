@@ -14,7 +14,13 @@ import {
 import { errorBody } from './renderApp';
 import { apiUrl } from './server';
 
-const STATS = { totalTodos: 0, doneTodos: 0, totalPoints: 0, donePoints: 0, byStatus: { todo: 0, in_progress: 0, in_review: 0, done: 0 } };
+const STATS = {
+  totalTodos: 0,
+  doneTodos: 0,
+  totalPoints: 0,
+  donePoints: 0,
+  byStatus: { todo: 0, in_progress: 0, in_review: 0, done: 0 },
+};
 
 /** A `Todo` with test defaults (project p1, backlog, task, medium, no points). */
 export function makeTodo(overrides: Partial<Todo> & Pick<Todo, 'id' | 'key' | 'title'>): Todo {
@@ -36,7 +42,9 @@ export function makeTodo(overrides: Partial<Todo> & Pick<Todo, 'id' | 'key' | 't
   };
 }
 
-export function makeSprint(overrides: Partial<Sprint> & Pick<Sprint, 'id' | 'name' | 'status'>): Sprint {
+export function makeSprint(
+  overrides: Partial<Sprint> & Pick<Sprint, 'id' | 'name' | 'status'>,
+): Sprint {
   return {
     projectId: 'p1',
     goal: '',
@@ -94,7 +102,14 @@ export function seedTodos(): Todo[] {
       storyPoints: 2,
       order: 1,
     }),
-    makeTodo({ id: 't4', key: 'KAN-33', title: 'Sprint summary', type: 'story', priority: 'low', order: 2 }),
+    makeTodo({
+      id: 't4',
+      key: 'KAN-33',
+      title: 'Sprint summary',
+      type: 'story',
+      priority: 'low',
+      order: 2,
+    }),
   ];
 }
 
@@ -142,18 +157,28 @@ export function makeTodoDb(todos = seedTodos(), sprints = [SPRINT_3, SPRINT_4]):
   };
 }
 
-const STATUS_RANK = Object.fromEntries(TODO_STATUSES.map((status, index) => [status, index])) as Record<string, number>;
+const STATUS_RANK = Object.fromEntries(
+  TODO_STATUSES.map((status, index) => [status, index]),
+) as Record<string, number>;
 
 /** The server's list sort (todos.routes.ts), written out again so the tests don't trust the client's copy. */
 function serverOrder(a: Todo, b: Todo) {
   if (a.sprintId !== b.sprintId) return (a.sprintId ?? '').localeCompare(b.sprintId ?? '');
-  return (a.sprintId === null ? 0 : STATUS_RANK[a.status]! - STATUS_RANK[b.status]!) || a.order - b.order;
+  return (
+    (a.sprintId === null ? 0 : STATUS_RANK[a.status]! - STATUS_RANK[b.status]!) || a.order - b.order
+  );
 }
 
 /** The server's `moveTodo` (board.service.ts): lists are the backlog or one status column of a sprint. */
-export function serverMove(db: TodoDb, todo: Todo, target: { sprintId: string | null; status: Todo['status']; position: number }) {
+export function serverMove(
+  db: TodoDb,
+  todo: Todo,
+  target: { sprintId: string | null; status: Todo['status']; position: number },
+) {
   const sameList = (where: Pick<Todo, 'sprintId' | 'status'>) => (item: Todo) =>
-    item.id !== todo.id && item.sprintId === where.sprintId && (where.sprintId === null || item.status === where.status);
+    item.id !== todo.id &&
+    item.sprintId === where.sprintId &&
+    (where.sprintId === null || item.status === where.status);
   const renumber = (list: Todo[]) => {
     list.forEach((item, index) => (item.order = index));
   };
@@ -187,7 +212,8 @@ function withStats(db: TodoDb, sprint: Sprint): Sprint {
 export function todoHandlers(db: TodoDb) {
   let nextNumber = 40;
   const find = (id: unknown) => db.todos.find((todo) => todo.id === id);
-  const notFound = () => HttpResponse.json(errorBody('NOT_FOUND', 'Todo not found'), { status: 404 });
+  const notFound = () =>
+    HttpResponse.json(errorBody('NOT_FOUND', 'Todo not found'), { status: 404 });
 
   return [
     http.get(apiUrl('/projects/:projectId/todos'), () => {
@@ -199,18 +225,26 @@ export function todoHandlers(db: TodoDb) {
     ),
     http.get(apiUrl('/sprints/:sprintId/todos'), ({ params }) => {
       const sprint = db.sprints.find((item) => item.id === params.sprintId);
-      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (!sprint)
+        return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
       db.calls.board.push(sprint.id);
-      const columns = Object.fromEntries(TODO_STATUSES.map((status) => [status, [] as Todo[]])) as Record<Todo['status'], Todo[]>;
-      for (const todo of [...db.todos].sort(serverOrder)) if (todo.sprintId === sprint.id) columns[todo.status].push(todo);
+      const columns = Object.fromEntries(
+        TODO_STATUSES.map((status) => [status, [] as Todo[]]),
+      ) as Record<Todo['status'], Todo[]>;
+      for (const todo of [...db.todos].sort(serverOrder))
+        if (todo.sprintId === sprint.id) columns[todo.status].push(todo);
       return HttpResponse.json({ sprint: withStats(db, sprint), columns });
     }),
     http.post(apiUrl('/sprints/:sprintId/complete'), async ({ params, request }) => {
       const body = (await request.json()) as CompleteSprintRequest;
       const sprint = db.sprints.find((item) => item.id === params.sprintId);
-      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (!sprint)
+        return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
       if (sprint.status !== 'active') {
-        return HttpResponse.json(errorBody('CONFLICT', 'Only the active sprint can be completed.'), { status: 409 });
+        return HttpResponse.json(
+          errorBody('CONFLICT', 'Only the active sprint can be completed.'),
+          { status: 409 },
+        );
       }
       db.calls.completeSprint.push({ sprintId: sprint.id, body });
       const target = body.moveUnfinishedTo === 'backlog' ? null : body.moveUnfinishedTo;
@@ -218,7 +252,11 @@ export function todoHandlers(db: TodoDb) {
       const unfinished = todos.filter((todo) => todo.status !== 'done');
       sprint.completedStats = { ...statsOf(todos), carriedOver: unfinished.length };
       for (const todo of unfinished) {
-        serverMove(db, todo, { sprintId: target, status: todo.status, position: Number.MAX_SAFE_INTEGER });
+        serverMove(db, todo, {
+          sprintId: target,
+          status: todo.status,
+          position: Number.MAX_SAFE_INTEGER,
+        });
       }
       Object.assign(sprint, { status: 'completed', completedAt: '2026-11-16T17:00:00.000Z' });
       return HttpResponse.json({ sprint: withStats(db, sprint) });
@@ -234,8 +272,17 @@ export function todoHandlers(db: TodoDb) {
       const sprintId = body.sprintId ?? null;
       const status = body.status ?? 'todo';
       // New todos go to the end of their list (the backlog, or one status column of a sprint).
-      const order = db.todos.filter((item) => item.sprintId === sprintId && (sprintId === null || item.status === status)).length;
-      const todo = makeTodo({ id: `new-${nextNumber}`, key: `KAN-${nextNumber}`, title: body.title, sprintId, status, order });
+      const order = db.todos.filter(
+        (item) => item.sprintId === sprintId && (sprintId === null || item.status === status),
+      ).length;
+      const todo = makeTodo({
+        id: `new-${nextNumber}`,
+        key: `KAN-${nextNumber}`,
+        title: body.title,
+        sprintId,
+        status,
+        order,
+      });
       nextNumber += 1;
       db.todos.push(todo);
       return HttpResponse.json({ todo }, { status: 201 });
@@ -296,27 +343,40 @@ export function todoHandlers(db: TodoDb) {
       // Like the server: `todoIds` (an AI plan) move from the backlog into the new sprint, in order.
       for (const todoId of body.todoIds ?? []) {
         const todo = find(todoId);
-        if (todo) serverMove(db, todo, { sprintId: sprint.id, status: todo.status, position: Number.MAX_SAFE_INTEGER });
+        if (todo)
+          serverMove(db, todo, {
+            sprintId: sprint.id,
+            status: todo.status,
+            position: Number.MAX_SAFE_INTEGER,
+          });
       }
       return HttpResponse.json({ sprint: withStats(db, sprint) }, { status: 201 });
     }),
     http.patch(apiUrl('/sprints/:sprintId'), async ({ params, request }) => {
       const body = (await request.json()) as UpdateSprintRequest;
       const sprint = db.sprints.find((item) => item.id === params.sprintId);
-      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (!sprint)
+        return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
       db.calls.updateSprint.push({ sprintId: sprint.id, body });
       Object.assign(sprint, body);
       return HttpResponse.json({ sprint });
     }),
     http.delete(apiUrl('/sprints/:sprintId'), ({ params }) => {
       const sprint = db.sprints.find((item) => item.id === params.sprintId);
-      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (!sprint)
+        return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
       if (sprint.status !== 'planned') {
-        return HttpResponse.json(errorBody('CONFLICT', 'Only planned sprints can be deleted.'), { status: 409 });
+        return HttpResponse.json(errorBody('CONFLICT', 'Only planned sprints can be deleted.'), {
+          status: 409,
+        });
       }
       db.calls.deleteSprint.push(sprint.id);
       for (const todo of db.todos.filter((item) => item.sprintId === sprint.id)) {
-        serverMove(db, todo, { sprintId: null, status: todo.status, position: Number.MAX_SAFE_INTEGER });
+        serverMove(db, todo, {
+          sprintId: null,
+          status: todo.status,
+          position: Number.MAX_SAFE_INTEGER,
+        });
       }
       db.sprints = db.sprints.filter((item) => item !== sprint);
       return new HttpResponse(null, { status: 204 });
@@ -324,16 +384,24 @@ export function todoHandlers(db: TodoDb) {
     http.post(apiUrl('/sprints/:sprintId/start'), async ({ params, request }) => {
       const body = (await request.json()) as StartSprintRequest;
       const sprint = db.sprints.find((item) => item.id === params.sprintId);
-      if (!sprint) return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
+      if (!sprint)
+        return HttpResponse.json(errorBody('NOT_FOUND', 'Sprint not found'), { status: 404 });
       const active = db.sprints.find((item) => item.status === 'active');
       if (active) {
         return HttpResponse.json(
-          errorBody('CONFLICT', `"${active.name}" is still active. Complete it before starting another sprint.`),
+          errorBody(
+            'CONFLICT',
+            `"${active.name}" is still active. Complete it before starting another sprint.`,
+          ),
           { status: 409 },
         );
       }
       db.calls.startSprint.push({ sprintId: sprint.id, body });
-      Object.assign(sprint, { status: 'active', startDate: body.startDate ?? null, endDate: body.endDate ?? null });
+      Object.assign(sprint, {
+        status: 'active',
+        startDate: body.startDate ?? null,
+        endDate: body.endDate ?? null,
+      });
       return HttpResponse.json({ sprint });
     }),
     http.delete(apiUrl('/todos/:todoId'), ({ params }) => {

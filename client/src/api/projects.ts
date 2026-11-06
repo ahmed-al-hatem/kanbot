@@ -15,7 +15,10 @@ export async function listProjects(signal?: AbortSignal): Promise<ProjectWithSta
   return projects;
 }
 
-export async function getProject(projectId: string, signal?: AbortSignal): Promise<ProjectWithStats> {
+export async function getProject(
+  projectId: string,
+  signal?: AbortSignal,
+): Promise<ProjectWithStats> {
   const { project } = await request<ProjectResponse>('GET', `/projects/${projectId}`, { signal });
   return project;
 }

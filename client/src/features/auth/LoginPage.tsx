@@ -133,7 +133,8 @@ export function LoginPage() {
       </form>
 
       <p className={styles.switch}>
-        {t.auth.login.noAccount} <Link to={withRedirect('/register', search)}>{t.auth.login.createOne}</Link>
+        {t.auth.login.noAccount}{' '}
+        <Link to={withRedirect('/register', search)}>{t.auth.login.createOne}</Link>
       </p>
     </AuthLayout>
   );

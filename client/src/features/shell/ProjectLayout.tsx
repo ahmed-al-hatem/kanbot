@@ -32,7 +32,8 @@ export function ProjectLayout() {
   }
 
   const todoMissing =
-    todoId !== null && (todo.data ? todo.data.projectId !== projectId : isNotFoundError(todo.error));
+    todoId !== null &&
+    (todo.data ? todo.data.projectId !== projectId : isNotFoundError(todo.error));
   if (todoMissing) return <NotFoundPage cause="todo" />;
 
   return (

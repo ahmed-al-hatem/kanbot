@@ -27,10 +27,14 @@ describe('login in Arabic', () => {
     const user = userEvent.setup();
     const { container } = renderApp('/login');
 
-    expect(await screen.findByRole('heading', { name: 'أهلًا بعودتك', level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'أهلًا بعودتك', level: 1 }),
+    ).toBeInTheDocument();
     expect(document.title).toBe('تسجيل الدخول · Kanbot');
     expect(screen.getByRole('group', { name: 'اللغة' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^التبديل إلى الوضع (الفاتح|الداكن)$/ })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^التبديل إلى الوضع (الفاتح|الداكن)$/ }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'تسجيل الدخول' }));
 
@@ -55,7 +59,9 @@ describe('login in Arabic', () => {
     const user = userEvent.setup();
     server.use(
       http.post(apiUrl('/auth/login'), () =>
-        HttpResponse.json(errorBody('UNAUTHORIZED', 'Incorrect email or password.'), { status: 401 }),
+        HttpResponse.json(errorBody('UNAUTHORIZED', 'Incorrect email or password.'), {
+          status: 401,
+        }),
       ),
     );
     const { container } = renderApp('/login');
@@ -87,9 +93,12 @@ describe('login in Arabic', () => {
     const user = userEvent.setup();
     server.use(
       http.post(apiUrl('/auth/login'), () =>
-        HttpResponse.json(errorBody('RATE_LIMITED', 'Too many attempts. Try again in a few minutes.'), {
-          status: 429,
-        }),
+        HttpResponse.json(
+          errorBody('RATE_LIMITED', 'Too many attempts. Try again in a few minutes.'),
+          {
+            status: 429,
+          },
+        ),
       ),
     );
     renderApp('/login');
@@ -109,12 +118,16 @@ describe('register in Arabic', () => {
     const message = 'An account with this email already exists.';
     server.use(
       http.post(apiUrl('/auth/register'), () =>
-        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), { status: 409 }),
+        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), {
+          status: 409,
+        }),
       ),
     );
     const { container } = renderApp('/register');
 
-    expect(await screen.findByRole('heading', { name: 'أنشئ حسابك', level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'أنشئ حسابك', level: 1 }),
+    ).toBeInTheDocument();
     await user.type(screen.getByLabelText('الاسم'), 'سارة أحمد');
     await user.type(screen.getByLabelText('البريد الإلكتروني'), 'sara@example.com');
     await user.type(screen.getByLabelText('كلمة المرور'), 'password123');
@@ -148,7 +161,9 @@ describe('a visible error follows a language switch', () => {
     await user.click(screen.getByRole('button', { name: 'العربية' }));
 
     await waitFor(() => {
-      expect(screen.getByLabelText('البريد الإلكتروني')).toHaveAccessibleDescription('أدخل بريدك الإلكتروني');
+      expect(screen.getByLabelText('البريد الإلكتروني')).toHaveAccessibleDescription(
+        'أدخل بريدك الإلكتروني',
+      );
     });
     expect(screen.getByLabelText('كلمة المرور')).toHaveAccessibleDescription('أدخل كلمة المرور');
     expect(screen.queryByText('Enter your email')).not.toBeInTheDocument();
@@ -166,7 +181,9 @@ describe('a visible error follows a language switch', () => {
     const message = 'An account with this email already exists.';
     server.use(
       http.post(apiUrl('/auth/register'), () =>
-        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), { status: 409 }),
+        HttpResponse.json(errorBody('CONFLICT', message, [{ path: 'email', message }]), {
+          status: 409,
+        }),
       ),
     );
     renderApp('/register');

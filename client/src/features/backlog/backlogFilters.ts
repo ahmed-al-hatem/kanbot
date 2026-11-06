@@ -19,7 +19,10 @@ export function readFilters(params: URLSearchParams): BacklogFilters {
   };
 }
 
-export function writeFilters(params: URLSearchParams, patch: Partial<BacklogFilters>): URLSearchParams {
+export function writeFilters(
+  params: URLSearchParams,
+  patch: Partial<BacklogFilters>,
+): URLSearchParams {
   const next = new URLSearchParams(params);
   for (const [name, value] of Object.entries(patch)) {
     if (value) next.set(name, value);
@@ -41,5 +44,7 @@ export function matchesFilters(todo: Todo, { q, priority, type }: BacklogFilters
   if (type && todo.type !== type) return false;
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
-  return [todo.key, todo.title, todo.description, ...todo.labels].some((field) => field.toLowerCase().includes(needle));
+  return [todo.key, todo.title, todo.description, ...todo.labels].some((field) =>
+    field.toLowerCase().includes(needle),
+  );
 }

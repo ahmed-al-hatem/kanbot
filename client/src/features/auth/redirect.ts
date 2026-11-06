@@ -8,7 +8,8 @@ const GUEST_PATHS = ['/login', '/register', '/forgot-password'];
  * and a guest page would bounce straight back.
  */
 export function safeRedirect(value: string | null | undefined): string {
-  if (!value?.startsWith('/') || value.startsWith('//') || value.startsWith('/\\')) return HOME_PATH;
+  if (!value?.startsWith('/') || value.startsWith('//') || value.startsWith('/\\'))
+    return HOME_PATH;
   const pathname = value.split(/[?#]/, 1)[0] ?? '';
   if (GUEST_PATHS.includes(pathname)) return HOME_PATH;
   return value;

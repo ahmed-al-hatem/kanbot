@@ -1,6 +1,13 @@
 import { z } from 'zod';
 import type { Messages } from '@/i18n';
-import { STORY_POINTS, TODO_PRIORITIES, TODO_STATUSES, TODO_TYPES, type Todo, type UpdateTodoRequest } from '@/types/api';
+import {
+  STORY_POINTS,
+  TODO_PRIORITIES,
+  TODO_STATUSES,
+  TODO_TYPES,
+  type Todo,
+  type UpdateTodoRequest,
+} from '@/types/api';
 
 /** `sprintId` value for the Backlog option of the Sprint select. */
 export const BACKLOG_VALUE = 'backlog';
@@ -36,7 +43,9 @@ export function todoFormSchema(t: Messages) {
     labels: z
       .array(z.string().trim().min(1).max(LABEL_MAX, validation.labelMax(LABEL_MAX)))
       .max(LABELS_MAX, validation.labelsMax(LABELS_MAX)),
-    dueDate: z.string().refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), validation.dateInvalid),
+    dueDate: z
+      .string()
+      .refine((value) => value === '' || /^\d{4}-\d{2}-\d{2}$/.test(value), validation.dateInvalid),
     sprintId: z.string().min(1),
   });
 }
@@ -58,12 +67,16 @@ export function toFormValues(todo: Todo): TodoFormValues {
 }
 
 function sameValue(a: unknown, b: unknown) {
-  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, i) => item === b[i]);
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((item, i) => item === b[i]);
   return a === b;
 }
 
 /** Fields whose value differs from the todo's (title compared trimmed, as the server stores it). */
-export function changedFields(values: TodoFormValues, initial: TodoFormValues): (keyof TodoFormValues)[] {
+export function changedFields(
+  values: TodoFormValues,
+  initial: TodoFormValues,
+): (keyof TodoFormValues)[] {
   return (Object.keys(initial) as (keyof TodoFormValues)[]).filter((field) =>
     field === 'title'
       ? values.title.trim() !== initial.title
@@ -72,7 +85,10 @@ export function changedFields(values: TodoFormValues, initial: TodoFormValues): 
 }
 
 /** The PATCH body: only the fields the user changed (BL-3), in the API's shapes. */
-export function toUpdateRequest(values: TodoFormValues, initial: TodoFormValues): UpdateTodoRequest {
+export function toUpdateRequest(
+  values: TodoFormValues,
+  initial: TodoFormValues,
+): UpdateTodoRequest {
   const changed = new Set(changedFields(values, initial));
   const body: UpdateTodoRequest = {};
   if (changed.has('title')) body.title = values.title.trim();
@@ -83,7 +99,8 @@ export function toUpdateRequest(values: TodoFormValues, initial: TodoFormValues)
   if (changed.has('storyPoints')) body.storyPoints = pointsOf(values.storyPoints);
   if (changed.has('labels')) body.labels = values.labels;
   if (changed.has('dueDate')) body.dueDate = values.dueDate || null;
-  if (changed.has('sprintId')) body.sprintId = values.sprintId === BACKLOG_VALUE ? null : values.sprintId;
+  if (changed.has('sprintId'))
+    body.sprintId = values.sprintId === BACKLOG_VALUE ? null : values.sprintId;
   return body;
 }
 

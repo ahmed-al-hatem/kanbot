@@ -45,7 +45,12 @@ export function buildBacklogGroups(
   sprints: readonly Sprint[],
   backlogName: string,
 ): BacklogGroup[] {
-  const group = (kind: BacklogGroupKind, id: string, name: string, sprint: Sprint | null): BacklogGroup => {
+  const group = (
+    kind: BacklogGroupKind,
+    id: string,
+    name: string,
+    sprint: Sprint | null,
+  ): BacklogGroup => {
     const todos = todosBySprint.get(id) ?? [];
     return { id, kind, name, sprint, todos, points: sumPoints(todos) };
   };
@@ -67,7 +72,10 @@ export function useBacklog(projectId: string) {
   const todos = useProjectTodos(projectId, bySprint);
   const sprints = useSprints(projectId);
   const groups = useMemo(
-    () => (todos.data && sprints.data ? buildBacklogGroups(todos.data, sprints.data, backlogName) : undefined),
+    () =>
+      todos.data && sprints.data
+        ? buildBacklogGroups(todos.data, sprints.data, backlogName)
+        : undefined,
     [todos.data, sprints.data, backlogName],
   );
 

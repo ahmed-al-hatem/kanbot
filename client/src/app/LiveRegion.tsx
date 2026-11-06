@@ -12,10 +12,20 @@ export function LiveRegion() {
 
   return (
     <>
-      <div className="visually-hidden" aria-live="polite" aria-atomic="true" data-testid="live-polite">
+      <div
+        className="visually-hidden"
+        aria-live="polite"
+        aria-atomic="true"
+        data-testid="live-polite"
+      >
         {politeness === 'polite' && message && <span key={id}>{message}</span>}
       </div>
-      <div className="visually-hidden" aria-live="assertive" aria-atomic="true" data-testid="live-assertive">
+      <div
+        className="visually-hidden"
+        aria-live="assertive"
+        aria-atomic="true"
+        data-testid="live-assertive"
+      >
         {politeness === 'assertive' && message && <span key={id}>{message}</span>}
       </div>
     </>

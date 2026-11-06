@@ -39,7 +39,9 @@ export function linkTodoKeys(markdown: string, keyToId: ReadonlyMap<string, stri
         : part.replace(TODO_KEY, (key: string, offset: number, whole: string) => {
             const id = keyToId.get(key);
             const inLinkText = whole[offset - 1] === '[' || whole[offset + key.length] === ']';
-            return id && !inLinkText ? `[${key}](${TODO_HREF_PREFIX}${encodeURIComponent(id)})` : key;
+            return id && !inLinkText
+              ? `[${key}](${TODO_HREF_PREFIX}${encodeURIComponent(id)})`
+              : key;
           }),
     )
     .join('');

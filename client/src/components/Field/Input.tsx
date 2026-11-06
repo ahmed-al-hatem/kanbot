@@ -12,5 +12,7 @@ export function Input({ className, type = 'text', ...props }: ComponentPropsWith
 /** Multi-line input; resizes vertically only. */
 export function Textarea({ className, rows = 3, ...props }: ComponentPropsWithRef<'textarea'>) {
   const control = useFieldControl(props);
-  return <textarea rows={rows} className={cx(styles.control, styles.textarea, className)} {...control} />;
+  return (
+    <textarea rows={rows} className={cx(styles.control, styles.textarea, className)} {...control} />
+  );
 }

@@ -19,7 +19,15 @@ export function Icon({ name, size = 16, label, ...rest }: IconProps) {
   const paths: readonly IconPath[] = icons[name];
   const a11y = label ? { role: 'img', 'aria-label': label } : { 'aria-hidden': true };
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" focusable="false" {...a11y} {...rest}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      focusable="false"
+      {...a11y}
+      {...rest}
+    >
       {paths.map((path) => (
         <path
           key={path.d}

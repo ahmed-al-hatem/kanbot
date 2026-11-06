@@ -47,7 +47,13 @@ interface ProjectFormDialogProps {
  * todos will get, mirroring the server's generation. A 409 lands under Key.
  * Mount it fresh for every open (`key`), so it starts from the project's current values.
  */
-export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSaved }: ProjectFormDialogProps) {
+export function ProjectFormDialog({
+  open,
+  onOpenChange,
+  project,
+  takenKeys,
+  onSaved,
+}: ProjectFormDialogProps) {
   const t = useT();
   const isEdit = Boolean(project);
   const formId = useId();
@@ -167,17 +173,28 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
 
         {/* Live preview (canvas): avatar, name and the key todos will be numbered with. */}
         <div className={styles.preview}>
-          <ProjectAvatar id={project?.id ?? NEW_PROJECT_ID} name={name || t.projects.form.untitled} size={40} />
+          <ProjectAvatar
+            id={project?.id ?? NEW_PROJECT_ID}
+            name={name || t.projects.form.untitled}
+            size={40}
+          />
           <span className={styles.previewText}>
             <span className={styles.previewName}>{name.trim() || t.projects.form.untitled}</span>
             <span className="meta">
-              {isEdit ? t.projects.form.previewEdit(previewKey) : t.projects.form.previewCreate(previewKey)}
+              {isEdit
+                ? t.projects.form.previewEdit(previewKey)
+                : t.projects.form.previewCreate(previewKey)}
             </span>
           </span>
         </div>
 
         <Field label={t.projects.form.name} required error={errors.name?.message}>
-          <Input data-autofocus placeholder={t.projects.form.namePlaceholder} maxLength={80} {...nameField} />
+          <Input
+            data-autofocus
+            placeholder={t.projects.form.namePlaceholder}
+            maxLength={80}
+            {...nameField}
+          />
         </Field>
 
         <Field
@@ -204,7 +221,11 @@ export function ProjectFormDialog({ open, onOpenChange, project, takenKeys, onSa
         </Field>
 
         <Field label={t.projects.form.description} error={errors.description?.message}>
-          <Textarea rows={3} placeholder={t.projects.form.descriptionPlaceholder} {...register('description')} />
+          <Textarea
+            rows={3}
+            placeholder={t.projects.form.descriptionPlaceholder}
+            {...register('description')}
+          />
         </Field>
 
         {!isEdit && (

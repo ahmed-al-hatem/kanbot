@@ -26,7 +26,11 @@ export interface Credentials {
 /** A user nobody has registered yet: every test gets its own, so runs never collide or need a seed. */
 export function newUser(): Credentials {
   const id = randomUUID().slice(0, 8);
-  return { name: `E2E ${id}`, email: `e2e-${id}-${Date.now()}@kanbot.test`, password: 'password123' };
+  return {
+    name: `E2E ${id}`,
+    email: `e2e-${id}-${Date.now()}@kanbot.test`,
+    password: 'password123',
+  };
 }
 
 /** A thin API client for test setup, through the preview's `/api` proxy (same origin as the app). */
@@ -46,7 +50,9 @@ export class Api {
       data,
       headers: { Authorization: `Bearer ${this.token}` },
     });
-    expect(response.ok(), `${method} ${path} → ${response.status()} ${await response.text()}`).toBe(true);
+    expect(response.ok(), `${method} ${path} → ${response.status()} ${await response.text()}`).toBe(
+      true,
+    );
     return (await response.json()) as T;
   }
 
@@ -55,11 +61,16 @@ export class Api {
   }
 
   async todos(projectId: string, todos: CreateTodoRequest[]): Promise<Todo[]> {
-    return (await this.call<BulkCreateTodosResponse>('POST', `/projects/${projectId}/todos/bulk`, { todos })).todos;
+    return (
+      await this.call<BulkCreateTodosResponse>('POST', `/projects/${projectId}/todos/bulk`, {
+        todos,
+      })
+    ).todos;
   }
 
   async sprint(projectId: string, body: CreateSprintRequest): Promise<Sprint> {
-    return (await this.call<{ sprint: Sprint }>('POST', `/projects/${projectId}/sprints`, body)).sprint;
+    return (await this.call<{ sprint: Sprint }>('POST', `/projects/${projectId}/sprints`, body))
+      .sprint;
   }
 
   async move(todoId: string, body: MoveTodoRequest): Promise<Todo> {
@@ -71,8 +82,11 @@ export class Api {
   }
 
   async complete(sprintId: string): Promise<Sprint> {
-    return (await this.call<{ sprint: Sprint }>('POST', `/sprints/${sprintId}/complete`, { moveUnfinishedTo: 'backlog' }))
-      .sprint;
+    return (
+      await this.call<{ sprint: Sprint }>('POST', `/sprints/${sprintId}/complete`, {
+        moveUnfinishedTo: 'backlog',
+      })
+    ).sprint;
   }
 
   async summarize(sprintId: string): Promise<SprintSummaryResponse> {
@@ -107,7 +121,9 @@ export async function openSignedIn(page: Page, token: string, path: string) {
 /** Reads the token the app persisted (after a sign-up or log in through the UI). */
 export async function storedToken(page: Page): Promise<string> {
   const raw = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
-  const token = raw ? (JSON.parse(raw) as { state?: { token?: string | null } }).state?.token : null;
+  const token = raw
+    ? (JSON.parse(raw) as { state?: { token?: string | null } }).state?.token
+    : null;
   expect(token, 'token in localStorage').toBeTruthy();
   return token ?? '';
 }
@@ -129,7 +145,11 @@ export const SAMPLE_TODOS: CreateTodoRequest[] = [
 export async function projectWithActiveSprint(api: Api, name = 'E2E Board') {
   const project = await api.project(name);
   const todos = await api.todos(project.id, SAMPLE_TODOS);
-  const sprint = await api.sprint(project.id, { name: 'Sprint 1', goal: 'Ship the basics', todoIds: todos.map((t) => t.id) });
+  const sprint = await api.sprint(project.id, {
+    name: 'Sprint 1',
+    goal: 'Ship the basics',
+    todoIds: todos.map((t) => t.id),
+  });
   await api.start(sprint.id);
   return { project, todos, sprint };
 }
@@ -146,13 +166,20 @@ export const card = (scope: Page | Locator, title: string) =>
 
 /** Resolves with the next `POST /todos/:id/move` response. */
 export const nextMove = (page: Page) =>
-  page.waitForResponse((r) => r.request().method() === 'POST' && /\/api\/todos\/[^/]+\/move$/.test(r.url()));
+  page.waitForResponse(
+    (r) => r.request().method() === 'POST' && /\/api\/todos\/[^/]+\/move$/.test(r.url()),
+  );
 
 /**
  * A real pointer drag (dnd-kit's mouse sensor needs ≥ 4px of travel before it picks the item up),
  * moving in small steps so the collision detection sees every droppable on the way.
  */
-export async function pointerDrag(page: Page, source: Locator, target: Locator, at: 'center' | 'top' = 'center') {
+export async function pointerDrag(
+  page: Page,
+  source: Locator,
+  target: Locator,
+  at: 'center' | 'top' = 'center',
+) {
   await source.scrollIntoViewIfNeeded();
   const from = await source.boundingBox();
   const to = await target.boundingBox();
@@ -181,7 +208,8 @@ export async function expectNoA11yViolations(page: Page, where: string) {
   const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
   const report = violations.flatMap((v) =>
     v.nodes.map(
-      (node) => `${v.id} (${v.impact ?? 'n/a'}): ${node.target.join(' ')} — ${node.failureSummary ?? v.help}`,
+      (node) =>
+        `${v.id} (${v.impact ?? 'n/a'}): ${node.target.join(' ')} — ${node.failureSummary ?? v.help}`,
     ),
   );
   expect.soft(report, `axe violations on ${where}`).toEqual([]);

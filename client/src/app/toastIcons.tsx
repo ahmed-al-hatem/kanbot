@@ -11,7 +11,15 @@ interface ToastIconProps extends Omit<SVGProps<SVGSVGElement>, 'children' | 'vie
 export function ToastIcon({ name, size = 16, ...rest }: ToastIconProps) {
   const paths: readonly IconPath[] = TOAST_ICONS[name];
   return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" focusable="false" aria-hidden="true" {...rest}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      focusable="false"
+      aria-hidden="true"
+      {...rest}
+    >
       {paths.map((path) => (
         <path
           key={path.d}

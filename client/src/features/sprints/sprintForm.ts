@@ -59,32 +59,55 @@ export type StartSprintValues = z.infer<ReturnType<typeof startSprintSchema>>;
  * It is data, not UI text: the name is stored, and the Arabic UI keeps it as typed (glossary).
  */
 export function nextSprintName(sprints: readonly Pick<Sprint, 'name'>[]): string {
-  const numbers = sprints.map((sprint) => /^Sprint (\d+)$/i.exec(sprint.name.trim())?.[1]).map(Number);
+  const numbers = sprints
+    .map((sprint) => /^Sprint (\d+)$/i.exec(sprint.name.trim())?.[1])
+    .map(Number);
   const highest = Math.max(0, ...numbers.filter((value) => Number.isFinite(value)));
   return `Sprint ${Math.max(highest, sprints.length) + 1}`;
 }
 
 /** DESIGN §9 13: the day after the last sprint ends (any status), else today. */
-export function defaultSprintStart(sprints: readonly Pick<Sprint, 'endDate'>[], today = todayIso()): string {
+export function defaultSprintStart(
+  sprints: readonly Pick<Sprint, 'endDate'>[],
+  today = todayIso(),
+): string {
   const ends = sprints.map((sprint) => sprint.endDate).filter((end): end is string => Boolean(end));
   if (ends.length === 0) return today;
-  return addDays(ends.reduce((last, end) => (end > last ? end : last)), 1);
+  return addDays(
+    ends.reduce((last, end) => (end > last ? end : last)),
+    1,
+  );
 }
 
 export function createDefaults(sprints: readonly Sprint[], today = todayIso()): SprintFormValues {
   const startDate = defaultSprintStart(sprints, today);
-  return { name: nextSprintName(sprints), goal: '', startDate, endDate: addDays(startDate, SPRINT_LENGTH_DAYS) };
+  return {
+    name: nextSprintName(sprints),
+    goal: '',
+    startDate,
+    endDate: addDays(startDate, SPRINT_LENGTH_DAYS),
+  };
 }
 
 export function editDefaults(sprint: Sprint): SprintFormValues {
-  return { name: sprint.name, goal: sprint.goal, startDate: sprint.startDate ?? '', endDate: sprint.endDate ?? '' };
+  return {
+    name: sprint.name,
+    goal: sprint.goal,
+    startDate: sprint.startDate ?? '',
+    endDate: sprint.endDate ?? '',
+  };
 }
 
 /**
  * The hint under the dates (DESIGN §9 13): "2 weeks · Nov 16 – Nov 30", "10 days · …",
  * "One day · Nov 16 – Nov 16"; null when they are out of order (the error shows instead).
  */
-export function durationHint(startDate: string, endDate: string, format: Formatter, t: Messages): string | null {
+export function durationHint(
+  startDate: string,
+  endDate: string,
+  format: Formatter,
+  t: Messages,
+): string | null {
   const { duration } = t.sprints;
   if (!startDate || !endDate) return startDate || endDate ? duration.bothDates : duration.optional;
   const days = daysBetween(startDate, endDate);

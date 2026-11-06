@@ -22,7 +22,9 @@ function findPlace(groups: readonly BacklogGroup[] | undefined, todo: Todo) {
   const all = groups ?? [];
   const index = all.findIndex((group) => group.todos.some((item) => item.id === todo.id));
   const group = all[index];
-  return group ? { all, index, group, row: group.todos.findIndex((item) => item.id === todo.id) } : null;
+  return group
+    ? { all, index, group, row: group.todos.findIndex((item) => item.id === todo.id) }
+    : null;
 }
 
 /**
@@ -33,7 +35,11 @@ function findPlace(groups: readonly BacklogGroup[] | undefined, todo: Todo) {
  * stable (they read the latest groups from a ref), so memoized rows don't re-render; their text
  * comes from `getT()` when they run, so it is in the language of that moment.
  */
-export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup[] | undefined, filtering: boolean) {
+export function useBacklogMoves(
+  projectId: string,
+  groups: readonly BacklogGroup[] | undefined,
+  filtering: boolean,
+) {
   const markTodo = useHighlight((s) => s.markTodo);
   const latest = useRef({ groups, filtering });
   useLayoutEffect(() => {
@@ -44,7 +50,8 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
     const { backlog } = getT();
     return sprintId === null
       ? backlog.groupName
-      : (latest.current.groups?.find((group) => group.id === sprintId)?.name ?? backlog.fallbackSprint);
+      : (latest.current.groups?.find((group) => group.id === sprintId)?.name ??
+          backlog.fallbackSprint);
   };
 
   // Undo needs `move` itself; the ref breaks the cycle.

@@ -67,7 +67,9 @@ export function ConfirmDialog({
             onCloseAutoFocus={returnFocus.restore}
           >
             <AlertDialog.Title className={styles.title}>{title}</AlertDialog.Title>
-            <AlertDialog.Description className={styles.confirmText}>{description}</AlertDialog.Description>
+            <AlertDialog.Description className={styles.confirmText}>
+              {description}
+            </AlertDialog.Description>
             <div className={styles.confirmActions}>
               <AlertDialog.Cancel asChild>
                 <Button variant="subtle" disabled={pending}>
@@ -75,7 +77,12 @@ export function ConfirmDialog({
                 </Button>
               </AlertDialog.Cancel>
               {/* Not AlertDialog.Action: that closes immediately, before the request settles. */}
-              <Button variant={tone} loading={pending} loadingText={pendingLabel} onClick={onConfirm}>
+              <Button
+                variant={tone}
+                loading={pending}
+                loadingText={pendingLabel}
+                onClick={onConfirm}
+              >
                 {confirmLabel}
               </Button>
             </div>

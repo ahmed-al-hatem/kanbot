@@ -1,5 +1,14 @@
 import { expect, test } from '@playwright/test';
-import { Api, card, column, escapeRegExp, newUser, nextMove, pointerDrag, storedToken } from './support';
+import {
+  Api,
+  card,
+  column,
+  escapeRegExp,
+  newUser,
+  nextMove,
+  pointerDrag,
+  storedToken,
+} from './support';
 
 const todosText = (n: number) => `${n} todo${n === 1 ? '' : 's'}`;
 
@@ -13,7 +22,10 @@ const todosText = (n: number) => `${n} todo${n === 1 ? '' : 's'}`;
  * In mock mode (the default, see playwright.config.ts) the AI's answers are known, so the exact
  * texts are checked too; with a real model only the structure is.
  */
-test('demo flow: register → AI todos → AI plan → board → complete with summary', async ({ page, request }) => {
+test('demo flow: register → AI todos → AI plan → board → complete with summary', async ({
+  page,
+  request,
+}) => {
   test.setTimeout(120_000);
   const user = newUser();
 
@@ -76,8 +88,10 @@ test('demo flow: register → AI todos → AI plan → board → complete with s
 
     const backlog = page.getByRole('list', { name: 'Backlog todos' });
     await expect(backlog.getByRole('listitem')).toHaveCount(kept.length);
-    for (const title of kept) await expect(backlog.getByRole('button', { name: title, exact: true })).toBeVisible();
-    for (const title of dropped) await expect(page.getByRole('button', { name: title, exact: true })).toHaveCount(0);
+    for (const title of kept)
+      await expect(backlog.getByRole('button', { name: title, exact: true })).toBeVisible();
+    for (const title of dropped)
+      await expect(page.getByRole('button', { name: title, exact: true })).toHaveCount(0);
   });
 
   const capacity = 8;
@@ -89,7 +103,9 @@ test('demo flow: register → AI todos → AI plan → board → complete with s
     await dialog.getByRole('spinbutton', { name: /Capacity/ }).fill(String(capacity));
     await dialog.getByRole('button', { name: 'Suggest plan' }).click();
 
-    await expect(dialog.getByRole('textbox', { name: 'Suggested sprint goal' })).toBeVisible({ timeout: 45_000 });
+    await expect(dialog.getByRole('textbox', { name: 'Suggested sprint goal' })).toBeVisible({
+      timeout: 45_000,
+    });
     const total = dialog.getByText(new RegExp(`^\\d+ / ${capacity} pts$`)).first();
     await expect(total).toBeVisible();
     const points = Number((await total.textContent())?.split(' / ')[0]);
@@ -112,7 +128,9 @@ test('demo flow: register → AI todos → AI plan → board → complete with s
 
     await create.click();
     await expect(dialog).toBeHidden();
-    await expect(page.getByText(new RegExp(`^Sprint 1 created with ${picked} todos?$`))).toBeVisible();
+    await expect(
+      page.getByText(new RegExp(`^Sprint 1 created with ${picked} todos?$`)),
+    ).toBeVisible();
     const sprintList = page.getByRole('list', { name: 'Sprint 1 todos' });
     await expect(sprintList.getByRole('listitem')).toHaveCount(picked);
   });
@@ -178,22 +196,29 @@ test('demo flow: register → AI todos → AI plan → board → complete with s
     const detail = page.getByRole('region', { name: 'Sprint 1', exact: true });
     await expect(detail).toBeVisible();
     // A stat tile's text is its label followed by its value ("Completed" is also the lozenge).
-    const tile = (label: string, value: string) => detail.getByText(new RegExp(`^${label}\\s*${value}$`));
+    const tile = (label: string, value: string) =>
+      detail.getByText(new RegExp(`^${label}\\s*${value}$`));
     await expect(tile('Completed', todosText(1))).toBeVisible();
     await expect(tile('Carried over', todosText(planned.length - 1))).toBeVisible();
     await expect(tile('Completion', '\\d+%')).toBeVisible();
     // Playwright's getByRole has no `current` option; the selected sprint is the aria-current link.
-    const selected = page.getByRole('navigation', { name: 'All sprints' }).locator('a[aria-current="page"]');
+    const selected = page
+      .getByRole('navigation', { name: 'All sprints' })
+      .locator('a[aria-current="page"]');
     await expect(selected).toContainText('Completed');
 
     const summary = page.getByRole('region', { name: 'AI summary' });
     await expect(summary.getByText(/^Generated /).first()).toBeVisible({ timeout: 45_000 });
-    if (mock) await expect(summary.getByRole('heading', { name: 'Sprint 1 summary' })).toBeVisible();
+    if (mock)
+      await expect(summary.getByRole('heading', { name: 'Sprint 1 summary' })).toBeVisible();
     await expect(summary).toContainText('AI can make mistakes');
   });
 
   await test.step('the unfinished todo is back in the backlog', async () => {
-    await page.getByRole('navigation', { name: 'Main' }).getByRole('link', { name: 'Backlog', exact: true }).click();
+    await page
+      .getByRole('navigation', { name: 'Main' })
+      .getByRole('link', { name: 'Backlog', exact: true })
+      .click();
     const backlog = page.getByRole('list', { name: 'Backlog todos' });
     await expect(backlog.getByRole('button', { name: keyed, exact: true })).toBeVisible();
     await expect(backlog.getByRole('button', { name: dragged, exact: true })).toHaveCount(0);

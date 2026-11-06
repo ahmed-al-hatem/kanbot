@@ -82,7 +82,9 @@ describe('projects page in Arabic', () => {
     const search = screen.getByRole('searchbox', { name: 'ابحث في المشاريع' });
     expect(search).toHaveAttribute('placeholder', 'ابحث بالاسم أو المفتاح');
     await user.type(search, 'zzz');
-    expect(await screen.findByRole('heading', { name: 'لا توجد مشاريع تطابق «zzz»' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'لا توجد مشاريع تطابق «zzz»' }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'مسح البحث' }));
     expect(await screen.findByRole('heading', { name: 'Kanbot App' })).toBeInTheDocument();
   });
@@ -139,7 +141,9 @@ describe('projects page in Arabic', () => {
     await user.click(await screen.findByRole('menuitem', { name: 'حذف' }));
 
     const confirm = await screen.findByRole('alertdialog', { name: 'حذف Kanbot App؟' });
-    expect(confirm).toHaveTextContent('سيُحذف Kanbot App (KAN) نهائيًا مع كل سبرنتاته و24 بندًا. لا يمكن التراجع عن ذلك.');
+    expect(confirm).toHaveTextContent(
+      'سيُحذف Kanbot App (KAN) نهائيًا مع كل سبرنتاته و24 بندًا. لا يمكن التراجع عن ذلك.',
+    );
     expect(within(confirm).getByRole('button', { name: 'إلغاء' })).toHaveFocus();
     await expectNoAxeViolations(confirm);
 
@@ -153,16 +157,22 @@ describe('projects page in Arabic', () => {
     server.use(
       ...projectHandlers([KANBOT, PORTFOLIO]),
       http.delete(apiUrl('/projects/p1'), () =>
-        HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong on our side.'), { status: 500 }),
+        HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong on our side.'), {
+          status: 500,
+        }),
       ),
     );
     renderApp('/projects');
 
     await user.click(await screen.findByRole('button', { name: 'إجراءات Kanbot App' }));
     await user.click(await screen.findByRole('menuitem', { name: 'حذف' }));
-    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'حذف المشروع' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'حذف المشروع' }),
+    );
 
-    expect(await screen.findByText('تعذّر حذف Kanbot App. حدث خطأ من جهتنا. حاول مجددًا.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('تعذّر حذف Kanbot App. حدث خطأ من جهتنا. حاول مجددًا.'),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/on our side/)).not.toBeInTheDocument();
   });
 
@@ -177,7 +187,9 @@ describe('projects page in Arabic', () => {
       );
       renderApp('/projects');
 
-      expect(await screen.findByRole('heading', { name: 'تعذّر تحميل مشاريعك' })).toBeInTheDocument();
+      expect(
+        await screen.findByRole('heading', { name: 'تعذّر تحميل مشاريعك' }),
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'إعادة المحاولة' })).toBeInTheDocument();
       expect(screen.getByText('خطأ 500 · خطأ داخلي في الخادم')).toBeInTheDocument();
     } finally {

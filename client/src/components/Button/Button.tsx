@@ -20,7 +20,15 @@ function buttonClass(variant: ButtonVariant, size: ButtonSize, className?: strin
   return cx(styles.button, styles[variant], styles[size], className);
 }
 
-function Content({ variant, icon, children }: { variant: ButtonVariant; icon?: IconName; children: ReactNode }) {
+function Content({
+  variant,
+  icon,
+  children,
+}: {
+  variant: ButtonVariant;
+  icon?: IconName;
+  children: ReactNode;
+}) {
   const leading = icon ?? (variant === 'ai' ? 'ai-sparkle' : undefined);
   return (
     <>
@@ -94,7 +102,14 @@ export function Button({
 export type ButtonLinkProps = LinkProps & StyleProps;
 
 /** A router link that looks like a Button, for actions that navigate ("Back to Projects"). */
-export function ButtonLink({ variant = 'neutral', size = 'md', icon, className, children, ...rest }: ButtonLinkProps) {
+export function ButtonLink({
+  variant = 'neutral',
+  size = 'md',
+  icon,
+  className,
+  children,
+  ...rest
+}: ButtonLinkProps) {
   return (
     <Link className={buttonClass(variant, size, className)} {...rest}>
       <span className={styles.label}>
@@ -107,7 +122,8 @@ export function ButtonLink({ variant = 'neutral', size = 'md', icon, className, 
 }
 
 export interface IconButtonProps
-  extends Omit<ComponentPropsWithRef<'button'>, 'children' | 'aria-label'>,
+  extends
+    Omit<ComponentPropsWithRef<'button'>, 'children' | 'aria-label'>,
     Pick<StyleProps, 'variant'> {
   /** Required by the type: an icon-only button has no other accessible name (DESIGN §7). */
   'aria-label': string;
@@ -117,9 +133,20 @@ export interface IconButtonProps
 }
 
 /** Square icon-only button. Subtle by default. */
-export function IconButton({ icon, variant = 'subtle', size = 'md', type = 'button', className, ...rest }: IconButtonProps) {
+export function IconButton({
+  icon,
+  variant = 'subtle',
+  size = 'md',
+  type = 'button',
+  className,
+  ...rest
+}: IconButtonProps) {
   return (
-    <button type={type} className={buttonClass(variant, size, cx(styles.iconOnly, className))} {...rest}>
+    <button
+      type={type}
+      className={buttonClass(variant, size, cx(styles.iconOnly, className))}
+      {...rest}
+    >
       <Icon name={icon} className={styles.icon} />
     </button>
   );

@@ -22,7 +22,15 @@ interface ConfirmBarProps {
  * DESIGN §7 Unsaved-changes confirm bar: `--warning-bg`, radius 8, `role="alertdialog"`,
  * "Keep editing" focused on open and "Discard" in danger. Lives inside a dialog, above its footer.
  */
-export function ConfirmBar({ children, label, keepLabel, confirmLabel, onKeep, onConfirm, className }: ConfirmBarProps) {
+export function ConfirmBar({
+  children,
+  label,
+  keepLabel,
+  confirmLabel,
+  onKeep,
+  onConfirm,
+  className,
+}: ConfirmBarProps) {
   const keepRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {

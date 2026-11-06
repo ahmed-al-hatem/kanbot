@@ -13,7 +13,14 @@ type Part = 'bg' | 'fg' | 'accent';
 
 /** The mark's shapes on a 512 grid (kept as data: geometry, not text). */
 const VIEW_BOX = '0 0 512 512';
-const RECTS: readonly { x: number; y: number; width: number; height: number; rx: number; part: Part }[] = [
+const RECTS: readonly {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rx: number;
+  part: Part;
+}[] = [
   { x: 0, y: 0, width: 512, height: 512, rx: 112, part: 'bg' },
   { x: 248, y: 100, width: 16, height: 60, rx: 8, part: 'fg' },
   { x: 78, y: 232, width: 44, height: 88, rx: 16, part: 'fg' },
@@ -44,7 +51,14 @@ export function Logo({ size = 28, wordmark = false }: LogoProps) {
     );
 
   const mark = (
-    <svg className={styles.mark} width={size} height={size} viewBox={VIEW_BOX} aria-hidden focusable={false}>
+    <svg
+      className={styles.mark}
+      width={size}
+      height={size}
+      viewBox={VIEW_BOX}
+      aria-hidden
+      focusable={false}
+    >
       {rect(background, 0)}
       {rect(antenna, 1)}
       <circle cx={ANTENNA.cx} cy={ANTENNA.cy} r={ANTENNA.r} className={styles.accent} />

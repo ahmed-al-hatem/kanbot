@@ -63,7 +63,11 @@ export function UiPage() {
       </header>
       <div className={styles.panes}>
         {shown.map((paneTheme) => (
-          <div key={paneTheme} className={cx(styles.pane, paneTheme)} style={{ colorScheme: paneTheme }}>
+          <div
+            key={paneTheme}
+            className={cx(styles.pane, paneTheme)}
+            style={{ colorScheme: paneTheme }}
+          >
             <h2 className={styles.paneTitle}>{paneTheme === 'light' ? 'Light' : 'Dark'}</h2>
             <Catalogue />
           </div>
@@ -105,7 +109,15 @@ function useFakeRequest(ms = 1500) {
 }
 
 const LOZENGES: LozengeTone[] = ['gray', 'blue', 'green', 'purple', 'orange', 'teal', 'magenta'];
-const DIALOG_SIZES: DialogSize[] = ['session', 'complete', 'sprint', 'project', 'todo', 'generate', 'plan'];
+const DIALOG_SIZES: DialogSize[] = [
+  'session',
+  'complete',
+  'sprint',
+  'project',
+  'todo',
+  'generate',
+  'plan',
+];
 
 function Catalogue() {
   return (
@@ -123,7 +135,10 @@ function ButtonsSection() {
   const [saving, save] = useFakeRequest();
   return (
     <>
-      <Section title="Button" note="Hover, press (scale .97) and Tab for the focus ring. Loading keeps the width.">
+      <Section
+        title="Button"
+        note="Hover, press (scale .97) and Tab for the focus ring. Loading keeps the width."
+      >
         <Row label="Variants">
           <Button variant="primary">Primary</Button>
           <Button variant="neutral">Neutral</Button>
@@ -221,7 +236,11 @@ function FieldsSection() {
             }}
           />
         </Field>
-        <Field label="Key" required help="2–6 letters. Changing it doesn't change existing todo keys.">
+        <Field
+          label="Key"
+          required
+          help="2–6 letters. Changing it doesn't change existing todo keys."
+        >
           <Input defaultValue="KAN" />
         </Field>
         <Field label="Email" error="Enter a valid email address">
@@ -253,12 +272,18 @@ function FieldsSection() {
       <Field label="Description" help="Up to 5000 characters">
         <Textarea placeholder="What is this project about?" />
       </Field>
-      <Field label="Labels" help="Press Enter or , to add a label, Backspace to remove the last one">
+      <Field
+        label="Labels"
+        help="Press Enter or , to add a label, Backspace to remove the last one"
+      >
         <TagInput value={labels} onChange={setLabels} placeholder="Add a label" />
       </Field>
       <Row>
         <Checkbox label="Generate an AI summary" defaultChecked />
-        <Checkbox label="Let Kanbot draft a starter backlog" description="Uses the description to suggest 6 todos." />
+        <Checkbox
+          label="Let Kanbot draft a starter backlog"
+          description="Uses the description to suggest 6 todos."
+        />
         <Checkbox label="Disabled" disabled />
       </Row>
     </Section>
@@ -273,7 +298,10 @@ function OverlaysSection() {
 
   return (
     <>
-      <Section title="Dialog" note="Esc, blanket click and × close; Tab is trapped; focus returns to the opener.">
+      <Section
+        title="Dialog"
+        note="Esc, blanket click and × close; Tab is trapped; focus returns to the opener."
+      >
         <Row>
           {DIALOG_SIZES.map((size) => (
             <Button
@@ -323,7 +351,9 @@ function OverlaysSection() {
             </>
           }
         >
-          <p className={styles.meta}>Max width: {openSize} (DESIGN §3.5). The first field has data-autofocus.</p>
+          <p className={styles.meta}>
+            Max width: {openSize} (DESIGN §3.5). The first field has data-autofocus.
+          </p>
           <Field label="Project name" required>
             <Input data-autofocus placeholder="e.g. Kanbot Mobile" />
           </Field>
@@ -332,7 +362,10 @@ function OverlaysSection() {
           </Field>
         </Dialog>
       </Section>
-      <Section title="ConfirmDialog" note="AlertDialog: Cancel is focused; no blanket dismiss; stays open while pending.">
+      <Section
+        title="ConfirmDialog"
+        note="AlertDialog: Cancel is focused; no blanket dismiss; stays open while pending."
+      >
         <Row>
           <Button
             variant="danger"
@@ -361,7 +394,10 @@ function OverlaysSection() {
       </Section>
       <Section title="Menu" note="↑ ↓ Home End move, Esc closes and refocuses the trigger.">
         <Row>
-          <Menu label="KAN-12 actions" trigger={<IconButton icon="show-more-horizontal" aria-label="Actions for KAN-12" />}>
+          <Menu
+            label="KAN-12 actions"
+            trigger={<IconButton icon="show-more-horizontal" aria-label="Actions for KAN-12" />}
+          >
             <MenuItem icon="pencil">Open details</MenuItem>
             <MenuLabel>Move to</MenuLabel>
             <MenuItem icon="arrow-right">Sprint 4</MenuItem>
@@ -372,7 +408,11 @@ function OverlaysSection() {
               Delete
             </MenuItem>
           </Menu>
-          <Menu label="Profile" align="start" trigger={<Button icon="chevron-down">Sara Ahmed</Button>}>
+          <Menu
+            label="Profile"
+            align="start"
+            trigger={<Button icon="chevron-down">Sara Ahmed</Button>}
+          >
             <MenuItem icon="theme">Switch theme</MenuItem>
             <MenuItem icon="log-out">Log out</MenuItem>
           </Menu>
@@ -441,7 +481,13 @@ function DisplaySection() {
         </Row>
       </Section>
       <Section title="ProgressBar">
-        <ProgressBar value={progress} max={32} height={8} label="Sprint 3 progress" valueText={`${progress} of 32 points done`} />
+        <ProgressBar
+          value={progress}
+          max={32}
+          height={8}
+          label="Sprint 3 progress"
+          valueText={`${progress} of 32 points done`}
+        />
         <ProgressBar value={24} max={30} height={6} label="Sprint 1 progress" />
         <ProgressBar value={9} max={10} height={4} label="Project progress" />
         <ProgressBar value={36} max={30} height={8} label="Planned capacity" over />
@@ -479,8 +525,16 @@ function DisplaySection() {
   );
 }
 
-const networkError = new ApiError({ status: 0, code: 'NETWORK_ERROR', message: 'Cannot reach the server.' });
-const serverError = new ApiError({ status: 503, code: 'INTERNAL_ERROR', message: 'Service unavailable' });
+const networkError = new ApiError({
+  status: 0,
+  code: 'NETWORK_ERROR',
+  message: 'Cannot reach the server.',
+});
+const serverError = new ApiError({
+  status: 503,
+  code: 'INTERNAL_ERROR',
+  message: 'Service unavailable',
+});
 
 function StatesSection() {
   const [retrying, retry] = useFakeRequest();
@@ -567,7 +621,8 @@ function StatesSection() {
             </Button>
           }
         >
-          Couldn&apos;t save KAN-18. Check your connection and try again — your edits are still here.
+          Couldn&apos;t save KAN-18. Check your connection and try again — your edits are still
+          here.
         </Banner>
       </Section>
     </>

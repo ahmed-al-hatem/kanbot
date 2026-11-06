@@ -12,7 +12,10 @@ import {
 
 // What the unit tests can't cover (jsdom has no layout for dnd-kit): real pointer drags.
 
-test('backlog: a pointer drag reorders, and the order survives a reload (BL-5)', async ({ page, request }) => {
+test('backlog: a pointer drag reorders, and the order survives a reload (BL-5)', async ({
+  page,
+  request,
+}) => {
   const { api } = await registerViaApi(request);
   const project = await api.project('E2E Backlog');
   const [first, second, third] = await api.todos(project.id, SAMPLE_TODOS);
@@ -20,7 +23,11 @@ test('backlog: a pointer drag reorders, and the order survives a reload (BL-5)',
 
   await openSignedIn(page, api.token, `/projects/${project.id}/backlog`);
   const rows = page.getByRole('list', { name: 'Backlog todos' }).getByRole('listitem');
-  await expect(rows).toHaveText([new RegExp(first.title), new RegExp(second.title), new RegExp(third.title)]);
+  await expect(rows).toHaveText([
+    new RegExp(first.title),
+    new RegExp(second.title),
+    new RegExp(third.title),
+  ]);
 
   // Drag the third row by its handle onto the first one.
   const moved = nextMove(page);
@@ -47,7 +54,9 @@ test('board: a failed move rolls back with an error toast (SPR-5)', async ({ pag
     route.fulfill({
       status: 500,
       contentType: 'application/json',
-      body: JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Something went wrong on our side.' } }),
+      body: JSON.stringify({
+        error: { code: 'INTERNAL_ERROR', message: 'Something went wrong on our side.' },
+      }),
     }),
   );
   await openSignedIn(page, api.token, `/projects/${project.id}/board`);
@@ -58,5 +67,8 @@ test('board: a failed move rolls back with an error toast (SPR-5)', async ({ pag
   await expect(page.getByText(new RegExp(`^Couldn't move ${todo.key}\\.`))).toBeVisible();
   await expect(card(column(page, 'To Do'), todo.title)).toBeVisible();
   await expect(column(page, 'In Progress')).toHaveAccessibleName('In Progress, 0 todos');
-  await expect(page.getByRole('progressbar', { name: 'Sprint 1 todos done' })).toHaveAttribute('aria-valuenow', '0');
+  await expect(page.getByRole('progressbar', { name: 'Sprint 1 todos done' })).toHaveAttribute(
+    'aria-valuenow',
+    '0',
+  );
 });

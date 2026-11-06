@@ -7,7 +7,8 @@ import styles from './Dialog.module.css';
 import { useReturnFocus } from './useReturnFocus';
 
 /** Max widths from DESIGN §3.5, named after the dialog that uses them. */
-export type DialogSize = 'session' | 'complete' | 'sprint' | 'project' | 'todo' | 'generate' | 'plan';
+export type DialogSize =
+  'session' | 'complete' | 'sprint' | 'project' | 'todo' | 'generate' | 'plan';
 
 interface DialogProps {
   open: boolean;
@@ -89,7 +90,9 @@ export function Dialog({
             </header>
             <div className={styles.body}>
               {description && (
-                <RadixDialog.Description className={styles.description}>{description}</RadixDialog.Description>
+                <RadixDialog.Description className={styles.description}>
+                  {description}
+                </RadixDialog.Description>
               )}
               {children}
             </div>

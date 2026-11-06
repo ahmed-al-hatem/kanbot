@@ -43,4 +43,6 @@ if (problems.length > 0) {
   console.error(`\n✖ ${problems.length} CSS problem(s) in ${relative(process.cwd(), root)}`);
   process.exit(1);
 }
-console.log('✓ CSS: no hex colors outside tokens.css, logical properties only, global keyframes in modules');
+console.log(
+  '✓ CSS: no hex colors outside tokens.css, logical properties only, global keyframes in modules',
+);

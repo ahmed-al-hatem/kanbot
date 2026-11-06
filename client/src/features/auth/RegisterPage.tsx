@@ -57,11 +57,14 @@ export function RegisterPage() {
         onError: (error) => {
           // AUTH-1: a 409 always goes under Email, even if the server sent no details.
           if (isApiError(error) && error.status === 409) {
-            setServerError('email', (messages) => messages.auth.register.emailTaken, { shouldFocus: true });
+            setServerError('email', (messages) => messages.auth.register.emailTaken, {
+              shouldFocus: true,
+            });
             announceInvalid(1);
             return;
           }
-          if (applyLocalizedServerErrors(error, setServerError, ['name', 'email', 'password'])) return;
+          if (applyLocalizedServerErrors(error, setServerError, ['name', 'email', 'password']))
+            return;
           setFormError(error);
         },
       },
@@ -90,10 +93,19 @@ export function RegisterPage() {
         </Field>
 
         <Field label={t.auth.email} error={errors.email?.message}>
-          <Input type="email" autoComplete="email" placeholder={t.auth.emailPlaceholder} {...register('email')} />
+          <Input
+            type="email"
+            autoComplete="email"
+            placeholder={t.auth.emailPlaceholder}
+            {...register('email')}
+          />
         </Field>
 
-        <Field label={t.auth.password} error={errors.password?.message} help={t.auth.register.passwordHelp}>
+        <Field
+          label={t.auth.password}
+          error={errors.password?.message}
+          help={t.auth.register.passwordHelp}
+        >
           <Input
             type="password"
             autoComplete="new-password"
@@ -125,7 +137,8 @@ export function RegisterPage() {
       </form>
 
       <p className={styles.switch}>
-        {t.auth.register.haveAccount} <Link to={withRedirect('/login', search)}>{t.auth.register.logIn}</Link>
+        {t.auth.register.haveAccount}{' '}
+        <Link to={withRedirect('/login', search)}>{t.auth.register.logIn}</Link>
       </p>
     </AuthLayout>
   );
