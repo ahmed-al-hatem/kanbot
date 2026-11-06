@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
+import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -7,6 +8,21 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 const HEX_COLOR = '^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$';
+
+/*
+ * RTL & Arabic (plan §11): areas whose user-visible text already comes from src/i18n/messages.
+ * In them `react/jsx-no-literals` is an error for JSX text *and* attributes (aria-label, title,
+ * placeholder…). The list grows with each PR (R2 auth + shell + projects, R3 backlog + todo +
+ * sprints, R4 board + history + AI + 404 + errors); R5 applies the rule to all of src/.
+ */
+const I18N_MIGRATED = [
+  'src/i18n/**/*.{ts,tsx}',
+  'src/components/LanguageSwitcher/**/*.tsx',
+  'src/features/shell/LanguageNavItem.tsx',
+];
+
+/** Attribute values that are tokens, not text: `type="button"`, `role="group"`, `<Icon name="globe">`. */
+const NON_TEXT_LITERALS = ['button', 'group', 'globe'];
 
 export default defineConfig([
   // api.ts is a verbatim copy of the server contract; icons.ts is generated.
@@ -55,6 +71,23 @@ export default defineConfig([
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
+    },
+  },
+  {
+    files: I18N_MIGRATED,
+    ignores: ['**/*.test.{ts,tsx}'],
+    plugins: { react },
+    settings: { react: { version: 'detect' } },
+    rules: {
+      'react/jsx-no-literals': [
+        'error',
+        {
+          noStrings: true,
+          noAttributeStrings: true,
+          ignoreProps: false,
+          allowedStrings: NON_TEXT_LITERALS,
+        },
       ],
     },
   },
