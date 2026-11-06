@@ -48,6 +48,8 @@ const ICONS = {
   copy: '@atlaskit/icon/core/copy',
   email: '@atlaskit/icon/core/email',
   'lock-locked': '@atlaskit/icon/core/lock-locked',
+  // Language switcher (RTL & Arabic, PR R1): the canvas's globe.
+  globe: '@atlaskit/icon/core/globe',
 };
 
 const GLYPH = /dangerouslySetGlyph:\s*`([^`]*)`/;

@@ -5,6 +5,7 @@ import { usePrefetchProject } from '@/hooks/useProjects';
 import { cx } from '@/lib/cx';
 import { prefetchChunk, type ProjectSection } from '@/routeChunks';
 import { useNotFound } from '@/stores/notFound';
+import { LanguageNavItem } from './LanguageNavItem';
 import { ProfileMenu } from './ProfileMenu';
 import { ProjectSwitcher } from './ProjectSwitcher';
 import styles from './AppShell.module.css';
@@ -30,8 +31,8 @@ interface SidebarProps {
 
 /**
  * DESIGN §6 sidebar, `<nav aria-label="Main">`: logo, project switcher, the project's pages
- * (only with a current project), Projects, then profile and theme. NavLink sets
- * `aria-current="page"`; the active item gets the animated brand bar.
+ * (only with a current project), Projects, the language item (with Arabic on), then profile and
+ * theme. NavLink sets `aria-current="page"`; the active item gets the animated brand bar.
  */
 export function Sidebar({ projectId, open }: SidebarProps) {
   const prefetch = usePrefetchProject();
@@ -100,6 +101,7 @@ export function Sidebar({ projectId, open }: SidebarProps) {
         </li>
       </ul>
 
+      <LanguageNavItem />
       <div className={styles.navFooter}>
         <ProfileMenu />
       </div>

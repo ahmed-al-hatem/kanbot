@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
 import { Logo } from '@/components/Logo/Logo';
 import { cx } from '@/lib/cx';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
@@ -14,7 +15,8 @@ interface AuthLayoutProps {
 
 /**
  * DESIGN §9 01/01b/02: a centered 420px card on `--surface-sunken`, the logo on top, the
- * tagline under it and the theme toggle in the corner (as on the canvas).
+ * tagline under it and the theme toggle in the corner (as on the canvas). With Arabic on, the
+ * ع / EN switcher sits before the toggle (Arabic canvas auth top bar).
  */
 export function AuthLayout({ title, children }: AuthLayoutProps) {
   const theme = useTheme((s) => s.theme);
@@ -23,12 +25,14 @@ export function AuthLayout({ title, children }: AuthLayoutProps) {
 
   return (
     <main id="main" tabIndex={-1} className={styles.page}>
-      <IconButton
-        icon="theme"
-        aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-        className={styles.theme}
-        onClick={toggle}
-      />
+      <div className={styles.corner}>
+        <LanguageSwitcher />
+        <IconButton
+          icon="theme"
+          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          onClick={toggle}
+        />
+      </div>
       <div className={cx(styles.card, 'kb-rise')}>
         <div className={styles.brand}>
           <Logo size={36} wordmark />
