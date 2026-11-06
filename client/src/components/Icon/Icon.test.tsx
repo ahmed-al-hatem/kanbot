@@ -11,6 +11,22 @@ describe('Icon', () => {
     expect(svg).toHaveAttribute('width', '16');
   });
 
+  it('mirrors directional icons in RTL (.flip), not the others', () => {
+    const { container } = render(
+      <>
+        <Icon name="arrow-right" className="extra" />
+        <Icon name="send" />
+        <Icon name="check-mark" />
+        <Icon name="search" />
+      </>,
+    );
+    const [arrow, send, check, search] = container.querySelectorAll('svg');
+    expect(arrow).toHaveClass('flip', 'extra');
+    expect(send).toHaveClass('flip');
+    expect(check).not.toHaveClass('flip');
+    expect(search).not.toHaveAttribute('class');
+  });
+
   it('is an image with an accessible name when labelled', () => {
     render(<Icon name="ai-sparkle" label="AI" size={12} />);
     expect(screen.getByRole('img', { name: 'AI' })).toHaveAttribute('width', '12');
