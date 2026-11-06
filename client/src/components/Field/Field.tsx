@@ -1,5 +1,6 @@
 import { useId, type ReactNode } from 'react';
 import { Icon } from '@/components/Icon/Icon';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { FieldContext } from './fieldContext';
 import styles from './Field.module.css';
@@ -24,6 +25,7 @@ interface FieldProps {
  * both linked to the control with `aria-describedby` (DESIGN §10.5).
  */
 export function Field({ label, children, help, error, required = false, id, className }: FieldProps) {
+  const t = useT();
   const autoId = useId();
   const controlId = id ?? `field${autoId}`;
   const errorId = `${controlId}-error`;
@@ -36,7 +38,7 @@ export function Field({ label, children, help, error, required = false, id, clas
         {label}
         {required && (
           <span className={styles.required} aria-hidden="true">
-            {' *'}
+            {t.common.requiredMark}
           </span>
         )}
       </label>

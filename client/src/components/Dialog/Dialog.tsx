@@ -1,6 +1,7 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useRef, type ReactElement, type ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './Dialog.module.css';
 import { useReturnFocus } from './useReturnFocus';
@@ -56,6 +57,7 @@ export function Dialog({
   trigger,
   className,
 }: DialogProps) {
+  const t = useT();
   const contentRef = useRef<HTMLDivElement>(null);
   const returnFocus = useReturnFocus(fallbackFocus);
 
@@ -82,7 +84,7 @@ export function Dialog({
               <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
               {headerMeta && <span className={styles.headerMeta}>{headerMeta}</span>}
               <RadixDialog.Close asChild>
-                <IconButton icon="cross" aria-label="Close" />
+                <IconButton icon="cross" aria-label={t.common.close} />
               </RadixDialog.Close>
             </header>
             <div className={styles.body}>

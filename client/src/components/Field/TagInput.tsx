@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent } from 'react';
 import { Chip } from '@/components/Chip/Chip';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { announce } from '@/stores/announcer';
 import { useFieldControl } from './fieldContext';
@@ -9,8 +10,6 @@ interface TagInputProps {
   value: string[];
   onChange: (next: string[]) => void;
   onBlur?: () => void;
-  /** Singular noun for chips and announcements: "Remove label x", "Label x added". */
-  itemName?: string;
   /** The API allows 10 labels of up to 30 characters (server schemas). */
   maxTags?: number;
   maxTagLength?: number;
@@ -24,13 +23,13 @@ interface TagInputProps {
 /**
  * DESIGN §7 Tag input: chips inside a field-looking box with a borderless input.
  * Enter or `,` adds, Backspace on an empty input removes the last chip (DESIGN §10.1).
- * Duplicates (case-insensitive) are ignored; each change is announced.
+ * Duplicates (case-insensitive) are ignored; each change is announced (`tags.*` messages: the
+ * one tag input today holds labels).
  */
 export function TagInput({
   value,
   onChange,
   onBlur,
-  itemName = 'label',
   maxTags = 10,
   maxTagLength = 30,
   placeholder,
@@ -41,27 +40,27 @@ export function TagInput({
   const control = useFieldControl(props);
   const [draft, setDraft] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const noun = itemName.charAt(0).toUpperCase() + itemName.slice(1);
+  const t = useT();
 
   const add = (raw: string) => {
     const tag = raw.trim().slice(0, maxTagLength);
     setDraft('');
     if (!tag) return;
     if (value.some((existing) => existing.toLowerCase() === tag.toLowerCase())) {
-      announce(`${noun} ${tag} is already added`);
+      announce(t.tags.alreadyAdded(tag));
       return;
     }
     if (value.length >= maxTags) {
-      announce(`You can add up to ${maxTags} ${itemName}s`);
+      announce(t.tags.limit(maxTags));
       return;
     }
     onChange([...value, tag]);
-    announce(`${noun} ${tag} added`);
+    announce(t.tags.added(tag));
   };
 
   const remove = (tag: string) => {
     onChange(value.filter((existing) => existing !== tag));
-    announce(`${noun} ${tag} removed`);
+    announce(t.tags.removed(tag));
     inputRef.current?.focus();
   };
 
@@ -91,7 +90,7 @@ export function TagInput({
             onRemove={() => {
               remove(tag);
             }}
-            removeLabel={`Remove ${itemName} ${tag}`}
+            removeLabel={t.tags.remove(tag)}
           >
             {tag}
           </Chip>

@@ -1,6 +1,7 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import type { ReactElement, ReactNode } from 'react';
 import { Button } from '@/components/Button/Button';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './Dialog.module.css';
 import { useReturnFocus } from './useReturnFocus';
@@ -38,13 +39,14 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   pendingLabel,
-  cancelLabel = 'Cancel',
+  cancelLabel,
   tone = 'danger',
   pending = false,
   onConfirm,
   fallbackFocus,
   trigger,
 }: ConfirmDialogProps) {
+  const t = useT();
   const returnFocus = useReturnFocus(fallbackFocus);
 
   return (
@@ -69,7 +71,7 @@ export function ConfirmDialog({
             <div className={styles.confirmActions}>
               <AlertDialog.Cancel asChild>
                 <Button variant="subtle" disabled={pending}>
-                  {cancelLabel}
+                  {cancelLabel ?? t.common.cancel}
                 </Button>
               </AlertDialog.Cancel>
               {/* Not AlertDialog.Action: that closes immediately, before the request settles. */}
