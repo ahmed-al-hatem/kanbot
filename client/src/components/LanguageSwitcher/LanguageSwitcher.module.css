@@ -1,0 +1,46 @@
+/* Arabic canvas `.lang-seg`: a 2px-padded neutral track; the current segment is raised. */
+.group {
+  display: flex;
+  padding: 2px;
+  border-radius: var(--radius-large);
+  background: var(--neutral);
+}
+
+.option {
+  block-size: 28px;
+  padding-block: 0;
+  padding-inline: var(--space-150);
+  border: none;
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background-color 150ms var(--ease-practical),
+    color 150ms var(--ease-practical),
+    box-shadow 150ms var(--ease-practical),
+    transform 100ms var(--ease-practical);
+}
+
+.option:hover {
+  background: var(--neutral-hover);
+}
+
+.option:active {
+  transform: scale(0.97);
+}
+
+.option[aria-pressed='true'] {
+  background: var(--surface-raised);
+  color: var(--text-selected);
+  box-shadow: var(--shadow-raised);
+  font-weight: 700;
+  cursor: default;
+}
+
+.option[aria-busy='true'] {
+  cursor: progress;
+}

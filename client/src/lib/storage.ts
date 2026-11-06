@@ -1,4 +1,5 @@
 import type { StateStorage } from 'zustand/middleware';
+import { LOCALE_STORAGE_KEY } from '@/i18n/config';
 
 /**
  * localStorage that never throws: access fails in some privacy modes and when the
@@ -34,4 +35,6 @@ export const STORAGE_KEYS = {
   theme: 'kanbot.theme',
   /** AI chats per project (an enhancement, Requirements §9); cleared on log out. */
   chats: 'kanbot.chats',
+  /** UI language (stores/locale.ts); also read by the pre-paint script in index.html. */
+  locale: LOCALE_STORAGE_KEY,
 } as const;

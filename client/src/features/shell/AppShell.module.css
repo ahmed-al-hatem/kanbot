@@ -471,3 +471,36 @@
   font-size: 11px;
   color: var(--text-subtle);
 }
+
+/* ---------- Language item (Arabic canvas `.lang-btn`, shown with VITE_FEATURE_AR) ---------- */
+.langItem {
+  inline-size: 100%;
+  block-size: 32px;
+  margin-block-start: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-subtlest);
+  font-size: 13px;
+  text-align: start;
+}
+
+/* The item takes the free space above the profile; the footer sits right under it. */
+.langItem + .navFooter {
+  margin-block-start: var(--space-050);
+}
+
+.langIcon {
+  transition: transform 500ms var(--ease-inout);
+}
+
+.langItem:hover .langIcon {
+  transform: rotate(-180deg);
+}
+
+.langItemBusy {
+  cursor: progress;
+}
+
+.langItemBusy .langIcon {
+  animation: global(kbLangSpin) 600ms var(--ease-inout);
+}

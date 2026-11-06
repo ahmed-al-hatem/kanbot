@@ -15,10 +15,14 @@
   outline: none;
 }
 
-.theme {
+/* Top corner: the language switcher (with Arabic on) and the theme toggle. */
+.corner {
   position: absolute;
   inset-block-start: var(--space-200);
   inset-inline-end: var(--space-200);
+  display: flex;
+  align-items: center;
+  gap: var(--space-100);
 }
 
 .card {

@@ -193,3 +193,53 @@ kbd {
     border-color 300ms var(--ease-practical),
     box-shadow 300ms var(--ease-practical) !important;
 }
+
+/* ---------- Direction (RTL & Arabic, plan §11) ---------- */
+
+/*
+ * `--dir` is 1 in LTR and -1 in RTL, for transforms CSS can't mirror on its own:
+ * `transform: translateX(calc(var(--dir) * 8px))`. Logical properties cover layout.
+ */
+:root {
+  --dir: 1;
+}
+
+:root[dir='rtl'] {
+  --dir: -1;
+}
+
+/*
+ * Directional icons (arrows, "move to", send, back) mirror in RTL — the canvas's `kb-flip`.
+ * `scale` (not `transform`) so it composes with hover transforms on the same element.
+ */
+:root[dir='rtl'] .flip {
+  scale: -1 1;
+}
+
+/* ---------- Arabic typography (Arabic canvas) ---------- */
+
+/* No faux bold or italic: Plex Arabic ships 400/500/600/700, and synthesized glyphs break joins. */
+:root[lang='ar'] body {
+  font-synthesis: none;
+  line-height: 24px;
+}
+
+/* Arabic letters are joined: tracking (the page title's −0.2px, lozenges' +0.2px) breaks them. */
+:root[lang='ar'],
+:root[lang='ar'] * {
+  letter-spacing: 0 !important;
+}
+
+:root[lang='ar'] :is(button, input, select, textarea) {
+  font-family: inherit;
+  font-synthesis: none;
+}
+
+:root[lang='ar'] p,
+:root[lang='ar'] textarea {
+  line-height: 1.7;
+}
+
+:root[lang='ar'] :is(h1, h2, h3) {
+  line-height: 1.35 !important;
+}

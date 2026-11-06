@@ -6,6 +6,7 @@ import { stopRefocus } from '@/lib/refocus';
 import { useAnnouncer } from '@/stores/announcer';
 import { useAssistant } from '@/stores/assistant';
 import { useHighlight } from '@/stores/highlight';
+import { applyDocumentLocale, useLocaleStore } from '@/stores/locale';
 import { useSession } from '@/stores/session';
 import { useToast } from '@/stores/toast';
 import { server } from './server';
@@ -33,7 +34,11 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  // Arabic is off unless a test turns it on (a local .env may set VITE_FEATURE_AR=true).
+  vi.stubEnv('VITE_FEATURE_AR', '');
   window.localStorage.clear();
+  useLocaleStore.setState({ locale: 'en' });
+  applyDocumentLocale('en');
   useSession.setState({ token: null, sessionExpired: false, signedOut: false });
   useToast.setState({ toast: null });
   useAnnouncer.setState({ message: '', politeness: 'polite', id: 0 });
@@ -42,6 +47,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   // A focus watch left from a delete must not outlive its test (or jsdom: "document is not defined").
   stopRefocus();
   cleanup();

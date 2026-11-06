@@ -29,6 +29,8 @@
 @keyframes kbDrawerOutRtl { from { transform:none } to { transform:translateX(-100%) } }
 @keyframes kbFlagInRtl    { from { opacity:0; transform:translateX(50%) } to { opacity:1; transform:none } }
 @keyframes kbFlagOutRtl   { from { opacity:1; transform:none } to { opacity:0; transform:translateX(15%) } }
+/* Language item: the globe turns once while the other language loads (Arabic canvas `arLangSpin`). */
+@keyframes kbLangSpin    { to { transform:rotate(-360deg) } }
 
 /* Entry animations use `backwards` so they don't block hover transforms afterwards (§8.4). */
 .kb-page    { animation: kbRise 250ms var(--ease-bold) backwards; }

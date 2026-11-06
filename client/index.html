@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="light">
+<html lang="en" dir="ltr" class="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -31,6 +31,22 @@
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
         document.documentElement.className = theme;
+      })();
+    </script>
+    <script>
+      // Set lang and dir before first paint, so a saved Arabic choice never flashes LTR.
+      // Mirrors stores/locale.ts, which persists { state: { locale } } under "kanbot.locale".
+      // A new visitor, or Arabic switched off (VITE_FEATURE_AR, replaced by Vite at build time), is English.
+      (function () {
+        var locale = 'en';
+        if ('%VITE_FEATURE_AR%' === 'true') {
+          try {
+            var saved = JSON.parse(localStorage.getItem('kanbot.locale') || 'null');
+            if (saved && saved.state && saved.state.locale === 'ar') locale = 'ar';
+          } catch (e) {}
+        }
+        document.documentElement.lang = locale;
+        document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
       })();
     </script>
   </head>
