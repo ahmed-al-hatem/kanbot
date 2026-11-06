@@ -49,6 +49,10 @@
   /* Typography (DESIGN §4) */
   --font-sans: 'Inter Variable', Inter, ui-sans-serif, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, Menlo, monospace;
+  /* Sizes that change with the language (Arabic below); the rest of the scale is fixed. */
+  --font-size-body: 14px;
+  --line-height-body: 20px;
+  --font-size-xs: 11px; /* lozenges, key caps, avatars, small caps headings */
 
   /* Easing (DESIGN §8.1) */
   --ease-practical: cubic-bezier(0.4, 1, 0.6, 1); /* buttons, inputs, menus */
@@ -69,6 +73,10 @@
  */
 :root[lang='ar'] {
   --font-sans: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+  /* Arabic canvas: 15px / 24px body, and every 11px text set at 12px (Arabic glyphs need it). */
+  --font-size-body: 15px;
+  --line-height-body: 24px;
+  --font-size-xs: 12px;
 }
 
 .light {

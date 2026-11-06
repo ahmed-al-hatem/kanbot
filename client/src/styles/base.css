@@ -25,8 +25,8 @@ body {
   background: var(--surface);
   color: var(--text);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 20px;
+  font-size: var(--font-size-body);
+  line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -88,7 +88,7 @@ a:hover {
 
 kbd {
   font: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   font-weight: 600;
   padding-inline: 5px;
   border-radius: var(--radius-small);
@@ -221,7 +221,6 @@ kbd {
 /* No faux bold or italic: Plex Arabic ships 400/500/600/700, and synthesized glyphs break joins. */
 :root[lang='ar'] body {
   font-synthesis: none;
-  line-height: 24px;
 }
 
 /* Arabic letters are joined: tracking (the page title's −0.2px, lozenges' +0.2px) breaks them. */
