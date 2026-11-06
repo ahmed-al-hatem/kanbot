@@ -5,7 +5,8 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { qk } from '@/hooks/queryKeys';
 import { boardTodos, sprintStatsOf, withBoardTodos } from '@/lib/board';
-import { daysRemaining } from '@/lib/format';
+import { createFormatter } from '@/i18n/format';
+import { en } from '@/i18n/messages/en';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
 import { KANBOT, makeProject, PORTFOLIO, projectHandlers } from '@/test/projects';
@@ -22,8 +23,22 @@ beforeAll(preloadPages, 30_000);
 function boardDb() {
   return makeTodoDb(
     [
-      makeTodo({ id: 'a1', key: 'KAN-21', title: 'Validate signup form', sprintId: 's3', storyPoints: 3, order: 0 }),
-      makeTodo({ id: 'a2', key: 'KAN-22', title: 'Board filters', sprintId: 's3', storyPoints: 2, order: 1 }),
+      makeTodo({
+        id: 'a1',
+        key: 'KAN-21',
+        title: 'Validate signup form',
+        sprintId: 's3',
+        storyPoints: 3,
+        order: 0,
+      }),
+      makeTodo({
+        id: 'a2',
+        key: 'KAN-22',
+        title: 'Board filters',
+        sprintId: 's3',
+        storyPoints: 2,
+        order: 1,
+      }),
       makeTodo({
         id: 'a3',
         key: 'KAN-18',
@@ -36,12 +51,28 @@ function boardDb() {
         labels: ['frontend'],
         dueDate: '2020-01-01',
       }),
-      makeTodo({ id: 'a4', key: 'KAN-19', title: 'Review empty states', sprintId: 's3', status: 'in_review' }),
-      makeTodo({ id: 'a5', key: 'KAN-15', title: 'Set up routing', sprintId: 's3', status: 'done', storyPoints: 3 }),
+      makeTodo({
+        id: 'a4',
+        key: 'KAN-19',
+        title: 'Review empty states',
+        sprintId: 's3',
+        status: 'in_review',
+      }),
+      makeTodo({
+        id: 'a5',
+        key: 'KAN-15',
+        title: 'Set up routing',
+        sprintId: 's3',
+        status: 'done',
+        storyPoints: 3,
+      }),
       makeTodo({ id: 'b1', key: 'KAN-31', title: 'Login screen', storyPoints: 3 }),
       makeTodo({ id: 'c1', key: 'KAN-35', title: 'Planned work', sprintId: 's4', storyPoints: 2 }),
     ],
-    [{ ...SPRINT_3, goal: 'Users can sign up and log in' }, { ...SPRINT_4, startDate: '2026-11-16' }],
+    [
+      { ...SPRINT_3, goal: 'Users can sign up and log in' },
+      { ...SPRINT_4, startDate: '2026-11-16' },
+    ],
   );
 }
 
@@ -69,7 +100,11 @@ const live = () => screen.getByTestId('live-polite');
 
 /** Focuses a card the way a keyboard user lands on it. */
 async function focusCard(title: string) {
-  const button = await screen.findByRole('button', { name: new RegExp(`^${title}`) }, { timeout: 3000 });
+  const button = await screen.findByRole(
+    'button',
+    { name: new RegExp(`^${title}`) },
+    { timeout: 3000 },
+  );
   button.focus();
   return button;
 }
@@ -84,11 +119,23 @@ describe('board helpers', () => {
     const rebuilt = withBoardTodos(board, todos);
     expect(rebuilt.columns.todo.map((todo) => todo.key)).toEqual(['KAN-21', 'KAN-22']);
     expect(rebuilt.sprint.stats).toEqual(sprintStatsOf(todos));
-    expect(rebuilt.sprint.stats).toMatchObject({ totalTodos: 5, doneTodos: 1, totalPoints: 13, donePoints: 3 });
-    expect(boardTodos(rebuilt).map((todo) => todo.key)).toEqual(['KAN-21', 'KAN-22', 'KAN-18', 'KAN-19', 'KAN-15']);
+    expect(rebuilt.sprint.stats).toMatchObject({
+      totalTodos: 5,
+      doneTodos: 1,
+      totalPoints: 13,
+      donePoints: 3,
+    });
+    expect(boardTodos(rebuilt).map((todo) => todo.key)).toEqual([
+      'KAN-21',
+      'KAN-22',
+      'KAN-18',
+      'KAN-19',
+      'KAN-15',
+    ]);
   });
 
   it('says how many days are left', () => {
+    const { daysRemaining } = createFormatter('en', en);
     expect(daysRemaining('2026-11-15', '2026-11-04')).toBe('11 days left');
     expect(daysRemaining('2026-11-05', '2026-11-04')).toBe('1 day left');
     expect(daysRemaining('2026-11-04', '2026-11-04')).toBe('Ends today');
@@ -102,7 +149,9 @@ describe('active sprint board (SPR-4)', () => {
     start();
     renderApp('/projects/p1/board');
 
-    expect(await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'Sprint 3', level: 2 }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Active Sprint', level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/Nov 2 – Nov 15/)).toBeInTheDocument();
     expect(screen.getByText(/Users can sign up and log in/)).toBeInTheDocument();
@@ -147,7 +196,9 @@ describe('active sprint board (SPR-4)', () => {
       }),
     );
     renderApp('/projects/p1/board');
-    expect(await screen.findByRole('region', { name: 'To Do, 2 todos' }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('region', { name: 'To Do, 2 todos' }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(db.calls.board).toContain('s3');
   });
 
@@ -155,7 +206,9 @@ describe('active sprint board (SPR-4)', () => {
     const user = userEvent.setup();
     start();
     const { router } = renderApp('/projects/p1/board');
-    await user.click(await screen.findByRole('button', { name: /^Board filters/ }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: /^Board filters/ }, { timeout: 3000 }),
+    );
     expect(router.state.location.search).toBe('?todo=a2');
     expect(await screen.findByRole('dialog', { name: /Board filters|KAN-22/ })).toBeInTheDocument();
   });
@@ -172,7 +225,11 @@ describe('active sprint board (SPR-4)', () => {
     );
     renderApp('/projects/p1/board');
     expect(
-      await screen.findByRole('heading', { name: "We couldn't load the active sprint" }, { timeout: 3000 }),
+      await screen.findByRole(
+        'heading',
+        { name: "We couldn't load the active sprint" },
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument();
     fail = false;
     await user.click(screen.getByRole('button', { name: 'Try again' }));
@@ -198,7 +255,9 @@ describe('moving cards (SPR-5)', () => {
       expect(card('Board filters')).toHaveFocus();
     });
     await waitFor(() => {
-      expect(db.calls.move).toEqual([{ todoId: 'a2', body: { sprintId: 's3', status: 'in_progress', position: 1 } }]);
+      expect(db.calls.move).toEqual([
+        { todoId: 'a2', body: { sprintId: 's3', status: 'in_progress', position: 1 } },
+      ]);
     });
     // A change of column offers Undo.
     expect(await screen.findByText('KAN-22 moved to In Progress')).toBeInTheDocument();
@@ -243,14 +302,18 @@ describe('moving cards (SPR-5)', () => {
     start();
     renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Actions for KAN-21' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Actions for KAN-21' }, { timeout: 3000 }),
+    );
     await user.click(await screen.findByRole('menuitem', { name: 'Move to Done' }));
 
     await waitFor(() => {
       expect(cardsIn(/^Done/)).toEqual(['Validate signup form', 'Set up routing']);
     });
     await waitFor(() => {
-      expect(db.calls.move).toEqual([{ todoId: 'a1', body: { sprintId: 's3', status: 'done', position: 0 } }]);
+      expect(db.calls.move).toEqual([
+        { todoId: 'a1', body: { sprintId: 's3', status: 'done', position: 0 } },
+      ]);
     });
 
     await user.click(await screen.findByRole('button', { name: 'Undo' }));
@@ -258,7 +321,10 @@ describe('moving cards (SPR-5)', () => {
       expect(cardsIn(/^To Do/)).toEqual(['Validate signup form', 'Board filters']);
     });
     await waitFor(() => {
-      expect(db.calls.move[1]).toEqual({ todoId: 'a1', body: { sprintId: 's3', status: 'todo', position: 0 } });
+      expect(db.calls.move[1]).toEqual({
+        todoId: 'a1',
+        body: { sprintId: 's3', status: 'todo', position: 0 },
+      });
     });
   });
 
@@ -277,7 +343,9 @@ describe('moving cards (SPR-5)', () => {
     );
     renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Actions for KAN-21' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Actions for KAN-21' }, { timeout: 3000 }),
+    );
     await user.click(await screen.findByRole('menuitem', { name: 'Move to Done' }));
 
     // The request is still waiting at the gate.
@@ -324,15 +392,21 @@ describe('column composer', () => {
     start();
     renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Create todo in In Review' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Create todo in In Review' }, { timeout: 3000 }),
+    );
     const input = screen.getByLabelText('New todo in In Review');
     expect(input).toHaveFocus();
 
     await user.type(input, 'Write release notes{Enter}');
     // Optimistic: the card is there before the server answers, then takes its key.
-    expect(await within(column(/^In Review/)).findByText('Write release notes')).toBeInTheDocument();
+    expect(
+      await within(column(/^In Review/)).findByText('Write release notes'),
+    ).toBeInTheDocument();
     expect(await within(column(/^In Review/)).findByText('KAN-40')).toBeInTheDocument();
-    expect(db.calls.create).toEqual([{ title: 'Write release notes', sprintId: 's3', status: 'in_review' }]);
+    expect(db.calls.create).toEqual([
+      { title: 'Write release notes', sprintId: 's3', status: 'in_review' },
+    ]);
     expect(input).toHaveValue('');
     expect(input).toHaveFocus();
     expect(column('In Review, 2 todos')).toBeInTheDocument();
@@ -353,7 +427,16 @@ describe('no active sprint (SPR-4)', () => {
   it('offers the backlog and starting the next planned sprint', async () => {
     const user = userEvent.setup();
     db = makeTodoDb(
-      [makeTodo({ id: 'q1', key: 'PORT-1', title: 'Planned work', projectId: 'p2', sprintId: 's4', storyPoints: 2 })],
+      [
+        makeTodo({
+          id: 'q1',
+          key: 'PORT-1',
+          title: 'Planned work',
+          projectId: 'p2',
+          sprintId: 's4',
+          storyPoints: 2,
+        }),
+      ],
       [{ ...SPRINT_4, projectId: 'p2' }],
     );
     // The project reports the active sprint the fake server has, so it follows the start.
@@ -363,7 +446,10 @@ describe('no active sprint (SPR-4)', () => {
         return HttpResponse.json({
           project: makeProject({
             ...PORTFOLIO,
-            stats: { ...PORTFOLIO.stats, activeSprint: active ? { id: active.id, name: active.name } : null },
+            stats: {
+              ...PORTFOLIO.stats,
+              activeSprint: active ? { id: active.id, name: active.name } : null,
+            },
           }),
         });
       }),
@@ -372,8 +458,13 @@ describe('no active sprint (SPR-4)', () => {
     );
     renderApp('/projects/p2/board');
 
-    expect(await screen.findByRole('heading', { name: 'No active sprint' }, { timeout: 3000 })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Backlog' })).toHaveAttribute('href', '/projects/p2/backlog');
+    expect(
+      await screen.findByRole('heading', { name: 'No active sprint' }, { timeout: 3000 }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Go to Backlog' })).toHaveAttribute(
+      'href',
+      '/projects/p2/backlog',
+    );
     expect(screen.queryByRole('button', { name: 'Complete sprint' })).not.toBeInTheDocument();
 
     await user.click(await screen.findByRole('button', { name: 'Start Sprint 4' }));
@@ -390,7 +481,9 @@ describe('no active sprint (SPR-4)', () => {
     db = makeTodoDb([], []);
     server.use(...todoHandlers(db), ...projectHandlers());
     renderApp('/projects/p2/board');
-    expect(await screen.findByRole('heading', { name: 'No active sprint' }, { timeout: 3000 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: 'No active sprint' }, { timeout: 3000 }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Start/ })).not.toBeInTheDocument();
   });
 });
@@ -401,7 +494,9 @@ describe('complete sprint (SPR-6)', () => {
     start();
     const { router } = renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }),
+    );
     const dialog = await screen.findByRole('dialog', { name: 'Complete Sprint 3' });
     expect(dialog).toHaveAccessibleDescription(/1 todo done · 4 unfinished/);
     expect(within(dialog).getByText('3 of 13 story points completed.')).toBeInTheDocument();
@@ -414,8 +509,12 @@ describe('complete sprint (SPR-6)', () => {
 
     await user.click(within(dialog).getByRole('button', { name: 'Complete sprint' }));
 
-    expect(await screen.findByText('Sprint 3 completed · 4 todos moved to the backlog')).toBeInTheDocument();
-    expect(db.calls.completeSprint).toEqual([{ sprintId: 's3', body: { moveUnfinishedTo: 'backlog' } }]);
+    expect(
+      await screen.findByText('Sprint 3 completed · 4 todos moved to the backlog'),
+    ).toBeInTheDocument();
+    expect(db.calls.completeSprint).toEqual([
+      { sprintId: 's3', body: { moveUnfinishedTo: 'backlog' } },
+    ]);
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/projects/p1/sprints/s3');
     });
@@ -423,8 +522,12 @@ describe('complete sprint (SPR-6)', () => {
     expect(await within(detail).findByText('Carried over')).toBeInTheDocument();
     expect(within(detail).getByText('Carried over').parentElement).toHaveTextContent('4 todos');
     const list = screen.getByRole('navigation', { name: 'All sprints' });
-    expect(within(list).getByRole('link', { current: 'page' })).toHaveTextContent(/Sprint 3.*Completed/);
-    const backlogOnServer = db.todos.filter((todo) => todo.sprintId === null).sort((a, b) => a.order - b.order);
+    expect(within(list).getByRole('link', { current: 'page' })).toHaveTextContent(
+      /Sprint 3.*Completed/,
+    );
+    const backlogOnServer = db.todos
+      .filter((todo) => todo.sprintId === null)
+      .sort((a, b) => a.order - b.order);
     expect(backlogOnServer.map((todo) => todo.key)).toEqual([
       'KAN-31',
       'KAN-21',
@@ -439,12 +542,16 @@ describe('complete sprint (SPR-6)', () => {
     start();
     renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }),
+    );
     const dialog = await screen.findByRole('dialog', { name: 'Complete Sprint 3' });
     await user.click(within(dialog).getByRole('radio', { name: /Sprint 4/ }));
     await user.click(within(dialog).getByRole('button', { name: 'Complete sprint' }));
 
-    expect(await screen.findByText('Sprint 3 completed · 4 todos moved to Sprint 4')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Sprint 3 completed · 4 todos moved to Sprint 4'),
+    ).toBeInTheDocument();
     expect(db.calls.completeSprint).toEqual([{ sprintId: 's3', body: { moveUnfinishedTo: 's4' } }]);
     expect(db.todos.filter((todo) => todo.sprintId === 's4')).toHaveLength(5);
   });
@@ -454,14 +561,20 @@ describe('complete sprint (SPR-6)', () => {
     start();
     server.use(
       http.post(apiUrl('/sprints/:sprintId/complete'), () =>
-        HttpResponse.json(errorBody('CONFLICT', 'Only the active sprint can be completed.'), { status: 409 }),
+        HttpResponse.json(errorBody('CONFLICT', 'Only the active sprint can be completed.'), {
+          status: 409,
+        }),
       ),
     );
     renderApp('/projects/p1/board');
 
-    await user.click(await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }));
+    await user.click(
+      await screen.findByRole('button', { name: 'Complete sprint' }, { timeout: 3000 }),
+    );
     const dialog = await screen.findByRole('dialog', { name: 'Complete Sprint 3' });
     await user.click(within(dialog).getByRole('button', { name: 'Complete sprint' }));
-    expect(await within(dialog).findByText('Only the active sprint can be completed.')).toBeInTheDocument();
+    expect(
+      await within(dialog).findByText('Only the active sprint can be completed.'),
+    ).toBeInTheDocument();
   });
 });

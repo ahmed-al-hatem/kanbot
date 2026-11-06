@@ -1,8 +1,7 @@
 /**
- * English-only bridge for screens not yet migrated to i18n (RTL & Arabic, R1). Formatting now
- * lives in `i18n/format.ts` and date math in `lib/dates.ts`; these exports keep their old names
- * and exact English output so the 20-odd importers don't change in this PR. Each area switches to
- * `useFormat()` / `useT()` when its strings move (R2–R4), and this file is deleted in R5.
+ * English-only bridge from R1, **unused since R4**: every screen now formats through
+ * `useFormat()` / `getFormat()` (`i18n/format.ts`) and does date math with `lib/dates.ts`.
+ * Nothing imports this file any more; R5 deletes it. Don't add importers.
  */
 import { createFormatter } from '@/i18n/format';
 import { en } from '@/i18n/messages/en';

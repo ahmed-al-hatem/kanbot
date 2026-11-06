@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/api/errors';
-import * as legacy from '@/lib/format';
 import { intlTag, LOCALE_CONFIG, LOCALES } from './config';
 import { errorMessage, fieldErrorMessages } from './errors';
 import { createFormatter } from './format';
@@ -44,10 +43,13 @@ describe('dictionaries', () => {
   it.each([
     ['en', en],
     ['ar', ar],
-  ] as [string, Messages][])('%s has no empty strings, from keys or functions', (_name, messages) => {
-    const empty = allStrings(messages).filter(([, value]) => value.trim() === '');
-    expect(empty).toEqual([]);
-  });
+  ] as [string, Messages][])(
+    '%s has no empty strings, from keys or functions',
+    (_name, messages) => {
+      const empty = allStrings(messages).filter(([, value]) => value.trim() === '');
+      expect(empty).toEqual([]);
+    },
+  );
 
   it('names every locale in its own language', () => {
     for (const locale of LOCALES) {
@@ -153,16 +155,6 @@ describe('format — English output is unchanged', () => {
     expect(format.todosAndPoints(1, 1)).toBe('1 todo · 1 pt');
     expect(format.todosAndPoints(5, 13)).toBe('5 todos · 13 pts');
   });
-
-  it('lib/format.ts still exports the same English helpers', () => {
-    expect(legacy.formatDay('2026-11-02')).toBe('Nov 2');
-    expect(legacy.formatRange('2026-10-20', '2026-11-02')).toBe('Oct 20 – Nov 2');
-    expect(legacy.todosAndPoints(5, 13)).toBe('5 todos · 13 pts');
-    expect(legacy.plural(1, 'day')).toBe('1 day');
-    expect(legacy.plural(3, 'day')).toBe('3 days');
-    expect(legacy.addDays('2026-11-02', 14)).toBe('2026-11-16');
-    expect(legacy.daysBetween('2026-11-02', '2026-11-16')).toBe(14);
-  });
 });
 
 describe('errors', () => {
@@ -171,25 +163,40 @@ describe('errors', () => {
     expect(errorMessage(network, en)).toBe('Cannot reach the server. Is it running?');
     expect(errorMessage(network, ar)).toBe(ar.errors.byCode.NETWORK_ERROR);
 
-    const conflict = new ApiError({ status: 409, code: 'CONFLICT', message: 'This key is already used' });
+    const conflict = new ApiError({
+      status: 409,
+      code: 'CONFLICT',
+      message: 'This key is already used',
+    });
     expect(errorMessage(conflict, en)).toBe('This key is already used');
     expect(errorMessage(conflict, ar)).toBe(ar.errors.server.CONFLICT(''));
     expect(errorMessage(new Error('boom'), en)).toBe(en.errors.generic);
     expect(errorMessage(new Error('boom'), ar)).toBe(ar.errors.generic);
   });
 
-  it.each(['VALIDATION_ERROR', 'UNAUTHORIZED', 'NOT_FOUND', 'CONFLICT', 'RATE_LIMITED', 'AI_ERROR', 'INTERNAL_ERROR'] as const)(
-    '%s in Arabic is Arabic text, not the server message',
-    (code) => {
-      const error = new ApiError({ status: 400, code, message: 'Too many attempts. Try again in a few minutes.' });
-      const text = errorMessage(error, ar);
-      expect(text).not.toContain('Too many');
-      expect(text).toMatch(/[\u0600-\u06FF]/);
-      // English shows the server's text as it came (empty → the generic message).
-      expect(errorMessage(error, en)).toBe('Too many attempts. Try again in a few minutes.');
-      expect(errorMessage(new ApiError({ status: 400, code, message: '' }), en)).toBe(en.errors.generic);
-    },
-  );
+  it.each([
+    'VALIDATION_ERROR',
+    'UNAUTHORIZED',
+    'NOT_FOUND',
+    'CONFLICT',
+    'RATE_LIMITED',
+    'AI_ERROR',
+    'INTERNAL_ERROR',
+  ] as const)('%s in Arabic is Arabic text, not the server message', (code) => {
+    const error = new ApiError({
+      status: 400,
+      code,
+      message: 'Too many attempts. Try again in a few minutes.',
+    });
+    const text = errorMessage(error, ar);
+    expect(text).not.toContain('Too many');
+    expect(text).toMatch(/[\u0600-\u06FF]/);
+    // English shows the server's text as it came (empty → the generic message).
+    expect(errorMessage(error, en)).toBe('Too many attempts. Try again in a few minutes.');
+    expect(errorMessage(new ApiError({ status: 400, code, message: '' }), en)).toBe(
+      en.errors.generic,
+    );
+  });
 
   it('maps details[] to fields by top-level path, first issue wins', () => {
     const error = new ApiError({
@@ -223,6 +230,8 @@ describe('errors', () => {
       details: [{ path: 'email', message: 'Invalid email' }],
     });
     expect(fieldErrorMessages(email, en)).toEqual({ email: 'Invalid email' });
-    expect(fieldErrorMessages(email, ar)).toEqual({ email: 'أدخل بريدًا صالحًا، مثل name@example.com' });
+    expect(fieldErrorMessages(email, ar)).toEqual({
+      email: 'أدخل بريدًا صالحًا، مثل name@example.com',
+    });
   });
 });
