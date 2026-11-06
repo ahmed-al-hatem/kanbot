@@ -24,6 +24,9 @@ term is added here first. Plan: [FRONTEND-PLAN.en.md §11](FRONTEND-PLAN.en.md#1
   | The offline banner only («Retry now») | **أعد المحاولة الآن** |
   | Inside a sentence («… Please try again.») | حاول مجددًا |
 - **Brand and product names** stay Latin: Kanbot, Mock AI badge text stays as the API names it.
+- **Server errors** never reach the Arabic UI as the API's English text: `client/src/i18n/errors.ts`
+  says each error code's meaning (`errors.server`) and each field's rule (`errors.fields`) instead;
+  English keeps the server's text.
 - **Letter-spacing** is always 0 and nothing is uppercased (Arabic has no case); lozenges keep their Arabic text.
 
 ## Terms
@@ -95,3 +98,32 @@ term is added here first. Plan: [FRONTEND-PLAN.en.md §11](FRONTEND-PLAN.en.md#1
 | Couldn't load {page} | تعذّر تحميل {page} | Page errors |
 | Language · Change language | اللغة · تغيير اللغة | Switcher group / sidebar item |
 | Switch between light and dark | التبديل بين الوضع الفاتح والداكن | Theme toggle |
+| Switch to light theme · Switch to dark theme | التبديل إلى الوضع الفاتح · التبديل إلى الوضع الداكن | The toggle's name says where it goes (R2) |
+| Main (nav) · Navigation (mobile menu) | القائمة الرئيسية · التنقل | |
+| Skip to main content | تخطَّ إلى المحتوى الرئيسي | |
+| Choose a project · View all projects · Your projects | اختر مشروعًا · عرض كل المشاريع · مشاريعك | Project switcher |
+| Current (the current project) | الحالي | |
+| Account · Signed in as {email} · Log out | الحساب · مسجّل الدخول باسم {email} · تسجيل الخروج | Profile menu |
+| Keyboard shortcuts · then | اختصارات لوحة المفاتيح · ثم | «g ثم b» |
+| You're offline · Back online · Retry now | أنت غير متصل · عاد الاتصال · أعد المحاولة الآن | Offline banner and toast |
+| Loading {page} · Loading your workspace | جارٍ تحميل {page} · جارٍ تحميل مساحة عملك | Skeletons and the full-page loader |
+| Retrying… | جارٍ إعادة المحاولة… | |
+| Error {status} · {reason} | خطأ {status} · {reason} | Page error code line |
+| Dismiss (toast ×) | إغلاق الإشعار | Not «تجاهل», which is Discard |
+| Close · Cancel · Open · Save changes | إغلاق · إلغاء · فتح · حفظ التغييرات | |
+| Unassigned · Not estimated | غير مُسند · غير مقدّر | Avatar / points pill (screen readers) |
+| {n} story points (spoken) | {n} نقطة قصة (نقطة قصة واحدة · نقطتا قصة · 3 نقاط قصة) | Points pill |
+| {n} fields need attention | حقل واحد يحتاج إلى انتباه · حقلان يحتاجان… · 3 حقول تحتاج… | Validation summary |
+| Use {n} characters or fewer | استخدم {n} حرفًا أو أقل | Plural forms of حرف |
+| Label {x} added / removed | أُضيف الوسم {x} · أُزيل الوسم {x} | Tag input |
+| Sign up (page title) · Create account (button) | إنشاء حساب | |
+| Too short · Fair · Good · Strong | قصيرة جدًا · مقبولة · جيدة · قوية | Password strength |
+| Resend link in {n}s | إعادة إرسال الرابط بعد {n} ثانية | Plural forms of ثانية |
+| Demo only | للعرض فقط | Forgot password note |
+| {name} created · updated · deleted | {name} أُنشئ · {name} حُدّث · {name} حُذف | Toasts, canvas order (name first) |
+| Untitled project (preview) | مشروع بلا عنوان | |
+| Todos will be numbered {KEY}-1 | ستُرقَّم البنود {KEY}-1 | |
+| Search by name or key | ابحث بالاسم أو المفتاح | Projects search placeholder |
+| {n} projects · {n} backlog todos | مشروع واحد · مشروعان · 3 مشاريع · 11 مشروعًا · 100 مشروع · «… في قائمة الانتظار» | |
+| {sprint} active (lozenge) | {sprint} نشط | |
+| Your workspace · your projects · this project | مساحة عملك · مشاريعك · هذا المشروع | «تعذّر تحميل …» |
