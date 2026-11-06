@@ -63,6 +63,14 @@
   --logo-accent: #22c55e;
 }
 
+/*
+ * Arabic (plan §11, Arabic canvas): IBM Plex Sans Arabic for Arabic *and* Latin text, so mixed
+ * lines share one x-height. Self-hosted in the lazy Arabic chunk (i18n/messages/ar.ts).
+ */
+:root[lang='ar'] {
+  --font-sans: 'IBM Plex Sans Arabic', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+
 .light {
   --surface:#FFFFFF; --surface-hovered:#F0F1F2; --surface-pressed:#DDDEE1; --surface-sunken:#F8F8F8; --surface-raised:#FFFFFF; --surface-overlay:#FFFFFF;
   --text:#292A2E; --text-subtle:#505258; --text-subtlest:#6B6E76; --text-inverse:#FFFFFF;
