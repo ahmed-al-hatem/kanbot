@@ -1,4 +1,5 @@
 import { useId, type ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Icon } from '@/components/Icon/Icon';
 import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
@@ -57,12 +58,12 @@ export function Field({
         // Keyed by the message so a new error replays the shake.
         <p key={error} id={errorId} role="alert" className={cx(styles.error, 'kb-shake')}>
           <Icon name="status-error" size={12} />
-          {error}
+          <BidiText>{error}</BidiText>
         </p>
       ) : (
         help && (
           <p id={helpId} className={styles.help}>
-            {help}
+            <BidiText>{help}</BidiText>
           </p>
         )
       )}

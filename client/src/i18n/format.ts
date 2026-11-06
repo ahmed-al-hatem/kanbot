@@ -6,7 +6,7 @@ import type { Messages } from './messages/en';
  * Every date, time and number the UI shows goes through a `Formatter` (DESIGN §12 content rules).
  * Get one with `useFormat()` in components; `createFormatter()` is for code outside React.
  *
- * English output is exactly what lib/format.ts always produced ("Nov 2", "Oct 20 – Nov 2",
+ * English output is what the app showed before i18n ("Nov 2", "Oct 20 – Nov 2",
  * "Nov 2, 2026", "Nov 4, 2026, 3:42 PM", "3 hours ago"). Arabic uses `ar-SY-u-nu-latn`:
  * Levantine months ("2 تشرين الثاني") with Latin digits.
  *

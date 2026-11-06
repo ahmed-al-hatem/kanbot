@@ -354,7 +354,9 @@ function DrawerBody({
             entry.role === 'user' ? (
               <div key={entry.id} className={styles.userRow}>
                 <span className="visually-hidden">{msg.youSaid}</span>
-                <p className={styles.userBubble}>{entry.content}</p>
+                <p className={styles.userBubble} dir="auto">
+                  {entry.content}
+                </p>
               </div>
             ) : (
               <div key={entry.id} className={styles.aiRow}>

@@ -94,7 +94,7 @@
 
 .navHeading {
   margin: var(--space-200) 10px var(--space-050);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   line-height: 16px;
   font-weight: 700;
   letter-spacing: 0.4px;
@@ -136,7 +136,7 @@
 }
 
 .navItem:hover .navIcon {
-  transform: translateX(1px);
+  transform: translateX(calc(var(--dir) * 1px));
 }
 
 .navItem:active {
@@ -237,7 +237,7 @@
 }
 
 .switcherKey {
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-subtlest);
 }
 
@@ -388,7 +388,7 @@
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
-    margin: -1px;
+    margin: 0; /* not -1px: it would push the box past the right edge in RTL */
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
@@ -468,7 +468,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-small);
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   color: var(--text-subtle);
 }
 

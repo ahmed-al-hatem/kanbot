@@ -182,12 +182,14 @@ export const TodoRow = memo(function TodoRow({
             <span className="visually-hidden">{copy.saving}</span>
           </>
         ) : (
-          todo.key
+          <bdi>{todo.key}</bdi>
         )}
       </span>
       <span className={styles.titleCell}>
         {saving ? (
-          <span className={styles.title}>{todo.title}</span>
+          <span className={styles.title}>
+            <bdi>{todo.title}</bdi>
+          </span>
         ) : (
           <button
             type="button"
@@ -199,7 +201,7 @@ export const TodoRow = memo(function TodoRow({
             }}
             onKeyDown={onTitleKeyDown}
           >
-            {todo.title}
+            <bdi>{todo.title}</bdi>
           </button>
         )}
         {todo.labels.length > 0 && (
@@ -305,9 +307,13 @@ export function TodoRowPreview({ todo }: { todo: Todo }) {
       <span className={styles.typeCell}>
         <TypeIcon type={todo.type} />
       </span>
-      <span className={styles.key}>{todo.key}</span>
+      <span className={styles.key}>
+        <bdi>{todo.key}</bdi>
+      </span>
       <span className={styles.titleCell}>
-        <span className={styles.title}>{todo.title}</span>
+        <span className={styles.title}>
+          <bdi>{todo.title}</bdi>
+        </span>
       </span>
       <PriorityLabel priority={todo.priority} className={styles.priority} />
       <PointsPill points={todo.storyPoints} className={styles.points} />

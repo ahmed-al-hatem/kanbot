@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { useToast, type Toast, type ToastKind } from '@/stores/toast';
@@ -84,7 +85,9 @@ function Flag({ toast }: { toast: Toast }) {
       }}
     >
       <ToastIcon name={icon.name} className={cx(styles.icon, icon.className)} />
-      <span className={styles.message}>{toast.message}</span>
+      <span className={styles.message}>
+        <BidiText>{toast.message}</BidiText>
+      </span>
       {action && (
         <button
           type="button"

@@ -4,10 +4,11 @@ import { delay, http, HttpResponse } from 'msw';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { queryClient } from '@/app/queryClient';
 import { qk } from '@/hooks/queryKeys';
+import { isolate, stripIsolates } from '@/i18n/bidi';
 import { ar } from '@/i18n/messages/ar';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -124,8 +125,10 @@ describe('backlog page in Arabic', () => {
     expect(active.getByRole('link', { name: 'إكمال السبرنت' })).toBeInTheDocument();
     const planned = within(group('Sprint 4'));
     expect(planned.getByText('مخطط')).toBeInTheDocument();
-    expect(planned.getByText('اسحب البنود إلى هنا للتخطيط لـ Sprint 4')).toBeInTheDocument();
-    expect(planned.getByText('أكمل Sprint 3 أولًا')).toBeInTheDocument();
+    expect(
+      planned.getByText(sentence('اسحب البنود إلى هنا للتخطيط لـ Sprint 4')),
+    ).toBeInTheDocument();
+    expect(planned.getByText(sentence('أكمل Sprint 3 أولًا'))).toBeInTheDocument();
     expect(within(group(BACKLOG)).getByText('3 بنود · 5 نقاط')).toBeInTheDocument();
 
     // A row: type, priority, points and the extra labels, spoken in Arabic.
@@ -221,11 +224,15 @@ describe('backlog page in Arabic', () => {
     await user.type(search, 'zzz');
     expect(await screen.findByText('عرض 0 من 4', {}, { timeout: 3000 })).toBeInTheDocument();
     expect(
-      within(group('Sprint 3')).getByText('لا توجد بنود في Sprint 3 تطابق عوامل التصفية'),
+      within(group('Sprint 3')).getByText(sentence('لا توجد بنود في Sprint 3 تطابق عوامل التصفية')),
     ).toBeInTheDocument();
-    expect(within(group('Sprint 4')).getByText('لا توجد بنود في Sprint 4 بعد')).toBeInTheDocument();
     expect(
-      within(group(BACKLOG)).getByText('لا توجد بنود في قائمة الانتظار تطابق عوامل التصفية'),
+      within(group('Sprint 4')).getByText(sentence('لا توجد بنود في Sprint 4 بعد')),
+    ).toBeInTheDocument();
+    expect(
+      within(group(BACKLOG)).getByText(
+        sentence('لا توجد بنود في قائمة الانتظار تطابق عوامل التصفية'),
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(ar.backlog.dragOff)).toBeInTheDocument();
     await expectNoAxeViolations(container);
@@ -265,7 +272,7 @@ describe('quick create in Arabic', () => {
 
     expect(
       await screen.findByText(
-        'تعذّر إنشاء «Bad title». بعض القيم غير صالحة. تحقق من الحقول وحاول مجددًا.',
+        sentence('تعذّر إنشاء «Bad title». بعض القيم غير صالحة. تحقق من الحقول وحاول مجددًا.'),
       ),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Invalid request body|Title is required/)).not.toBeInTheDocument();
@@ -304,9 +311,11 @@ describe('moves and drag and drop in Arabic', () => {
 
     await user.click(within(title.closest('li')!).getByRole('button', { name: 'إجراءات KAN-31' }));
     await user.click(await screen.findByRole('menuitem', { name: 'نقل إلى Sprint 4' }));
-    expect(await screen.findByText('KAN-31 نُقل إلى Sprint 4')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('KAN-31 نُقل إلى Sprint 4'))).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'تراجع' }));
-    expect(await screen.findByText('KAN-31 أُعيد إلى قائمة الانتظار')).toBeInTheDocument();
+    expect(
+      await screen.findByText(sentence('KAN-31 أُعيد إلى قائمة الانتظار')),
+    ).toBeInTheDocument();
   });
 
   it('a failed move explains in Arabic', async () => {
@@ -324,7 +333,7 @@ describe('moves and drag and drop in Arabic', () => {
     (await screen.findByRole('button', { name: 'Login screen' }, { timeout: 3000 })).focus();
     await user.keyboard('{ArrowDown}');
     expect(
-      await screen.findByText('تعذّر نقل KAN-31. حدث خطأ من جهتنا. حاول مجددًا.'),
+      await screen.findByText(sentence('تعذّر نقل KAN-31. حدث خطأ من جهتنا. حاول مجددًا.')),
     ).toBeInTheDocument();
     expect(screen.queryByText(/on our side/)).not.toBeInTheDocument();
   });
@@ -338,7 +347,9 @@ describe('sprint actions in Arabic', () => {
 
     const planned = await screen.findByRole('region', { name: 'Sprint 4' }, { timeout: 3000 });
     await user.click(within(planned).getByRole('button', { name: 'بدء السبرنت' }));
-    expect(await screen.findByText('أكمل Sprint 3 قبل بدء Sprint 4.')).toBeInTheDocument();
+    expect(
+      await screen.findByText(sentence('أكمل Sprint 3 قبل بدء Sprint 4.')),
+    ).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'الذهاب إلى اللوحة' })).toBeInTheDocument();
   });
 
@@ -362,7 +373,7 @@ describe('sprint actions in Arabic', () => {
     await user.click(within(confirm).getByRole('button', { name: 'حذف السبرنت' }));
 
     expect(
-      await screen.findByText('Sprint 4 حُذف · نُقل بند واحد إلى قائمة الانتظار'),
+      await screen.findByText(sentence('Sprint 4 حُذف · نُقل بند واحد إلى قائمة الانتظار')),
     ).toBeInTheDocument();
     expect(db.calls.deleteSprint).toEqual(['s4']);
   });
@@ -385,6 +396,9 @@ describe('delete sprint confirm plurals', () => {
     [11, 'Sprint 4 حُذف · نُقل 11 بندًا إلى قائمة الانتظار'],
     [100, 'Sprint 4 حُذف · نُقل 100 بند إلى قائمة الانتظار'],
   ])('toast with %i todos', (n, text) => {
-    expect(ar.backlog.toast.sprintDeleted('Sprint 4', n)).toBe(text);
+    const toast = ar.backlog.toast.sprintDeleted('Sprint 4', n);
+    // The sprint's name is isolated (i18n/bidi.ts), so «Sprint 4» keeps its order in Arabic.
+    expect(toast.startsWith(isolate('Sprint 4'))).toBe(true);
+    expect(stripIsolates(toast)).toBe(text);
   });
 });

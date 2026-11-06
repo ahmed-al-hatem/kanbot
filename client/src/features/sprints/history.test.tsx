@@ -201,7 +201,7 @@ describe('sprints page (SPR-7)', () => {
     expect(within(sprintList()).getByRole('link', { current: 'page' })).toHaveTextContent(
       /^Sprint 2/,
     );
-    expect(screen.getByText(/Board MVP/)).toHaveTextContent('Goal: Board MVP');
+    expect(screen.getByText(/Board MVP/).parentElement).toHaveTextContent('Goal: Board MVP');
     // Live: 2 todos, 10 of 10 points. Snapshot: 4 of 6 todos, 15 of 20 points, 2 carried over.
     expect(tile('Completed')).toHaveTextContent('4 todos');
     expect(tile('Points done')).toHaveTextContent('15 / 20');

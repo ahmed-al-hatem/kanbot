@@ -1,4 +1,5 @@
 import { useId, useRef } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Button, ButtonLink, IconButton } from '@/components/Button/Button';
 import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
 import type { BacklogGroup } from '@/hooks/useBacklog';
@@ -51,7 +52,7 @@ export function SprintActions({
         <>
           {blockedBy && (
             <span id={reasonId} className={styles.groupHint}>
-              {copy.blockedBy(blockedBy.name)}
+              <BidiText>{copy.blockedBy(blockedBy.name)}</BidiText>
             </span>
           )}
           <Button

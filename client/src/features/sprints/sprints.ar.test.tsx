@@ -6,7 +6,7 @@ import { setLocale } from '@/i18n';
 import { addDays, todayIso } from '@/lib/dates';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -82,7 +82,9 @@ describe('create sprint in Arabic', () => {
     const { user, dialog } = await openCreate();
 
     await user.click(within(dialog).getByRole('button', { name: 'إنشاء سبرنت' }));
-    expect(await screen.findByText('Sprint 5 أُنشئ · اسحب البنود إليه')).toBeInTheDocument();
+    expect(
+      await screen.findByText(sentence('Sprint 5 أُنشئ · اسحب البنود إليه')),
+    ).toBeInTheDocument();
   });
 
   it('a server date error goes under End date in Arabic, never the server English', async () => {
@@ -159,7 +161,7 @@ describe('start sprint in Arabic', () => {
     await expectNoAxeViolations(dialog);
 
     await user.click(within(dialog).getByRole('button', { name: 'بدء السبرنت' }));
-    expect(await screen.findByText('Sprint 4 بدأ')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('Sprint 4 بدأ'))).toBeInTheDocument();
   });
 
   it('a 409 (a sprint is already active) explains in Arabic, never the server English', async () => {

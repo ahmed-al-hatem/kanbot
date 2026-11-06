@@ -34,8 +34,12 @@ export function ProfileMenu() {
           >
             <Avatar name={user?.name ?? ''} size={32} decorative />
             <span className={styles.profileText}>
-              <span className={styles.profileName}>{user?.name}</span>
-              <span className={styles.profileEmail}>{user?.email}</span>
+              <span className={styles.profileName}>
+                <bdi>{user?.name}</bdi>
+              </span>
+              <span className={styles.profileEmail}>
+                <bdi>{user?.email}</bdi>
+              </span>
             </span>
             <Icon name="chevron-down" className={styles.profileChevron} />
           </button>

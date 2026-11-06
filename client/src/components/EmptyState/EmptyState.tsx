@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Icon, type IconName } from '@/components/Icon/Icon';
 import { cx } from '@/lib/cx';
 import styles from './EmptyState.module.css';
@@ -37,8 +38,14 @@ export function EmptyState({
   return (
     <div className={cx(styles.empty, styles[variant], 'kb-rise', className)}>
       {illustration ?? (icon && <Icon name={icon} size={24} className={styles.icon} />)}
-      <Heading className={styles.title}>{title}</Heading>
-      {description && <p className={styles.description}>{description}</p>}
+      <Heading className={styles.title}>
+        <BidiText>{title}</BidiText>
+      </Heading>
+      {description && (
+        <p className={styles.description}>
+          <BidiText>{description}</BidiText>
+        </p>
+      )}
       {actions && <div className={styles.actions}>{actions}</div>}
     </div>
   );

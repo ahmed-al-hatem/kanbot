@@ -150,7 +150,7 @@ describe('sprints history in Arabic', () => {
     expect(
       within(detail()).getByText(/^6 تشرين الأول – 19 تشرين الأول · اكتمل في /),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Board MVP/)).toHaveTextContent('الهدف: Board MVP');
+    expect(screen.getByText(/Board MVP/).parentElement).toHaveTextContent('الهدف: Board MVP');
     expect(tile('البنود المكتملة')).toHaveTextContent('4 بنود');
     expect(tile('النقاط المنجزة')).toHaveTextContent('15 / 20');
     expect(tile('نسبة الإنجاز')).toHaveTextContent('75%');

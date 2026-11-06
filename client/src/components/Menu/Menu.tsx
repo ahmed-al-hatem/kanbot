@@ -1,5 +1,6 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { useRef, type ReactElement, type ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Icon, type IconName } from '@/components/Icon/Icon';
 import { cx } from '@/lib/cx';
 import styles from './Menu.module.css';
@@ -105,7 +106,9 @@ export function MenuItem({
       onFocus={onFocus}
     >
       {icon && <Icon name={icon} className={styles.icon} />}
-      <span className={styles.text}>{children}</span>
+      <span className={styles.text}>
+        <BidiText>{children}</BidiText>
+      </span>
     </DropdownMenu.Item>
   );
 }
@@ -116,5 +119,9 @@ export function MenuSeparator() {
 
 /** Small uppercase heading above a group of items, e.g. "Move to". */
 export function MenuLabel({ children }: { children: ReactNode }) {
-  return <DropdownMenu.Label className={styles.label}>{children}</DropdownMenu.Label>;
+  return (
+    <DropdownMenu.Label className={styles.label}>
+      <BidiText>{children}</BidiText>
+    </DropdownMenu.Label>
+  );
 }

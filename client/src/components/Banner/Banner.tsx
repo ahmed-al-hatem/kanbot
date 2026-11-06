@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Icon, type IconName } from '@/components/Icon/Icon';
 import { cx } from '@/lib/cx';
 import styles from './Banner.module.css';
@@ -31,7 +32,9 @@ export function Banner({ tone, children, action, layout = 'page', role, classNam
       className={cx(styles.banner, styles[tone], styles[layout], 'kb-pop', className)}
     >
       <Icon name={ICONS[tone]} className={styles.icon} />
-      <span className={styles.message}>{children}</span>
+      <span className={styles.message}>
+        <BidiText>{children}</BidiText>
+      </span>
       {action && <span className={styles.action}>{action}</span>}
     </div>
   );

@@ -22,7 +22,7 @@
 .s28 {
   inline-size: 28px;
   block-size: 28px;
-  font-size: 11px;
+  font-size: var(--font-size-xs);
 }
 
 .s32 {

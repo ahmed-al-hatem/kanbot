@@ -21,7 +21,8 @@ export function Lozenge({ children, tone = 'gray', live = false, className }: Lo
   return (
     <span className={cx(styles.lozenge, styles[tone], className)}>
       {live && <span className={cx(styles.dot, 'kb-live')} aria-hidden="true" />}
-      {children}
+      {/* Project keys (KAN) and statuses: isolated inside Arabic rows. */}
+      <bdi>{children}</bdi>
     </span>
   );
 }

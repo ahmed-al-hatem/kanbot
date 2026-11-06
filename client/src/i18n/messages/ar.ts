@@ -8,6 +8,7 @@ import '@fontsource/ibm-plex-sans-arabic/400.css';
 import '@fontsource/ibm-plex-sans-arabic/500.css';
 import '@fontsource/ibm-plex-sans-arabic/600.css';
 import '@fontsource/ibm-plex-sans-arabic/700.css';
+import { isolate as bdi } from '../bidi';
 import { plural, type PluralForms } from '../plural';
 import type { Messages } from './en';
 
@@ -17,6 +18,14 @@ import type { Messages } from './en';
  * few (3–10), many (11–99), other (100+).
  */
 const count = (n: number, forms: PluralForms) => plural('ar', n, forms);
+
+/*
+ * `bdi(value)` isolates user and server text (names, keys, emails, titles, a search) in the
+ * sentences people *see* — toasts, titles, buttons, hints (i18n/bidi.ts). Not around a failure
+ * `reason` (always this dictionary's Arabic), in aria-only labels (nothing is laid out),
+ * live-region text (the announcer strips the marks anyway) or prompts sent to the AI (the
+ * model gets the text as typed).
+ */
 
 const todos = (n: number) =>
   count(n, {
@@ -76,7 +85,7 @@ export const ar = {
     label: 'اللغة',
     change: (languageName: string) => `${languageName} — تغيير اللغة`,
     loadFailed: (languageName: string) =>
-      `تعذّر تحميل ${languageName}. تحقّق من اتصالك وحاول مجددًا.`,
+      `تعذّر تحميل ${bdi(languageName)}. تحقّق من اتصالك وحاول مجددًا.`,
   },
 
   count: {
@@ -344,7 +353,7 @@ export const ar = {
       text: 'سجّل الدخول مجددًا للمتابعة. ستعود إلى هذه الصفحة.',
       action: 'تسجيل الدخول مجددًا',
     },
-    welcome: (firstName: string) => `أهلًا بك في Kanbot يا ${firstName}`,
+    welcome: (firstName: string) => `أهلًا بك في Kanbot يا ${bdi(firstName)}`,
   },
 
   shell: {
@@ -371,7 +380,7 @@ export const ar = {
     },
     profile: {
       menu: 'الحساب',
-      signedInAs: (email: string) => `مسجّل الدخول باسم ${email}`,
+      signedInAs: (email: string) => `مسجّل الدخول باسم ${bdi(email)}`,
       shortcuts: 'اختصارات لوحة المفاتيح',
       logOut: 'تسجيل الخروج',
     },
@@ -414,27 +423,27 @@ export const ar = {
     search: {
       label: 'ابحث في المشاريع',
       placeholder: 'ابحث بالاسم أو المفتاح',
-      noMatch: (query: string) => `لا توجد مشاريع تطابق «${query}»`,
+      noMatch: (query: string) => `لا توجد مشاريع تطابق «${bdi(query)}»`,
     },
     tile: {
       menu: (name: string) => `إجراءات ${name}`,
       actions: (name: string) => `إجراءات ${name}`,
       noDescription: 'لا يوجد وصف بعد.',
       noActiveSprint: 'لا يوجد سبرنت نشط',
-      activeSprint: (sprint: string) => `${sprint} نشط`,
+      activeSprint: (sprint: string) => `${bdi(sprint)} نشط`,
     },
     toast: {
-      created: (name: string) => `${name} أُنشئ`,
-      updated: (name: string) => `${name} حُدّث`,
-      deleted: (name: string) => `${name} حُذف`,
-      deleteFailed: (name: string, reason: string) => `تعذّر حذف ${name}. ${reason}`,
+      created: (name: string) => `${bdi(name)} أُنشئ`,
+      updated: (name: string) => `${bdi(name)} حُدّث`,
+      deleted: (name: string) => `${bdi(name)} حُذف`,
+      deleteFailed: (name: string, reason: string) => `تعذّر حذف ${bdi(name)}. ${reason}`,
     },
     delete: {
-      title: (name: string) => `حذف ${name}؟`,
+      title: (name: string) => `حذف ${bdi(name)}؟`,
       fallbackName: 'المشروع',
       before: 'سيُحذف ',
       after: (key: string, todoCount: number) =>
-        ` (${key}) نهائيًا مع كل سبرنتاته${todoCount > 0 ? ` و${todos(todoCount)}` : ' وبنوده'}. لا يمكن التراجع عن ذلك.`,
+        ` (${bdi(key)}) نهائيًا مع كل سبرنتاته${todoCount > 0 ? ` و${todos(todoCount)}` : ' وبنوده'}. لا يمكن التراجع عن ذلك.`,
       confirm: 'حذف المشروع',
     },
     form: {
@@ -442,8 +451,8 @@ export const ar = {
       editTitle: 'تعديل المشروع',
       create: 'إنشاء مشروع',
       untitled: 'مشروع بلا عنوان',
-      previewCreate: (key: string) => `ستُرقَّم البنود ${key}-1`,
-      previewEdit: (key: string) => `ستُرقَّم البنود الجديدة ${key}-…`,
+      previewCreate: (key: string) => `ستُرقَّم البنود ${bdi(`${key}-1`)}`,
+      previewEdit: (key: string) => `ستُرقَّم البنود الجديدة ${bdi(`${key}-…`)}`,
       name: 'اسم المشروع',
       namePlaceholder: 'مثال: Kanbot للجوال',
       key: 'المفتاح',
@@ -470,21 +479,21 @@ export const ar = {
       done: 'منجز',
     },
     sprintOption: {
-      active: (name: string) => `${name} (نشط)`,
-      planned: (name: string) => `${name} (مخطط)`,
-      completed: (name: string) => `${name} (مكتمل)`,
+      active: (name: string) => `${bdi(name)} (نشط)`,
+      planned: (name: string) => `${bdi(name)} (مخطط)`,
+      completed: (name: string) => `${bdi(name)} (مكتمل)`,
     },
     toast: {
-      saved: (key: string) => `${key} حُفظ`,
-      deleted: (key: string) => `${key} حُذف`,
-      deleteFailed: (key: string, reason: string) => `تعذّر حذف ${key}. ${reason}`,
+      saved: (key: string) => `${bdi(key)} حُفظ`,
+      deleted: (key: string) => `${bdi(key)} حُذف`,
+      deleteFailed: (key: string, reason: string) => `تعذّر حذف ${bdi(key)}. ${reason}`,
     },
     notFound: say('لم نعد نجد هذا البند، ربما حُذف.'),
     delete: {
-      title: (key: string) => `حذف ${key}؟`,
+      title: (key: string) => `حذف ${bdi(key)}؟`,
       fallbackKey: 'البند',
       before: 'سيُحذف ',
-      after: (title: string) => ` «${title}» نهائيًا. لا يمكن التراجع عن ذلك.`,
+      after: (title: string) => ` «${bdi(title)}» نهائيًا. لا يمكن التراجع عن ذلك.`,
       confirm: 'حذف البند',
     },
     details: {
@@ -526,9 +535,9 @@ export const ar = {
       discard: 'تجاهل',
       escToClose: '{esc} للإغلاق',
       saveFailed: (key: string, reason: string) =>
-        `تعذّر حفظ ${key}. ${reason} تعديلاتك ما زالت هنا.`,
+        `تعذّر حفظ ${bdi(key)}. ${reason} تعديلاتك ما زالت هنا.`,
       saveFailedOffline: (key: string) =>
-        `تعذّر حفظ ${key}. تحقق من اتصالك وحاول مجددًا — تعديلاتك ما زالت هنا.`,
+        `تعذّر حفظ ${bdi(key)}. تحقق من اتصالك وحاول مجددًا — تعديلاتك ما زالت هنا.`,
     },
     validation: {
       titleRequired: 'يحتاج البند إلى عنوان',
@@ -590,9 +599,9 @@ export const ar = {
       active: 'نشط',
       planned: 'مخطط',
       meta: (dates: string, summary: string) => `${dates} · ${summary}`,
-      noMatch: (name: string) => `لا توجد بنود في ${name} تطابق عوامل التصفية`,
-      empty: (name: string) => `لا توجد بنود في ${name} بعد`,
-      dropHint: (name: string) => `اسحب البنود إلى هنا للتخطيط لـ ${name}`,
+      noMatch: (name: string) => `لا توجد بنود في ${bdi(name)} تطابق عوامل التصفية`,
+      empty: (name: string) => `لا توجد بنود في ${bdi(name)} بعد`,
+      dropHint: (name: string) => `اسحب البنود إلى هنا للتخطيط لـ ${bdi(name)}`,
     },
     filters: {
       label: 'تصفية البنود',
@@ -609,8 +618,8 @@ export const ar = {
       label: 'إنشاء بند',
       placeholder: 'إنشاء بند — اكتب عنوانًا واضغط Enter',
       hint: '{enter} للإضافة',
-      created: (key: string) => `${key} أُنشئ`,
-      failed: (title: string, reason: string) => `تعذّر إنشاء «${title}». ${reason}`,
+      created: (key: string) => `${bdi(key)} أُنشئ`,
+      failed: (title: string, reason: string) => `تعذّر إنشاء «${bdi(title)}». ${reason}`,
     },
     row: {
       drag: (key: string) => (key ? `اسحب ${key}` : 'اسحب البند'),
@@ -624,7 +633,7 @@ export const ar = {
       open: 'فتح التفاصيل',
       moveToTop: 'نقل إلى الأعلى',
       moveToBottom: 'نقل إلى الأسفل',
-      moveTo: (name: string) => `نقل إلى ${name}`,
+      moveTo: (name: string) => `نقل إلى ${bdi(name)}`,
     },
     moveHelp: 'اسحب الصفوف بين المجموعات، أو حدّد عنوانًا واستخدم {up} {down} لنقله.',
     rowHelp:
@@ -636,42 +645,42 @@ export const ar = {
     moves: {
       moved: (key: string, name: string, position: string, total: string) =>
         `${key} نُقل إلى ${name}، الموضع ${position} من ${total}`,
-      movedToast: (key: string, name: string) => `${key} نُقل إلى ${name}`,
-      movedBack: (key: string, name: string) => `${key} أُعيد إلى ${name}`,
-      failed: (key: string, reason: string) => `تعذّر نقل ${key}. ${reason}`,
+      movedToast: (key: string, name: string) => `${bdi(key)} نُقل إلى ${bdi(name)}`,
+      movedBack: (key: string, name: string) => `${bdi(key)} أُعيد إلى ${bdi(name)}`,
+      failed: (key: string, reason: string) => `تعذّر نقل ${bdi(key)}. ${reason}`,
       atTop: (key: string) => `${key} في الأعلى بالفعل`,
       atBottom: (key: string) => `${key} في الأسفل بالفعل`,
     },
     sprint: {
       start: 'بدء السبرنت',
       complete: 'إكمال السبرنت',
-      blockedBy: (name: string) => `أكمل ${name} أولًا`,
+      blockedBy: (name: string) => `أكمل ${bdi(name)} أولًا`,
       menu: (name: string) => `إجراءات ${name}`,
       actions: (name: string) => `إجراءات ${name}`,
       edit: 'تعديل السبرنت',
       delete: 'حذف السبرنت',
     },
     toast: {
-      sprintCreated: (name: string) => `${name} أُنشئ · اسحب البنود إليه`,
-      sprintSaved: (name: string) => `${name} حُفظ`,
-      startBlocked: (active: string, name: string) => `أكمل ${active} قبل بدء ${name}.`,
+      sprintCreated: (name: string) => `${bdi(name)} أُنشئ · اسحب البنود إليه`,
+      sprintSaved: (name: string) => `${bdi(name)} حُفظ`,
+      startBlocked: (active: string, name: string) => `أكمل ${bdi(active)} قبل بدء ${bdi(name)}.`,
       goToBoard: 'الذهاب إلى اللوحة',
-      startEmpty: (name: string) => `أضف بنودًا إلى ${name} قبل بدئه.`,
-      started: (name: string) => `${name} بدأ`,
+      startEmpty: (name: string) => `أضف بنودًا إلى ${bdi(name)} قبل بدئه.`,
+      started: (name: string) => `${bdi(name)} بدأ`,
       sprintDeleted: (name: string, n: number) =>
         n > 0
-          ? `${name} حُذف · ${count(n, {
+          ? `${bdi(name)} حُذف · ${count(n, {
               one: 'نُقل بند واحد إلى قائمة الانتظار',
               two: 'نُقل بندان إلى قائمة الانتظار',
               few: `نُقلت ${n} بنود إلى قائمة الانتظار`,
               many: `نُقل ${n} بندًا إلى قائمة الانتظار`,
               other: `نُقل ${n} بند إلى قائمة الانتظار`,
             })}`
-          : `${name} حُذف`,
-      sprintDeleteFailed: (name: string, reason: string) => `تعذّر حذف ${name}. ${reason}`,
+          : `${bdi(name)} حُذف`,
+      sprintDeleteFailed: (name: string, reason: string) => `تعذّر حذف ${bdi(name)}. ${reason}`,
     },
     deleteSprint: {
-      title: (name: string) => `حذف ${name}؟`,
+      title: (name: string) => `حذف ${bdi(name)}؟`,
       fallbackName: 'السبرنت',
       withTodos: (n: number) =>
         count(n, {
@@ -697,7 +706,7 @@ export const ar = {
       title: 'السبرنتات',
       loadingName: 'السبرنتات',
       pageName: 'سبرنتاتك',
-      created: (name: string) => `${name} أُنشئ · اسحب البنود إليه من قائمة الانتظار`,
+      created: (name: string) => `${bdi(name)} أُنشئ · اسحب البنود إليه من قائمة الانتظار`,
       empty: {
         title: 'لا توجد سبرنتات بعد',
         text: 'خطّط لسبرنت من قائمة الانتظار: أنشئ واحدًا، واسحب البنود إليه، ثم ابدأه.',
@@ -735,7 +744,7 @@ export const ar = {
     },
     form: {
       createTitle: 'إنشاء سبرنت',
-      editTitle: (name: string) => `تعديل ${name}`,
+      editTitle: (name: string) => `تعديل ${bdi(name)}`,
       create: 'إنشاء سبرنت',
       save: 'حفظ السبرنت',
       name: 'اسم السبرنت',
@@ -781,8 +790,8 @@ export const ar = {
       endRequired: 'اختر تاريخ الانتهاء',
     },
     start: {
-      title: (name: string) => `بدء ${name}`,
-      summary: (counts: string, goal: string) => (goal ? `${counts} · ${goal}` : counts),
+      title: (name: string) => `بدء ${bdi(name)}`,
+      summary: (counts: string, goal: string) => (goal ? `${counts} · ${bdi(goal)}` : counts),
       submit: 'بدء السبرنت',
       starting: 'جارٍ البدء…',
       note: 'تنتقل بنوده إلى لوحة السبرنت النشط، حيث تتابعها حتى تكمله.',
@@ -799,7 +808,7 @@ export const ar = {
     noActive: {
       title: 'لا يوجد سبرنت نشط',
       text: 'ابدأ سبرنتًا مخططًا من قائمة الانتظار لترى لوحته هنا.',
-      start: (name: string) => `بدء ${name}`,
+      start: (name: string) => `بدء ${bdi(name)}`,
     },
     moveHelp: 'اسحب البطاقات بين الأعمدة، أو حدّد بطاقة واستخدم {left} {right} {up} {down} لنقلها.',
     cardHelp:
@@ -821,7 +830,7 @@ export const ar = {
       placeholder: 'ما الذي يجب إنجازه؟',
       hint: '{enter} إضافة · {esc} إلغاء',
       add: 'إضافة',
-      created: (key: string, column: string) => `${key} أُنشئ في ${column}`,
+      created: (key: string, column: string) => `${bdi(key)} أُنشئ في ${column}`,
     },
     card: {
       overdue: 'متأخر، الاستحقاق ',
@@ -832,7 +841,7 @@ export const ar = {
       atBottom: (key: string, column: string) => `${key} في أسفل ${column} بالفعل`,
     },
     complete: {
-      title: (name: string) => `إكمال ${name}`,
+      title: (name: string) => `إكمال ${bdi(name)}`,
       description: (done: number, unfinished: number) =>
         `منجز: ${todos(done)} · غير منجز: ${todos(unfinished)}`,
       done: 'منجز',
@@ -861,9 +870,9 @@ export const ar = {
       confirm: 'إكمال السبرنت',
       completing: 'جارٍ الإكمال…',
       toBacklog: 'قائمة الانتظار',
-      completed: (name: string) => `${name} اكتمل`,
+      completed: (name: string) => `${bdi(name)} اكتمل`,
       completedMoved: (name: string, n: number, destination: string) =>
-        `${name} اكتمل · ${movedTodos(n, destination)}`,
+        `${bdi(name)} اكتمل · ${movedTodos(n, bdi(destination))}`,
     },
   },
 
@@ -1016,22 +1025,22 @@ export const ar = {
       loadingBacklog: 'جارٍ تحميل قائمة الانتظار…',
       intro: (n: number) =>
         `يختار Kanbot من قائمة الانتظار البنود التي تتّسع لسعتك، الأعلى أولوية أولًا. ${todos(n)} في قائمة الانتظار.`,
-      create: (name: string, n: number) => `إنشاء ${name} ${withTodos(n)}`,
-      createFailed: (name: string, reason: string) => `تعذّر إنشاء ${name}. ${reason}`,
+      create: (name: string, n: number) => `إنشاء ${bdi(name)} ${withTodos(n)}`,
+      createFailed: (name: string, reason: string) => `تعذّر إنشاء ${bdi(name)}. ${reason}`,
       ready: (todoCount: number, points: number, capacity: number) =>
         `الخطة جاهزة: ${todos(todoCount)}، ${points} من ${capacity} ${pointsNoun(capacity)}`,
-      created: (name: string, n: number) => `${name} أُنشئ ${withTodos(n)}`,
+      created: (name: string, n: number) => `${bdi(name)} أُنشئ ${withTodos(n)}`,
     },
     summary: {
       title: 'ملخص الذكاء الاصطناعي',
       midSprint: 'ملخص منتصف السبرنت',
       midSprintDay: (day: number, total: number) => `ملخص منتصف السبرنت · اليوم ${day} من ${total}`,
-      dialogTitle: (name: string) => `${name} · ملخص الذكاء الاصطناعي`,
+      dialogTitle: (name: string) => `${bdi(name)} · ملخص الذكاء الاصطناعي`,
       summarize: 'تلخيص',
       summarizing: 'جارٍ التلخيص…',
       regenerate: 'إعادة التوليد',
       regenerating: 'جارٍ إعادة التوليد…',
-      ready: (name: string) => `ملخص ${name} جاهز`,
+      ready: (name: string) => `ملخص ${bdi(name)} جاهز`,
       generating: 'جارٍ توليد الملخص',
       failedTitle: 'تعذّر على Kanbot كتابة الملخص',
       emptyActive: 'احصل على قراءة سريعة لسير هذا السبرنت: التقدم والمخاطر وما يجب فعله تاليًا.',
@@ -1043,7 +1052,7 @@ export const ar = {
       generatedBefore: 'وُلّد في ',
       generatedAfter: ' · قد يخطئ الذكاء الاصطناعي. راجعه قبل المشاركة.',
       failedAfterComplete: (name: string, reason: string) =>
-        `اكتمل ${name}، لكن تعذّر توليد ملخصه بالذكاء الاصطناعي. ${reason}`,
+        `اكتمل ${bdi(name)}، لكن تعذّر توليد ملخصه بالذكاء الاصطناعي. ${reason}`,
     },
   },
 

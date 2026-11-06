@@ -121,7 +121,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-100);
-  padding: var(--space-075) var(--space-075) var(--space-050) var(--space-100);
+  padding-block: var(--space-075) var(--space-050);
+  padding-inline: var(--space-100) var(--space-075);
 }
 
 /* DESIGN §3.3 board column dots: gray, blue, purple, green. */

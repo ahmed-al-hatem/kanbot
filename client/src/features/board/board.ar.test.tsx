@@ -5,7 +5,7 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { ar } from '@/i18n/messages/ar';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -200,18 +200,19 @@ describe('board page in Arabic', () => {
 
     const button = await screen.findByRole('button', { name: /^Board filters/ }, { timeout: 3000 });
     button.focus();
-    await user.keyboard('{ArrowRight}');
+    // RTL: the columns run right to left, so ← moves to the next column (the one drawn on the left).
+    await user.keyboard('{ArrowLeft}');
 
     await waitFor(() => {
       expect(live()).toHaveTextContent('KAN-22 نُقل إلى قيد التنفيذ، الموضع 2 من 2');
     });
-    expect(await screen.findByText('KAN-22 نُقل إلى قيد التنفيذ')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('KAN-22 نُقل إلى قيد التنفيذ'))).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'تراجع' }));
-    expect(await screen.findByText('KAN-22 أُعيد إلى للتنفيذ')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('KAN-22 أُعيد إلى للتنفيذ'))).toBeInTheDocument();
 
-    // At the edge: the column's own name in the announcement.
+    // At the edge: → from the first column (the rightmost) stays, with the column's own name.
     (await screen.findByRole('button', { name: /^Validate signup form/ })).focus();
-    await user.keyboard('{ArrowLeft}');
+    await user.keyboard('{ArrowRight}');
     await waitFor(() => {
       expect(live()).toHaveTextContent('KAN-21 في للتنفيذ بالفعل');
     });
@@ -291,7 +292,7 @@ describe('complete sprint in Arabic', () => {
     await user.click(within(dialog).getByRole('button', { name: 'إكمال السبرنت' }));
 
     expect(
-      await screen.findByText('Sprint 3 اكتمل · نُقلت 3 بنود إلى قائمة الانتظار'),
+      await screen.findByText(sentence('Sprint 3 اكتمل · نُقلت 3 بنود إلى قائمة الانتظار')),
     ).toBeInTheDocument();
     expect(db.calls.completeSprint).toEqual([
       { sprintId: 's3', body: { moveUnfinishedTo: 'backlog' } },
@@ -317,7 +318,9 @@ describe('complete sprint in Arabic', () => {
     await user.click(within(dialog).getByRole('radio', { name: /Sprint 4/ }));
     await user.click(within(dialog).getByRole('button', { name: 'إكمال السبرنت' }));
 
-    expect(await screen.findByText('Sprint 3 اكتمل · نُقل بندان إلى Sprint 4')).toBeInTheDocument();
+    expect(
+      await screen.findByText(sentence('Sprint 3 اكتمل · نُقل بندان إلى Sprint 4')),
+    ).toBeInTheDocument();
   });
 
   it('a failure stays in the dialog in Arabic, never the server English', async () => {

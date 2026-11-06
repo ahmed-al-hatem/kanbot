@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { stripIsolates } from '@/i18n/bidi';
 
 export type Politeness = 'polite' | 'assertive';
 
@@ -17,7 +18,8 @@ const initialState = { message: '', politeness: 'polite', id: 0 } satisfies Part
 export const useAnnouncer = create<AnnouncerState>()((set) => ({
   ...initialState,
   announce: (message, politeness = 'polite') => {
-    set((state) => ({ message, politeness, id: state.id + 1 }));
+    // Isolation marks around names (i18n/bidi.ts) are for layout; speech has none.
+    set((state) => ({ message: stripIsolates(message), politeness, id: state.id + 1 }));
   },
   reset: () => {
     set(initialState);

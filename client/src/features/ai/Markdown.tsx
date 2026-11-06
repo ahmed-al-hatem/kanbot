@@ -58,7 +58,8 @@ interface MarkdownProps {
 export default function Markdown({ children, onOpenTodo, className }: MarkdownProps) {
   return (
     <OpenTodoContext value={onOpenTodo}>
-      <div className={cx(styles.markdown, className)}>
+      {/* AI text keeps its own direction: an English reply reads LTR in the Arabic UI too. */}
+      <div className={cx(styles.markdown, className)} dir="auto">
         <ReactMarkdown components={COMPONENTS}>{children}</ReactMarkdown>
       </div>
     </OpenTodoContext>

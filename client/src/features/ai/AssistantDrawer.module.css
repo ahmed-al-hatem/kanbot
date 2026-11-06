@@ -39,14 +39,6 @@
   animation: global(kbDrawerOut) 200ms var(--ease-bold) forwards;
 }
 
-.drawer:dir(rtl)[data-state='open'] {
-  animation-name: global(kbDrawerInRtl);
-}
-
-.drawer:dir(rtl)[data-state='closed'] {
-  animation-name: global(kbDrawerOutRtl);
-}
-
 /* Header: sparkle, title + Mock badge, subtitle, New chat, close. */
 .header {
   display: flex;
@@ -166,7 +158,9 @@
 .userBubble {
   padding-block: 10px;
   padding-inline: 14px;
-  border-radius: 14px 14px 4px;
+  border-radius: 14px;
+  /* The tail corner sits under the sender's side: bottom-right in English, bottom-left in Arabic. */
+  border-end-end-radius: 4px;
   background: var(--brand);
   color: var(--text-inverse);
   white-space: pre-wrap;
@@ -204,7 +198,8 @@
   max-inline-size: 100%;
   padding-block: 10px;
   padding-inline: 14px;
-  border-radius: 4px 14px 14px;
+  border-radius: 14px;
+  border-start-start-radius: 4px;
   background: var(--ai-bg);
   color: var(--ai-fg);
 }
@@ -219,7 +214,8 @@
   gap: var(--space-100);
   padding-block: 10px;
   padding-inline: 14px;
-  border-radius: 4px 14px 14px;
+  border-radius: 14px;
+  border-start-start-radius: 4px;
   background: var(--surface-sunken);
   color: var(--text-subtlest);
 }

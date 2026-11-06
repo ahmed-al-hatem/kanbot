@@ -54,6 +54,16 @@ describe('login in Arabic', () => {
     await expectNoAxeViolations(container);
   });
 
+  it('keeps the email and password left to right in the RTL page', async () => {
+    await switchToArabic();
+    renderApp('/login');
+
+    const email = await screen.findByLabelText('البريد الإلكتروني');
+    expect(document.documentElement).toHaveAttribute('dir', 'rtl');
+    expect(email).toHaveAttribute('dir', 'ltr');
+    expect(screen.getByLabelText('كلمة المرور')).toHaveAttribute('dir', 'ltr');
+  });
+
   it('shows the 401 banner in Arabic, never the server English', async () => {
     await switchToArabic();
     const user = userEvent.setup();
@@ -158,7 +168,7 @@ describe('a visible error follows a language switch', () => {
       expect(email).toHaveAccessibleDescription('Enter your email');
     });
 
-    await user.click(screen.getByRole('button', { name: 'العربية' }));
+    await user.click(screen.getByRole('button', { name: 'ع — العربية' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('البريد الإلكتروني')).toHaveAccessibleDescription(
@@ -168,7 +178,7 @@ describe('a visible error follows a language switch', () => {
     expect(screen.getByLabelText('كلمة المرور')).toHaveAccessibleDescription('أدخل كلمة المرور');
     expect(screen.queryByText('Enter your email')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'English' }));
+    await user.click(screen.getByRole('button', { name: 'EN — English' }));
 
     await waitFor(() => {
       expect(screen.getByLabelText('Email')).toHaveAccessibleDescription('Enter your email');
@@ -197,7 +207,7 @@ describe('a visible error follows a language switch', () => {
       expect(screen.getByLabelText('Email')).toHaveAccessibleDescription(message);
     });
 
-    await user.click(screen.getByRole('button', { name: 'العربية' }));
+    await user.click(screen.getByRole('button', { name: 'ع — العربية' }));
 
     const email = await screen.findByLabelText('البريد الإلكتروني');
     await waitFor(() => {

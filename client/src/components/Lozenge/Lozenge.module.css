@@ -6,7 +6,7 @@
   block-size: 20px;
   padding-inline: var(--space-075);
   border-radius: var(--radius-small);
-  font-size: 11px;
+  font-size: var(--font-size-xs);
   line-height: 20px;
   font-weight: 700;
   letter-spacing: 0.2px;

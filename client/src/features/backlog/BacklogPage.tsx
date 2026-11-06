@@ -3,6 +3,7 @@ import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Button } from '@/components/Button/Button';
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState/EmptyState';
@@ -411,8 +412,10 @@ export function BacklogPage() {
         description={
           <>
             {t.todos.delete.before}
-            <b>{toDelete.todo?.key}</b>
-            {t.todos.delete.after(toDelete.todo?.title ?? '')}
+            <b>
+              <bdi>{toDelete.todo?.key}</bdi>
+            </b>
+            <BidiText>{t.todos.delete.after(toDelete.todo?.title ?? '')}</BidiText>
           </>
         }
         confirmLabel={t.todos.delete.confirm}

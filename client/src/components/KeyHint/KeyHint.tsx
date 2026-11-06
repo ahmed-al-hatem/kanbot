@@ -33,7 +33,10 @@ export function KeyHint({ text }: KeyHintProps) {
         // `split` with a capture group puts the token names at the odd indexes.
         if (index % 2 === 1) {
           return isKey(part) ? (
-            <kbd key={index}>{KEYS[part]}</kbd>
+            // dir="ltr" isolates the cap («Enter», «←») inside an Arabic sentence, like <bdi>.
+            <kbd key={index} dir="ltr">
+              {KEYS[part]}
+            </kbd>
           ) : (
             <Fragment key={index}>{part}</Fragment>
           );

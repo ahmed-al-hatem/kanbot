@@ -22,7 +22,7 @@ Priority on conflict: API contract → Requirements AC → design.
 - No `any` without a comment explaining why. Every icon-only button has an `aria-label`.
 - Every view has loading, empty and error states; every mutation gives feedback.
 
-## i18n rules (in areas listed in `I18N_MIGRATED` in `client/eslint.config.js`; all of `src/` from R5)
+## i18n rules (all of `client/src/` except tests, `src/test/` and `src/dev/` — enforced by `react/jsx-no-literals` since R5)
 - No user-visible text outside `client/src/i18n/messages/` — including `aria-label`, `title`, `placeholder`, toasts, live-region announcements and `document.title`. Read it as `t.section.key` / `t.section.fn(n)` from `useT()` (or `getT()` outside React); never string keys.
 - Arabic terms come from `docs/I18N-GLOSSARY.md`; add a new term there first. Plurals use `plural()` (all six Arabic forms), never `n === 1`.
 - All dates and numbers go through `client/src/i18n/format.ts` (`useFormat()`); no `toLocaleString`, no hand-built date strings.

@@ -205,6 +205,8 @@ export function ProjectFormDialog({
         >
           <Input
             className={styles.keyInput}
+            // Latin letters only (KAN): typed and shown left to right in Arabic too.
+            dir="ltr"
             placeholder={isEdit ? undefined : generatedKey(name, takenKeys)}
             maxLength={PROJECT_KEY_MAX}
             autoCapitalize="characters"

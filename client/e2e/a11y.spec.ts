@@ -1,64 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import {
-  expectNoA11yViolations,
-  openSignedIn,
-  registerViaApi,
-  SAMPLE_TODOS,
-  type Api,
-} from './support';
+import { expectNoA11yViolations, openSignedIn, registerViaApi, seedHistory } from './support';
 
 /**
  * axe (WCAG 2.1 A + AA, color-contrast on) on every main surface, in light and dark (DESIGN §15,
  * plan §6 phase 8). The theme follows the OS until the user picks one, so `colorScheme` sets it.
  * Reduced motion makes entry animations 1ms, so axe never measures text in the middle of a fade.
  */
-
-/** A project with history on every page: a completed sprint with a summary, an active one, a planned one, a backlog. */
-async function seed(api: Api) {
-  const project = await api.project('Accessibility Check');
-  const todos = await api.todos(project.id, [
-    ...SAMPLE_TODOS,
-    {
-      title: 'Write the onboarding copy',
-      type: 'task',
-      priority: 'low',
-      storyPoints: 1,
-      dueDate: '2020-01-01',
-    },
-    {
-      title: 'Dark mode toggle',
-      type: 'story',
-      priority: 'high',
-      storyPoints: 3,
-      labels: ['ui', 'theme', 'polish'],
-    },
-    { title: 'Profile page', type: 'task', priority: 'medium', storyPoints: null },
-    { title: 'Crash on empty search', type: 'bug', priority: 'urgent', storyPoints: 2 },
-  ]);
-  const id = (i: number) => todos[i]?.id ?? '';
-
-  const done = await api.sprint(project.id, {
-    name: 'Sprint 1',
-    goal: 'Get the basics in',
-    todoIds: [id(0), id(1)],
-  });
-  await api.start(done.id);
-  await api.move(id(0), { status: 'done', position: 0 });
-  await api.complete(done.id);
-  await api.summarize(done.id);
-
-  const active = await api.sprint(project.id, {
-    name: 'Sprint 2',
-    goal: 'Polish',
-    todoIds: [id(2), id(3), id(4)],
-  });
-  await api.start(active.id);
-  await api.move(id(3), { status: 'in_progress', position: 0 });
-  await api.move(id(4), { status: 'done', position: 0 });
-  await api.sprint(project.id, { name: 'Sprint 3', todoIds: [id(5)] });
-
-  return { project, completedId: done.id, todoId: id(6) };
-}
 
 async function check(page: Page, where: string, ready: () => Promise<void>) {
   await test.step(where, async () => {
@@ -95,7 +42,7 @@ for (const scheme of ['light', 'dark'] as const) {
     }) => {
       test.setTimeout(120_000);
       const { api } = await registerViaApi(request);
-      const { project, completedId, todoId } = await seed(api);
+      const { project, completedId, todoId } = await seedHistory(api);
       const base = `/projects/${project.id}`;
 
       await openSignedIn(page, api.token, '/projects');

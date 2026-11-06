@@ -12,11 +12,17 @@ interface LanguageName {
   name: string;
   /** The switcher segment: "EN", "ع". */
   short: string;
+  /**
+   * The segment's accessible name: the visible text first, then the language's name, so speech
+   * input ("click EN") finds it (WCAG 2.5.3, axe `label-content-name-mismatch`). Not in
+   * parentheses: axe ignores parenthesised words when it compares.
+   */
+  label: string;
   /** The segment's tooltip, in that language. */
   switchTo: string;
 }
 
 export const LANGUAGE_NAMES: Readonly<Record<Locale, LanguageName>> = {
-  en: { name: 'English', short: 'EN', switchTo: 'Switch to English' },
-  ar: { name: 'العربية', short: 'ع', switchTo: 'التبديل إلى العربية' },
+  en: { name: 'English', short: 'EN', label: 'EN — English', switchTo: 'Switch to English' },
+  ar: { name: 'العربية', short: 'ع', label: 'ع — العربية', switchTo: 'التبديل إلى العربية' },
 };

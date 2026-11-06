@@ -6,11 +6,18 @@ import {
   TouchSensor,
   useSensor,
   useSensors,
+  type AutoScrollOptions,
+  type ClientRect,
   type CollisionDetection,
   type DroppableContainer,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
-import type { PointerEvent as ReactPointerEvent, TouchEvent as ReactTouchEvent } from 'react';
+import {
+  useMemo,
+  type PointerEvent as ReactPointerEvent,
+  type TouchEvent as ReactTouchEvent,
+} from 'react';
+import { useDirection, type Direction } from '@/i18n';
 
 /**
  * Drag inputs and collision rules shared by the Backlog (groups of rows) and the Board (columns
@@ -60,6 +67,17 @@ class LongPressTouchSensor extends TouchSensor {
 }
 
 /**
+ * ← / → as a step along the reading order of lists laid out in a row (board columns): −1 is the
+ * previous list, +1 the next. In RTL the next column is the one on the *left*, so the keys swap —
+ * the arrow always moves toward the column it points at (Arabic canvas). Other keys: 0.
+ */
+export function inlineStep(key: string, dir: Direction): -1 | 0 | 1 {
+  const forward = dir === 'rtl' ? 'ArrowLeft' : 'ArrowRight';
+  const backward = dir === 'rtl' ? 'ArrowRight' : 'ArrowLeft';
+  return key === forward ? 1 : key === backward ? -1 : 0;
+}
+
+/**
  * Pointer (4px before a drag starts, so clicks still open the todo) and touch (long press,
  * 200ms — DESIGN §13). With `keyboard`, dnd-kit's keyboard sensor too (Space / Enter on a drag
  * handle, then the arrows): the Backlog has handles; the Board moves focused cards with its own
@@ -70,8 +88,51 @@ export function useDragSensors({ keyboard }: { keyboard: boolean }) {
   const touch = useSensor(LongPressTouchSensor, {
     activationConstraint: { delay: 200, tolerance: 8 },
   });
+  // `sortableKeyboardCoordinates` picks the closest droppable *on screen* in the arrow's
+  // direction, from the measured rects, so it is already visual in RTL (→ reaches the item drawn
+  // on the right); it must not be mirrored again (`inlineStep` is for stepping by index).
   const keys = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
   return useSensors(pointer, touch, ...(keyboard ? [keys] : []));
+}
+
+/** Scrolls sideways only (the board's column strip), not up and down. */
+const scrollsInlineOnly = (element: Element) =>
+  element.scrollWidth > element.clientWidth && element.scrollHeight <= element.clientHeight;
+
+/**
+ * `autoScroll` for a `DndContext`. dnd-kit decides whether a container can still scroll left
+ * from `scrollLeft <= 0`, which is always true in RTL (scrollLeft runs from 0 at the start, on
+ * the right, down to −max): dragging a card toward the left edge of the board would never
+ * scroll. So in RTL dnd-kit keeps the vertical containers and `HorizontalEdgeScroll` scrolls
+ * the board strip. In LTR nothing changes.
+ */
+export function useDragAutoScroll(): AutoScrollOptions {
+  const dir = useDirection();
+  return useMemo<AutoScrollOptions>(
+    () => (dir === 'rtl' ? { canScroll: (element) => !scrollsInlineOnly(element) } : {}),
+    [dir],
+  );
+}
+
+/** Share of the container's width, from each side, where a dragged item scrolls it (dnd-kit's 20%). */
+const EDGE = 0.2;
+/** Pixels per frame at the very edge (dnd-kit's acceleration). */
+const MAX_STEP = 10;
+
+/**
+ * Pixels to scroll a horizontal container this frame while `dragged` is over it: negative
+ * toward the left edge, positive toward the right, faster nearer the edge, 0 in the middle.
+ * Physical on purpose — `scrollBy({ left })` moves the same way in LTR and RTL, so the
+ * negative `scrollLeft` of RTL never enters the sum.
+ */
+export function edgeScrollStep(dragged: ClientRect, container: ClientRect): number {
+  const zone = container.width * EDGE;
+  if (zone <= 0) return 0;
+  const intoLeft = container.left + zone - dragged.left;
+  const intoRight = dragged.right - (container.right - zone);
+  if (intoLeft > 0 && intoLeft >= intoRight) return -MAX_STEP * Math.min(1, intoLeft / zone);
+  if (intoRight > 0) return MAX_STEP * Math.min(1, intoRight / zone);
+  return 0;
 }
 
 const isItem = (container: DroppableContainer | undefined) =>

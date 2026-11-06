@@ -1,4 +1,7 @@
-/* DESIGN §7 Flag (toast), motion §8.2. Fixed bottom inline-start, 24px from the edges. */
+/*
+ * DESIGN §7 Flag (toast), motion §8.2. Fixed bottom inline-start, 24px from the edges: bottom-left
+ * in English, bottom-right in Arabic (the Arabic canvas). kbFlagIn / Out mirror through --dir.
+ */
 .region {
   position: fixed;
   inset-block-end: var(--space-300);
@@ -22,14 +25,6 @@
 
 .leaving {
   animation: global(kbFlagOut) 200ms var(--ease-in) forwards;
-}
-
-:dir(rtl) .flag {
-  animation-name: global(kbFlagInRtl);
-}
-
-:dir(rtl) .leaving {
-  animation-name: global(kbFlagOutRtl);
 }
 
 .icon {

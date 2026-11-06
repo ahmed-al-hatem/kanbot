@@ -1,5 +1,6 @@
 import * as RadixDialog from '@radix-ui/react-dialog';
 import { useRef, type ReactElement, type ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { IconButton } from '@/components/Button/Button';
 import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
@@ -82,7 +83,9 @@ export function Dialog({
             {...(description ? {} : { 'aria-describedby': undefined })}
           >
             <header className={styles.header}>
-              <RadixDialog.Title className={styles.title}>{title}</RadixDialog.Title>
+              <RadixDialog.Title className={styles.title}>
+                <BidiText>{title}</BidiText>
+              </RadixDialog.Title>
               {headerMeta && <span className={styles.headerMeta}>{headerMeta}</span>}
               <RadixDialog.Close asChild>
                 <IconButton icon="cross" aria-label={t.common.close} />
@@ -91,7 +94,7 @@ export function Dialog({
             <div className={styles.body}>
               {description && (
                 <RadixDialog.Description className={styles.description}>
-                  {description}
+                  <BidiText>{description}</BidiText>
                 </RadixDialog.Description>
               )}
               {children}

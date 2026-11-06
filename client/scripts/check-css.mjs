@@ -1,7 +1,10 @@
 /**
  * CSS rules from CLAUDE.md that ESLint can't see (runs as part of `npm run lint`):
  * - hex colors only in src/styles/tokens.css;
- * - logical properties only (margin-inline-start, not margin-left);
+ * - logical properties only (margin-inline-start, not margin-left), including corner radii
+ *   (border-start-end-radius, not a multi-value border-radius or border-top-right-radius);
+ * - every horizontal translation is mirrored in RTL: `translateX(calc(var(--dir) * …))`
+ *   (`--dir` is 1 in LTR, −1 in RTL; styles/base.css);
  * - in CSS Modules, the shared keyframes from styles/motion.css are written `global(kbX)`:
  *   a bare `kbX` is renamed to a local name with no keyframes, and the animation silently
  *   doesn't run.
@@ -16,6 +19,14 @@ const TOKENS = join('styles', 'tokens.css');
 const HEX = /#[0-9a-fA-F]{3,8}\b/;
 const PHYSICAL =
   /(?:^|[\s;{])(?:(?:margin|padding|border)-(?:left|right|top|bottom)\b|(?:left|right|top|bottom|width|height|min-width|min-height|max-width|max-height)\s*:)|text-align:\s*(?:left|right)/;
+// `border-radius: 14px 14px 4px` names physical corners; one value (or `a / b`) is symmetric.
+const PHYSICAL_RADIUS =
+  /border-(?:top|bottom)-(?:left|right)-radius|border-radius:\s*[^;/\s]+\s+[^;/]+;/;
+// Four values name top / right / bottom / left: use the -block / -inline longhands.
+const PHYSICAL_SHORTHAND =
+  /(?:^|[\s;{])(?:padding|margin|inset)\s*:\s*(?:[^;\s(]+|[\w-]+\([^)]*\))(?:\s+(?:[^;\s(]+|[\w-]+\([^)]*\))){3}\s*;/;
+// A translateX that isn't mirrored through --dir (translateX(0) is direction-free).
+const UNMIRRORED_X = /translateX\((?!calc\(var\(--dir\)|0\))/;
 const ANIMATION = /animation(?:-name)?\s*:/;
 const LOCAL_KEYFRAME = /(?<!global\()\bkb[A-Z]\w*/;
 
@@ -32,6 +43,15 @@ for (const file of readdirSync(root, { recursive: true })) {
     if (PHYSICAL.test(line)) {
       problems.push(`${where}  physical property — use the logical one (inline/block)`);
     }
+    if (PHYSICAL_SHORTHAND.test(line)) {
+      problems.push(`${where}  four-value shorthand — use the -block / -inline longhands`);
+    }
+    if (PHYSICAL_RADIUS.test(line)) {
+      problems.push(`${where}  physical corners — use border-{start|end}-{start|end}-radius`);
+    }
+    if (UNMIRRORED_X.test(line)) {
+      problems.push(`${where}  translateX without var(--dir) — it won't mirror in RTL`);
+    }
     if (file.endsWith('.module.css') && ANIMATION.test(line) && LOCAL_KEYFRAME.test(line)) {
       problems.push(`${where}  shared keyframe in a CSS Module — write it as global(kbName)`);
     }
@@ -44,5 +64,5 @@ if (problems.length > 0) {
   process.exit(1);
 }
 console.log(
-  '✓ CSS: no hex colors outside tokens.css, logical properties only, global keyframes in modules',
+  '✓ CSS: no hex colors outside tokens.css, logical properties and corners only, translateX through --dir, global keyframes in modules',
 );

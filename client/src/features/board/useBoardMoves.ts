@@ -11,7 +11,11 @@ import { toast } from '@/stores/toast';
 import type { Todo, TodoStatus } from '@/types/api';
 import type { BoardColumn } from './columns';
 
-export type KeyDirection = 'left' | 'right' | 'up' | 'down';
+/**
+ * A keyboard move in reading order: `previous` / `next` column (← / → in English, mirrored in
+ * Arabic — see `inlineStep`), `up` / `down` inside the column.
+ */
+export type KeyDirection = 'previous' | 'next' | 'up' | 'down';
 
 /** After a keyboard or menu move the card may remount in another column: put focus back on it (DESIGN §10.3). */
 function keepFocusOn(todoId: string) {
@@ -93,8 +97,8 @@ export function useBoardMoves(
   );
 
   /**
-   * DESIGN §10.1: ← / → to the previous / next column at the same index, ↑ / ↓ to reorder in
-   * the column. Focus stays on the card.
+   * DESIGN §10.1: the previous / next column at the same index (the arrow pointing at it: ← / →
+   * in English, → / ← in Arabic), ↑ / ↓ to reorder in the column. Focus stays on the card.
    */
   const onKeyMove = useCallback(
     (todo: Todo, direction: KeyDirection) => {
@@ -103,8 +107,8 @@ export function useBoardMoves(
       const column = all[columnIndex];
       if (!column) return;
       const row = column.todos.findIndex((item) => item.id === todo.id);
-      if (direction === 'left' || direction === 'right') {
-        const next = all[columnIndex + (direction === 'left' ? -1 : 1)];
+      if (direction === 'previous' || direction === 'next') {
+        const next = all[columnIndex + (direction === 'previous' ? -1 : 1)];
         if (!next) {
           announce(getT().board.moves.alreadyIn(todo.key, column.name));
           return;

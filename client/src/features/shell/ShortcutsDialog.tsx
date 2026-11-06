@@ -38,7 +38,9 @@ export function ShortcutsDialog() {
               {keys.map((key, index) => (
                 <Fragment key={key}>
                   {index > 0 && <span className={styles.then}>{t.shell.shortcuts.then}</span>}
-                  <kbd className={styles.kbd}>{key}</kbd>
+                  <kbd className={styles.kbd} dir="ltr">
+                    {key}
+                  </kbd>
                 </Fragment>
               ))}
             </dt>

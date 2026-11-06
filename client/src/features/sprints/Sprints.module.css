@@ -80,7 +80,7 @@
 }
 
 .item:hover {
-  transform: translateX(3px);
+  transform: translateX(calc(var(--dir) * 3px));
   box-shadow: var(--shadow-overlay);
 }
 
