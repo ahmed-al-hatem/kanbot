@@ -92,7 +92,8 @@
   flex-wrap: wrap;
   gap: 10px;
   min-block-size: 40px;
-  padding: 6px var(--space-100) 6px var(--space-050);
+  padding-block: 6px;
+  padding-inline: var(--space-050) var(--space-100);
 }
 
 .toggle svg {
@@ -101,7 +102,8 @@
 }
 
 .toggle[aria-expanded='false'] svg {
-  rotate: -90deg;
+  /* Collapsed, the chevron points to the inline end: right in English, left in Arabic. */
+  rotate: calc(var(--dir) * -90deg);
 }
 
 .groupTitle {
