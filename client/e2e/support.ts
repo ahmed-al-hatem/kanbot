@@ -154,6 +154,56 @@ export async function projectWithActiveSprint(api: Api, name = 'E2E Board') {
   return { project, todos, sprint };
 }
 
+/**
+ * A project with history on every page (the axe specs, both languages): a completed sprint with
+ * a summary, an active one, a planned one, a backlog.
+ */
+export async function seedHistory(api: Api) {
+  const project = await api.project('Accessibility Check');
+  const todos = await api.todos(project.id, [
+    ...SAMPLE_TODOS,
+    {
+      title: 'Write the onboarding copy',
+      type: 'task',
+      priority: 'low',
+      storyPoints: 1,
+      dueDate: '2020-01-01',
+    },
+    {
+      title: 'Dark mode toggle',
+      type: 'story',
+      priority: 'high',
+      storyPoints: 3,
+      labels: ['ui', 'theme', 'polish'],
+    },
+    { title: 'Profile page', type: 'task', priority: 'medium', storyPoints: null },
+    { title: 'Crash on empty search', type: 'bug', priority: 'urgent', storyPoints: 2 },
+  ]);
+  const id = (i: number) => todos[i]?.id ?? '';
+
+  const done = await api.sprint(project.id, {
+    name: 'Sprint 1',
+    goal: 'Get the basics in',
+    todoIds: [id(0), id(1)],
+  });
+  await api.start(done.id);
+  await api.move(id(0), { status: 'done', position: 0 });
+  await api.complete(done.id);
+  await api.summarize(done.id);
+
+  const active = await api.sprint(project.id, {
+    name: 'Sprint 2',
+    goal: 'Polish',
+    todoIds: [id(2), id(3), id(4)],
+  });
+  await api.start(active.id);
+  await api.move(id(3), { status: 'in_progress', position: 0 });
+  await api.move(id(4), { status: 'done', position: 0 });
+  await api.sprint(project.id, { name: 'Sprint 3', todoIds: [id(5)] });
+
+  return { project, completedId: done.id, todoId: id(6) };
+}
+
 export const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** A board column by its name ("To Do", "In Progress"…); its accessible name ends with the count. */

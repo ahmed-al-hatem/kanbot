@@ -8,6 +8,11 @@ import { defineConfig, devices } from '@playwright/test';
  *   touches `server/data/db.json`, and mock AI unless `E2E_REAL_AI=1`;
  * - the client as a production build (`npm run build && npm run preview`, port 4173), whose
  *   `/api` proxy keeps every request same-origin (plan §9.1: the server only allows CORS from 5173).
+ *   Built with `VITE_FEATURE_AR=true`, as in production since R5, so Arabic can be switched on.
+ *
+ * Two projects: `chromium` runs the English specs as they always ran (a new visitor is English);
+ * `chromium-ar` runs the `*.ar.spec.ts` specs with Arabic saved before the first page, so the app
+ * starts in Arabic and RTL (demo flow, board keys and edge scroll, 390px, axe light + dark).
  *
  * Outside CI an already-running server or preview is reused as it is (then its own `.env` decides
  * the AI mode; the AI assertions stay structural when it is a real model). Every test registers a
@@ -16,6 +21,11 @@ import { defineConfig, devices } from '@playwright/test';
 const CI = Boolean(process.env.CI);
 const API_HEALTH = 'http://localhost:4000/api/health';
 const CLIENT = 'http://localhost:4173';
+/** The Arabic choice as `stores/locale.ts` persists it (zustand `persist`, version 0). */
+const ARABIC_STORAGE = {
+  name: 'kanbot.locale',
+  value: JSON.stringify({ state: { locale: 'ar' }, version: 0 }),
+};
 
 export default defineConfig({
   testDir: './e2e',
@@ -40,7 +50,21 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
+      testIgnore: /\.ar\.spec\.ts$/,
       use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } },
+    },
+    {
+      name: 'chromium-ar',
+      testMatch: /\.ar\.spec\.ts$/,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 900 },
+        // The locale the switcher saves: index.html sets lang / dir from it before first paint.
+        storageState: {
+          cookies: [],
+          origins: [{ origin: CLIENT, localStorage: [ARABIC_STORAGE] }],
+        },
+      },
     },
   ],
   webServer: [
@@ -63,6 +87,8 @@ export default defineConfig({
       url: CLIENT,
       reuseExistingServer: !CI,
       timeout: 180_000,
+      // Arabic on, as in production (a reused local preview must have been built with it too).
+      env: { VITE_FEATURE_AR: 'true' },
     },
   ],
 });
