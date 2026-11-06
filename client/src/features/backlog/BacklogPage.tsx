@@ -2,12 +2,12 @@ import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
-import { isApiError } from '@/api/errors';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
 import { Button } from '@/components/Button/Button';
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState/EmptyState';
 import { Icon } from '@/components/Icon/Icon';
+import { KeyHint } from '@/components/KeyHint/KeyHint';
 import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { ProjectMeta } from '@/components/PageHeader/ProjectMeta';
@@ -18,12 +18,13 @@ import { todoNeighbourFocus } from '@/features/todos/todoFocus';
 import { useRemoveTodo } from '@/features/todos/useRemoveTodo';
 import { useBacklog, type BacklogGroup as Group } from '@/hooks/useBacklog';
 import { useCurrentProject } from '@/hooks/useProjects';
-import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useDeleteSprint, useSprints } from '@/hooks/useSprints';
+import { getT, useFormat, useT } from '@/i18n';
+import { failureReason } from '@/i18n/errors';
 import { cx } from '@/lib/cx';
 import { useDragSensors } from '@/lib/dnd/sensors';
 import { useListsDnd } from '@/lib/dnd/useListsDnd';
-import { plural, todosAndPoints } from '@/lib/format';
+import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { useAssistant } from '@/stores/assistant';
@@ -37,7 +38,7 @@ import { FilterBar } from './FilterBar';
 import { QuickCreate } from './QuickCreate';
 import { SprintActions } from './SprintActions';
 import { DRAG_OFF_ID, ROW_HELP_ID, TodoRowPreview, type MoveTargetGroup } from './TodoRow';
-import { DRAG_OFF_TEXT, useBacklogMoves } from './useBacklogMoves';
+import { useBacklogMoves } from './useBacklogMoves';
 
 interface DeleteState {
   open: boolean;
@@ -61,10 +62,6 @@ interface GroupDialogState {
 const pageTitle = () => document.querySelector<HTMLElement>('.page-title');
 // dnd-kit re-measures while dragging, so a group that grows as a row joins it still takes drops.
 const MEASURING = { droppable: { strategy: MeasuringStrategy.Always } };
-const DRAG_INSTRUCTIONS = {
-  draggable:
-    'To pick up a todo, press Space or Enter. Use the up and down arrow keys to move it, Space or Enter to drop it, Escape to cancel.',
-};
 // The active sprint's order is per status column (the board's), so a drop inside it changes nothing.
 const isReorderable = (group: Group) => group.kind !== 'active';
 
@@ -75,10 +72,13 @@ const isReorderable = (group: Group) => group.kind !== 'active';
  * Todo details opens from `?todo=` (project layout).
  */
 export function BacklogPage() {
+  const t = useT();
+  const format = useFormat();
+  const copy = t.backlog;
   const { projectId = '' } = useParams();
   const navigate = useNavigate();
   const { data: project } = useCurrentProject();
-  useDocumentTitle(titleOf('Backlog', project?.name));
+  useDocumentTitle(titleOf(copy.title, project?.name));
   const backlog = useBacklog(projectId);
   const { data: sprints = [] } = useSprints(projectId);
   const showSkeleton = useDelayedLoading(backlog.isPending);
@@ -117,7 +117,8 @@ export function BacklogPage() {
 
   const { moveTo, onKeyMove, onMenuMove } = useBacklogMoves(projectId, groups, filtering);
   const sensors = useDragSensors({ keyboard: true });
-  const dnd = useListsDnd(groups, moveTo, { sensors, instructions: DRAG_INSTRUCTIONS, reorderable: isReorderable });
+  const instructions = useMemo(() => ({ draggable: copy.dragInstructions }), [copy.dragInstructions]);
+  const dnd = useListsDnd(groups, moveTo, { sensors, instructions, reorderable: isReorderable });
 
   const total = groups?.reduce((count, group) => count + group.todos.length, 0) ?? 0;
   const points = groups?.reduce((sum, group) => sum + group.points, 0) ?? 0;
@@ -170,17 +171,17 @@ export function BacklogPage() {
   };
   const onSprintSaved = (sprint: Sprint, mode: 'create' | 'edit') => {
     setSprintForm((state) => ({ ...state, open: false }));
-    const message = mode === 'create' ? `${sprint.name} created · drag todos into it` : `${sprint.name} saved`;
+    const { toast: toasts } = getT().backlog;
     // The toast region is role="status", so it is announced; no second announcement.
-    toast.success(message);
+    toast.success(mode === 'create' ? toasts.sprintCreated(sprint.name) : toasts.sprintSaved(sprint.name));
   };
 
   /** SPR-3 and DESIGN §9 04: blocked while another sprint is active, and when the sprint is empty. */
   const askStart = (group: Group) => {
     if (activeSprint && activeSprint.id !== group.id) {
-      toast.error(`Complete ${activeSprint.name} before starting ${group.name}.`, {
+      toast.error(copy.toast.startBlocked(activeSprint.name, group.name), {
         action: {
-          label: 'Go to board',
+          label: copy.toast.goToBoard,
           onClick: () => {
             void navigate(boardPath);
           },
@@ -189,14 +190,14 @@ export function BacklogPage() {
       return;
     }
     if (group.todos.length === 0) {
-      toast.error(`Add todos to ${group.name} before starting it.`);
+      toast.error(copy.toast.startEmpty(group.name));
       return;
     }
     setToStart({ open: true, group });
   };
   const onStarted = (sprint: Sprint) => {
     setToStart((state) => ({ ...state, open: false }));
-    toast.success(`${sprint.name} started`);
+    toast.success(getT().backlog.toast.started(sprint.name));
     void navigate(boardPath);
   };
 
@@ -205,15 +206,16 @@ export function BacklogPage() {
     if (!group?.sprint) return;
     const count = group.todos.length;
     deleteSprint.mutate(group.sprint, {
+      // getT(): the language when the request settles.
       onSuccess: () => {
         setSprintToDelete((state) => ({ ...state, open: false }));
-        const message =
-          count > 0 ? `${group.name} deleted · ${plural(count, 'todo')} moved to the backlog` : `${group.name} deleted`;
-        toast.success(message);
+        toast.success(getT().backlog.toast.sprintDeleted(group.name, count));
       },
       onError: (error) => {
         setSprintToDelete((state) => ({ ...state, open: false }));
-        toast.error(`Couldn't delete ${group.name}. ${isApiError(error) ? error.message : 'Please try again.'}`);
+        const messages = getT();
+        const reason = failureReason(error, messages, { NOT_FOUND: messages.sprints.notFound });
+        toast.error(messages.backlog.toast.sprintDeleteFailed(group.name, reason));
       },
     });
   };
@@ -236,11 +238,11 @@ export function BacklogPage() {
   return (
     <div className="kb-page">
       <PageHeader
-        title="Backlog"
+        title={copy.title}
         meta={
           <>
             <ProjectMeta project={project} />
-            {groups && <span className={styles.headerTotals}>{todosAndPoints(total, points)}</span>}
+            {groups && <span className={styles.headerTotals}>{format.todosAndPoints(total, points)}</span>}
           </>
         }
         actions={
@@ -251,7 +253,7 @@ export function BacklogPage() {
                 openAiDialog({ kind: 'generate', projectId });
               }}
             >
-              Generate todos
+              {copy.generateTodos}
             </Button>
             <Button
               variant="ai"
@@ -260,7 +262,7 @@ export function BacklogPage() {
                 openAiDialog({ kind: 'plan', projectId });
               }}
             >
-              Plan sprint
+              {copy.planSprint}
             </Button>
             <Button
               icon="add"
@@ -269,7 +271,7 @@ export function BacklogPage() {
                 openSprintForm(null);
               }}
             >
-              Create sprint
+              {copy.createSprint}
             </Button>
             <AskAiButton />
           </>
@@ -280,14 +282,19 @@ export function BacklogPage() {
         {showSkeleton ? (
           <BacklogSkeleton />
         ) : backlog.error ? (
-          <PageError page="the backlog" error={backlog.error} onRetry={backlog.refetch} retrying={backlog.isRefetching} />
+          <PageError
+            page={copy.pageName}
+            error={backlog.error}
+            onRetry={backlog.refetch}
+            retrying={backlog.isRefetching}
+          />
         ) : !groups || !visible ? null : (
           <div className={styles.backlog}>
             <FilterBar filters={urlFilters} onChange={updateFilters} onClear={clearFilters} shown={shown} total={total} />
             {filtering && (
               <p id={DRAG_OFF_ID} className={cx(styles.dragOff, 'kb-pop')}>
                 <Icon name="drag-handle-vertical" />
-                {DRAG_OFF_TEXT}
+                {copy.dragOff}
               </p>
             )}
 
@@ -314,8 +321,8 @@ export function BacklogPage() {
                         icon="backlog"
                         headingLevel={3}
                         className={styles.emptyBacklog}
-                        title="Your backlog is empty"
-                        description="Capture the work ahead: type a title below, or let AI draft todos from a feature description."
+                        title={copy.empty.title}
+                        description={copy.empty.text}
                         actions={
                           <>
                             <Button
@@ -324,10 +331,10 @@ export function BacklogPage() {
                                 openAiDialog({ kind: 'generate', projectId });
                               }}
                             >
-                              Generate todos
+                              {copy.generateTodos}
                             </Button>
                             <Button variant="primary" icon="add" onClick={focusQuickCreate}>
-                              Create todo
+                              {copy.createTodo}
                             </Button>
                           </>
                         }
@@ -348,11 +355,11 @@ export function BacklogPage() {
 
             {!filtering && (
               <p className={styles.moveHelp}>
-                Drag rows between groups, or focus a title and use <kbd>↑</kbd> <kbd>↓</kbd> to move it.
+                <KeyHint text={copy.moveHelp} />
               </p>
             )}
             <span id={ROW_HELP_ID} className="visually-hidden">
-              Press Enter to open its details. Press the up and down arrow keys to move it.
+              {copy.rowHelp}
             </span>
           </div>
         )}
@@ -363,13 +370,15 @@ export function BacklogPage() {
         onOpenChange={(open) => {
           setToDelete((state) => ({ ...state, open }));
         }}
-        title={`Delete ${toDelete.todo?.key ?? 'todo'}?`}
+        title={t.todos.delete.title(toDelete.todo?.key ?? t.todos.delete.fallbackKey)}
         description={
           <>
-            This permanently deletes <b>{toDelete.todo?.key}</b> “{toDelete.todo?.title}”. This can&apos;t be undone.
+            {t.todos.delete.before}
+            <b>{toDelete.todo?.key}</b>
+            {t.todos.delete.after(toDelete.todo?.title ?? '')}
           </>
         }
-        confirmLabel="Delete todo"
+        confirmLabel={t.todos.delete.confirm}
         onConfirm={confirmDelete}
         fallbackFocus={toDelete.focus}
       />
@@ -408,19 +417,14 @@ export function BacklogPage() {
         onOpenChange={(open) => {
           setSprintToDelete((state) => ({ ...state, open }));
         }}
-        title={`Delete ${sprintToDelete.group?.name ?? 'sprint'}?`}
+        title={copy.deleteSprint.title(sprintToDelete.group?.name ?? copy.deleteSprint.fallbackName)}
         description={
-          sprintToDelete.group && sprintToDelete.group.todos.length > 0 ? (
-            <>
-              Its {plural(sprintToDelete.group.todos.length, 'todo')} {sprintToDelete.group.todos.length === 1 ? 'goes' : 'go'}{' '}
-              back to the backlog; no todos are deleted.
-            </>
-          ) : (
-            'It has no todos. This can’t be undone.'
-          )
+          sprintToDelete.group && sprintToDelete.group.todos.length > 0
+            ? copy.deleteSprint.withTodos(sprintToDelete.group.todos.length)
+            : copy.deleteSprint.empty
         }
-        confirmLabel="Delete sprint"
-        pendingLabel="Deleting…"
+        confirmLabel={copy.sprint.delete}
+        pendingLabel={t.common.deleting}
         pending={deleteSprint.isPending}
         onConfirm={confirmDeleteSprint}
         fallbackFocus={pageTitle}
@@ -431,8 +435,9 @@ export function BacklogPage() {
 
 /** Same layout as the page (DESIGN §11): the filter bar, then groups of 44px rows. */
 function BacklogSkeleton() {
+  const t = useT();
   return (
-    <SkeletonRegion label="backlog" className={styles.backlog}>
+    <SkeletonRegion label={t.backlog.loadingName} className={styles.backlog}>
       <div className={styles.filters}>
         <Skeleton inlineSize={240} blockSize={36} />
         <Skeleton inlineSize={140} blockSize={36} />

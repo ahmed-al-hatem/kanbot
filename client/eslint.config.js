@@ -23,6 +23,13 @@ const I18N_MIGRATED = [
   'src/features/projects/**/*.{ts,tsx}',
   'src/components/**/*.{ts,tsx}',
   'src/app/**/*.{ts,tsx}',
+  // R3: the backlog, Todo details, the sprint form / start dialogs and the shared DnD hooks.
+  'src/features/backlog/**/*.{ts,tsx}',
+  'src/features/todos/**/*.{ts,tsx}',
+  'src/features/sprints/SprintFormDialog.tsx',
+  'src/features/sprints/StartSprintDialog.tsx',
+  'src/features/sprints/sprintForm.ts',
+  'src/lib/dnd/**/*.{ts,tsx}',
 ];
 
 /**
@@ -32,7 +39,7 @@ const I18N_MIGRATED = [
 const NON_TEXT_LITERALS = [
   // HTML types, roles, ARIA states and live-region politeness.
   ...['button', 'submit', 'text', 'email', 'password', 'search', 'date', 'checkbox'],
-  ...['group', 'img', 'alert', 'alertdialog', 'status', 'progressbar', 'true', 'false'],
+  ...['group', 'img', 'alert', 'alertdialog', 'dialog', 'status', 'progressbar', 'true', 'false'],
   ...['polite', 'assertive'],
   // autocomplete / autocapitalize tokens.
   ...['name', 'current-password', 'new-password', 'off', 'characters'],
@@ -43,12 +50,15 @@ const NON_TEXT_LITERALS = [
   ...['globe', 'add', 'ai-sparkle', 'arrow-left', 'arrow-right', 'calendar', 'check-mark'],
   ...['chevron-down', 'cross', 'delete', 'lightbulb', 'lock-locked', 'log-out', 'menu'],
   ...['pencil', 'refresh', 'show-more-horizontal', 'spaces', 'status-error', 'theme'],
-  ...['warning-outline'],
+  ...['warning-outline', 'drag-handle-vertical', 'backlog', 'board', 'sprint', 'bug'],
   // Global class names, ids, test ids, routes and shortcut targets.
   ...['visually-hidden', 'kb-page', 'kb-pop', 'page-body', 'meta', 'main', 'project-search'],
   ...['live-polite', 'live-assertive', '#main', '/login', '/projects', 'create'],
+  ...['backlog-search', 'backlog-priority', 'backlog-type'],
+  // react-hook-form field names (Controller `name`), and the empty value of an "All …" option.
+  ...['sprintId', 'labels', ''],
   // SVG: the 16px icon grid and paint keywords.
-  ...['0 0 16 16', 'currentColor', 'none'],
+  ...['0 0 16 16', 'currentColor', 'none', 'evenodd'],
   // The shortcut key shown in the profile menu.
   '?',
 ];

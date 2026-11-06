@@ -2,6 +2,7 @@ import { useId, useRef } from 'react';
 import { Button, ButtonLink, IconButton } from '@/components/Button/Button';
 import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
 import type { BacklogGroup } from '@/hooks/useBacklog';
+import { useT } from '@/i18n';
 import type { Sprint } from '@/types/api';
 import styles from './Backlog.module.css';
 
@@ -25,6 +26,8 @@ interface SprintActionsProps {
  * board and ⋯ with Edit only; active sprints can't be deleted (the server answers 409).
  */
 export function SprintActions({ group, sprint, activeSprint, boardPath, onStart, onEdit, onDelete }: SprintActionsProps) {
+  const t = useT();
+  const copy = t.backlog.sprint;
   const reasonId = useId();
   const pending = useRef<SprintAction | null>(null);
   const blockedBy = group.kind === 'planned' && activeSprint && activeSprint.id !== sprint.id ? activeSprint : null;
@@ -33,13 +36,13 @@ export function SprintActions({ group, sprint, activeSprint, boardPath, onStart,
     <>
       {group.kind === 'active' ? (
         <ButtonLink to={boardPath} size="sm" variant="subtle" icon="board">
-          Complete sprint
+          {copy.complete}
         </ButtonLink>
       ) : (
         <>
           {blockedBy && (
             <span id={reasonId} className={styles.groupHint}>
-              Complete {blockedBy.name} first
+              {copy.blockedBy(blockedBy.name)}
             </span>
           )}
           <Button
@@ -52,19 +55,19 @@ export function SprintActions({ group, sprint, activeSprint, boardPath, onStart,
               onStart(group);
             }}
           >
-            Start sprint
+            {copy.start}
           </Button>
         </>
       )}
       <Menu
-        label={`${sprint.name} actions`}
+        label={copy.menu(sprint.name)}
         onCloseAutoFocus={() => {
           const action = pending.current;
           pending.current = null;
           if (action === 'edit') onEdit(sprint);
           if (action === 'delete') onDelete(group);
         }}
-        trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={`Actions for ${sprint.name}`} />}
+        trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={copy.actions(sprint.name)} />}
       >
         <MenuItem
           icon="pencil"
@@ -72,7 +75,7 @@ export function SprintActions({ group, sprint, activeSprint, boardPath, onStart,
             pending.current = 'edit';
           }}
         >
-          Edit sprint
+          {copy.edit}
         </MenuItem>
         {group.kind === 'planned' && (
           <>
@@ -84,7 +87,7 @@ export function SprintActions({ group, sprint, activeSprint, boardPath, onStart,
                 pending.current = 'delete';
               }}
             >
-              Delete sprint
+              {copy.delete}
             </MenuItem>
           </>
         )}

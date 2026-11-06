@@ -2,13 +2,13 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { en } from '@/i18n/messages/en';
 import { useSession } from '@/stores/session';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
 import { makeTodoDb, serverMove, todoHandlers, type TodoDb } from '@/test/todos';
 import type { MoveTodoRequest } from '@/types/api';
-import { DRAG_OFF_TEXT } from './useBacklogMoves';
 
 let db: TodoDb;
 
@@ -250,14 +250,14 @@ describe('while filtering (BL-6)', () => {
     const user = userEvent.setup();
     renderApp('/projects/p1/backlog?q=login');
 
-    expect(await screen.findByText(DRAG_OFF_TEXT)).toBeInTheDocument();
+    expect(await screen.findByText(en.backlog.dragOff)).toBeInTheDocument();
     const handle = screen.getByRole('button', { name: 'Drag KAN-31' });
     expect(handle).toBeDisabled();
-    expect(handle).toHaveAccessibleDescription(DRAG_OFF_TEXT);
+    expect(handle).toHaveAccessibleDescription(en.backlog.dragOff);
 
     await focusTitle('Login screen');
     await user.keyboard('{ArrowDown}');
-    expect(live()).toHaveTextContent(DRAG_OFF_TEXT);
+    expect(live()).toHaveTextContent(en.backlog.dragOff);
     expect(db.calls.move).toEqual([]);
 
     await user.click(screen.getByRole('button', { name: 'Actions for KAN-31' }));

@@ -1,10 +1,11 @@
 import { useCallback } from 'react';
-import { isApiError } from '@/api/errors';
 import { useDeleteTodo } from '@/hooks/useTodos';
+import { getT } from '@/i18n';
 import { refocusAfterRemoval } from '@/lib/refocus';
 import { toast } from '@/stores/toast';
 import type { Todo } from '@/types/api';
 import { todoNeighbourFocus } from './todoFocus';
+import { todoErrorMessage } from './todoErrors';
 
 /**
  * The confirmed delete (BL-4), shared by the row menu and Todo details: optimistic removal,
@@ -13,11 +14,13 @@ import { todoNeighbourFocus } from './todoFocus';
  */
 export function useRemoveTodo() {
   const { mutate } = useDeleteTodo({
+    // getT(): the language when the request settles, not when the hook rendered.
     onDeleted: (todo) => {
-      toast.success(`${todo.key} deleted`);
+      toast.success(getT().todos.toast.deleted(todo.key));
     },
     onFailed: (error, todo) => {
-      toast.error(`Couldn't delete ${todo.key}. ${isApiError(error) ? error.message : 'Please try again.'}`);
+      const t = getT();
+      toast.error(t.todos.toast.deleteFailed(todo.key, todoErrorMessage(error, t)));
     },
   });
 

@@ -1,8 +1,7 @@
 import type { TodoType } from '@/types/api';
 import { Icon } from '@/components/Icon/Icon';
+import { useT } from '@/i18n';
 import styles from './TypeIcon.module.css';
-
-const LABELS: Record<TodoType, string> = { task: 'Task', story: 'Story', bug: 'Bug' };
 
 // Task and Story come from the Jira board, not the icon package (DESIGN §5.3).
 const TASK_PATH =
@@ -19,7 +18,8 @@ interface TypeIconProps {
 
 /** Work-type icon. Alone it is `role="img"` with a label, so color is never the only signal. */
 export function TypeIcon({ type, size = 16, decorative = false }: TypeIconProps) {
-  const label = decorative ? undefined : LABELS[type];
+  const t = useT();
+  const label = decorative ? undefined : t.todos.type[type];
   const className = styles[type];
 
   if (type === 'bug') {

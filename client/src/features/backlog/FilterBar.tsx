@@ -3,8 +3,9 @@ import { Button } from '@/components/Button/Button';
 import { Input } from '@/components/Field/Input';
 import { Select } from '@/components/Field/Select';
 import { Icon } from '@/components/Icon/Icon';
+import { PRIORITY_OPTIONS, TYPE_OPTIONS, isTodoPriority, isTodoType } from '@/features/todos/todoMeta';
+import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { PRIORITY_LABELS, PRIORITY_OPTIONS, TYPE_LABELS, TYPE_OPTIONS, isTodoPriority, isTodoType } from '@/features/todos/todoMeta';
 import styles from './Backlog.module.css';
 import { isFiltering, type BacklogFilters } from './backlogFilters';
 
@@ -24,6 +25,9 @@ interface FilterBarProps {
  * While filters are active: "Showing X of Y" and Clear filters.
  */
 export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBarProps) {
+  const t = useT();
+  const format = useFormat();
+  const copy = t.backlog.filters;
   // The box owns what is typed; the URL follows it 300ms later. The box never copies back
   // from the URL: navigations are async, so a debounced write ("fronte") can land after more
   // was typed and would overwrite it. The only other writer is Clear filters, below; filters
@@ -46,10 +50,10 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
   }, [draft, filters.q, onChange]);
 
   return (
-    <div className={styles.filters} role="search" aria-label="Filter todos">
+    <div className={styles.filters} role="search" aria-label={copy.label}>
       <div className={styles.search}>
         <label htmlFor="backlog-search" className="visually-hidden">
-          Search todos
+          {copy.search}
         </label>
         <Icon name="search" className={styles.searchIcon} />
         <Input
@@ -57,7 +61,7 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
           type="search"
           data-shortcut="search"
           className={styles.searchInput}
-          placeholder="Search todos or keys"
+          placeholder={copy.searchPlaceholder}
           value={draft}
           onChange={(event) => {
             setDraft(event.target.value);
@@ -66,7 +70,7 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
       </div>
 
       <label htmlFor="backlog-priority" className="visually-hidden">
-        Filter by priority
+        {copy.byPriority}
       </label>
       <span className={styles.filterSelect}>
         <Select
@@ -77,17 +81,17 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
             onChange({ priority: isTodoPriority(value) ? value : null });
           }}
         >
-          <option value="">All priorities</option>
+          <option value="">{copy.allPriorities}</option>
           {PRIORITY_OPTIONS.map((value) => (
             <option key={value} value={value}>
-              {PRIORITY_LABELS[value]}
+              {t.todos.priority[value]}
             </option>
           ))}
         </Select>
       </span>
 
       <label htmlFor="backlog-type" className="visually-hidden">
-        Filter by type
+        {copy.byType}
       </label>
       <span className={styles.filterSelect}>
         <Select
@@ -98,10 +102,10 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
             onChange({ type: isTodoType(value) ? value : null });
           }}
         >
-          <option value="">All types</option>
+          <option value="">{copy.allTypes}</option>
           {TYPE_OPTIONS.map((value) => (
             <option key={value} value={value}>
-              {TYPE_LABELS[value]}
+              {t.todos.type[value]}
             </option>
           ))}
         </Select>
@@ -109,11 +113,9 @@ export function FilterBar({ filters, onChange, onClear, shown, total }: FilterBa
 
       {isFiltering(filters) && (
         <span className={cx(styles.summary, 'kb-pop')}>
-          <span role="status">
-            Showing {shown} of {total}
-          </span>
+          <span role="status">{copy.showing(format.number(shown), format.number(total))}</span>
           <Button variant="subtle" size="sm" className={styles.clear} onClick={clear}>
-            Clear filters
+            {copy.clear}
           </Button>
         </span>
       )}

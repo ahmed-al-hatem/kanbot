@@ -1,8 +1,9 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import { isApiError } from '@/api/errors';
+import { todoErrorMessage } from '@/features/todos/todoErrors';
 import { todoFocusSelector } from '@/features/todos/todoFocus';
 import type { BacklogGroup } from '@/hooks/useBacklog';
 import { useMoveTodo } from '@/hooks/useMoveTodo';
+import { getFormat, getT } from '@/i18n';
 import { dropTarget, type MoveTarget } from '@/lib/moveInLists';
 import { refocusAfterRemoval } from '@/lib/refocus';
 import { announce } from '@/stores/announcer';
@@ -10,8 +11,6 @@ import { useHighlight } from '@/stores/highlight';
 import { toast } from '@/stores/toast';
 import type { Todo } from '@/types/api';
 import type { RowMove } from './TodoRow';
-
-export const DRAG_OFF_TEXT = 'Drag and drop is off while filters are on. Clear the filters to reorder, or use ⋯ Move to.';
 
 /** After a keyboard or menu move the row may remount in another group: put focus back on it (DESIGN §10.3). */
 function keepFocusOn(todoId: string) {
@@ -31,7 +30,8 @@ function findPlace(groups: readonly BacklogGroup[] | undefined, todo: Todo) {
  * BL-7): it turns "this group, this index" into the server target (`dropTarget`), moves the todo
  * optimistically, announces "KAN-21 moved to Sprint 3, position 2 of 5", highlights the row
  * (`kbAdded`) and, when it changed group, offers Undo (plan §10 decision 2). The callbacks are
- * stable (they read the latest groups from a ref), so memoized rows don't re-render.
+ * stable (they read the latest groups from a ref), so memoized rows don't re-render; their text
+ * comes from `getT()` when they run, so it is in the language of that moment.
  */
 export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup[] | undefined, filtering: boolean) {
   const markTodo = useHighlight((s) => s.markTodo);
@@ -40,8 +40,12 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
     latest.current = { groups, filtering };
   });
 
-  const nameOf = (sprintId: string | null) =>
-    sprintId === null ? 'Backlog' : (latest.current.groups?.find((group) => group.id === sprintId)?.name ?? 'the sprint');
+  const nameOf = (sprintId: string | null) => {
+    const { backlog } = getT();
+    return sprintId === null
+      ? backlog.groupName
+      : (latest.current.groups?.find((group) => group.id === sprintId)?.name ?? backlog.fallbackSprint);
+  };
 
   // Undo needs `move` itself; the ref breaks the cycle.
   const undoRef = useRef<(todoId: string, from: MoveTarget) => void>(() => undefined);
@@ -51,16 +55,19 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
       const rows = todos.filter((item) => item.sprintId === target.sprintId);
       const position = rows.findIndex((item) => item.id === todo.id) + 1;
       const name = nameOf(target.sprintId);
-      announce(`${todo.key} moved to ${name}, position ${position} of ${rows.length}`);
+      const t = getT();
+      const format = getFormat();
+      const { moves } = t.backlog;
+      announce(moves.moved(todo.key, name, format.number(position), format.number(rows.length)));
       markTodo(todo.id);
       if (target.sprintId === todo.sprintId) return;
       if (undo) {
-        toast.success(`${todo.key} moved back to ${name}`);
+        toast.success(moves.movedBack(todo.key, name));
         return;
       }
-      toast.success(`${todo.key} moved to ${name}`, {
+      toast.success(moves.movedToast(todo.key, name), {
         action: {
-          label: 'Undo',
+          label: t.common.undo,
           onClick: () => {
             undoRef.current(todo.id, from);
           },
@@ -68,7 +75,8 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
       });
     },
     onFailed: (error, todo) => {
-      toast.error(`Couldn't move ${todo.key}. ${isApiError(error) ? error.message : 'Please try again.'}`);
+      const t = getT();
+      toast.error(t.backlog.moves.failed(todo.key, todoErrorMessage(error, t)));
     },
   });
 
@@ -91,7 +99,7 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
   const onKeyMove = useCallback(
     (todo: Todo, direction: 'up' | 'down') => {
       if (latest.current.filtering) {
-        announce(DRAG_OFF_TEXT);
+        announce(getT().backlog.dragOff);
         return;
       }
       const place = findPlace(latest.current.groups, todo);
@@ -104,7 +112,7 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
         if (reorderable && row > 0) moveTo(todo, group, row - 1);
         else if (previous) moveTo(todo, previous, previous.todos.length);
         else {
-          announce(`${todo.key} is already at the top`);
+          announce(getT().backlog.moves.atTop(todo.key));
           return;
         }
       } else {
@@ -112,7 +120,7 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
         if (reorderable && row < group.todos.length - 1) moveTo(todo, group, row + 1);
         else if (next) moveTo(todo, next, 0);
         else {
-          announce(`${todo.key} is already at the bottom`);
+          announce(getT().backlog.moves.atBottom(todo.key));
           return;
         }
       }
@@ -133,7 +141,8 @@ export function useBacklogMoves(projectId: string, groups: readonly BacklogGroup
       } else {
         const index = request.kind === 'top' ? 0 : group.todos.length - 1;
         if (index === row) {
-          announce(`${todo.key} is already at the ${request.kind}`);
+          const { moves } = getT().backlog;
+          announce(request.kind === 'top' ? moves.atTop(todo.key) : moves.atBottom(todo.key));
           return;
         }
         moveTo(todo, group, index);

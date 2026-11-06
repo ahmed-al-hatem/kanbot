@@ -28,6 +28,16 @@ const todos = (n: number) =>
     other: `${n} بند`,
   });
 
+const storyPoints = (n: number) =>
+  count(n, {
+    zero: 'لا نقاط قصة',
+    one: 'نقطة قصة واحدة',
+    two: 'نقطتا قصة',
+    few: `${n} نقاط قصة`,
+    many: `${n} نقطة قصة`,
+    other: `${n} نقطة قصة`,
+  });
+
 const GENERIC = 'حدث خطأ ما. حاول مجددًا.';
 
 /** Arabic never shows the API's English text: each code and field says its meaning instead. */
@@ -61,15 +71,16 @@ export const ar = {
         many: `${n} يومًا`,
         other: `${n} يوم`,
       }),
-    storyPoints: (n: number) =>
+    weeks: (n: number) =>
       count(n, {
-        zero: 'لا نقاط قصة',
-        one: 'نقطة قصة واحدة',
-        two: 'نقطتا قصة',
-        few: `${n} نقاط قصة`,
-        many: `${n} نقطة قصة`,
-        other: `${n} نقطة قصة`,
+        zero: 'لا أسابيع',
+        one: 'أسبوع واحد',
+        two: 'أسبوعان',
+        few: `${n} أسابيع`,
+        many: `${n} أسبوعًا`,
+        other: `${n} أسبوع`,
       }),
+    storyPoints,
     projects: (n: number) =>
       count(n, {
         zero: 'لا مشاريع',
@@ -152,9 +163,12 @@ export const ar = {
     saving: 'جارٍ الحفظ…',
     creating: 'جارٍ الإنشاء…',
     saveChanges: 'حفظ التغييرات',
+    deleting: 'جارٍ الحذف…',
     clearSearch: 'مسح البحث',
     tryAgain: 'إعادة المحاولة',
+    retry: 'إعادة المحاولة',
     retrying: 'جارٍ إعادة المحاولة…',
+    undo: 'تراجع',
     pleaseTryAgain: 'حاول مجددًا.',
     backToProjects: 'العودة إلى المشاريع',
     loading: (what: string) => `جارٍ تحميل ${what}`,
@@ -408,6 +422,288 @@ export const ar = {
     },
   },
 
+  todos: {
+    type: { story: 'قصة', task: 'مهمة', bug: 'خلل' },
+    priority: { urgent: 'عاجلة', high: 'عالية', medium: 'متوسطة', low: 'منخفضة' },
+    status: { todo: 'للتنفيذ', in_progress: 'قيد التنفيذ', in_review: 'قيد المراجعة', done: 'منجز' },
+    sprintOption: {
+      active: (name: string) => `${name} (نشط)`,
+      planned: (name: string) => `${name} (مخطط)`,
+      completed: (name: string) => `${name} (مكتمل)`,
+    },
+    toast: {
+      saved: (key: string) => `${key} حُفظ`,
+      deleted: (key: string) => `${key} حُذف`,
+      deleteFailed: (key: string, reason: string) => `تعذّر حذف ${key}. ${reason}`,
+    },
+    notFound: say('لم نعد نجد هذا البند، ربما حُذف.'),
+    delete: {
+      title: (key: string) => `حذف ${key}؟`,
+      fallbackKey: 'البند',
+      before: 'سيُحذف ',
+      after: (title: string) => ` «${title}» نهائيًا. لا يمكن التراجع عن ذلك.`,
+      confirm: 'حذف البند',
+    },
+    details: {
+      dialogTitle: 'تفاصيل البند',
+      loadingName: 'البند',
+      pageName: 'هذا البند',
+      meta: (type: string, date: string) => `${type} · أُنشئ في ${date}`,
+      title: 'العنوان',
+      description: 'الوصف',
+      descriptionPlaceholder: 'أضف مزيدًا من التفاصيل…',
+      improve: 'حسّن هذا البند',
+      improveHint: 'اطلب من Kanbot عنوانًا ووصفًا ومعايير قبول أوضح.',
+      sprint: 'السبرنت',
+      currentSprint: 'السبرنت الحالي',
+      completedHelp: 'لا يمكن نقل بنود سبرنت مكتمل أو تغيير حالتها',
+      status: 'الحالة',
+      statusHelp: 'انقله إلى السبرنت النشط لتحديد حالته',
+      priority: 'الأولوية',
+      type: 'النوع',
+      storyPoints: 'نقاط القصة',
+      noPoints: 'غير مقدّر',
+      labels: 'الوسوم',
+      labelsHelp: 'اضغط {enter} أو {comma} لإضافة وسم، و{backspace} لإزالة الأخير',
+      labelPlaceholder: 'أضف وسمًا',
+      dueDate: 'تاريخ الاستحقاق',
+      overdueBy: (n: number) =>
+        count(n, {
+          zero: 'غير متأخر',
+          one: 'متأخر يومًا واحدًا',
+          two: 'متأخر يومين',
+          few: `متأخر ${n} أيام`,
+          many: `متأخر ${n} يومًا`,
+          other: `متأخر ${n} يوم`,
+        }),
+      unsaved: 'تغييرات غير محفوظة',
+      unsavedAnnounce: 'لديك تغييرات غير محفوظة',
+      discardQuestion: 'تجاهل تغييراتك غير المحفوظة؟',
+      keepEditing: 'متابعة التعديل',
+      discard: 'تجاهل',
+      escToClose: '{esc} للإغلاق',
+      saveFailed: (key: string, reason: string) => `تعذّر حفظ ${key}. ${reason} تعديلاتك ما زالت هنا.`,
+      saveFailedOffline: (key: string) =>
+        `تعذّر حفظ ${key}. تحقق من اتصالك وحاول مجددًا — تعديلاتك ما زالت هنا.`,
+    },
+    validation: {
+      titleRequired: 'يحتاج البند إلى عنوان',
+      labelMax: (n: number) =>
+        count(n, {
+          zero: 'لا يمكن أن يحتوي الوسم على أي حرف',
+          one: 'يمكن أن يصل الوسم إلى حرف واحد على الأكثر',
+          two: 'يمكن أن يصل الوسم إلى حرفين على الأكثر',
+          few: `يمكن أن يصل الوسم إلى ${n} أحرف على الأكثر`,
+          many: `يمكن أن يصل الوسم إلى ${n} حرفًا على الأكثر`,
+          other: `يمكن أن يصل الوسم إلى ${n} حرف على الأكثر`,
+        }),
+      labelsMax: (n: number) =>
+        count(n, {
+          zero: 'لا تُضف أي وسم',
+          one: 'استخدم وسمًا واحدًا أو أقل',
+          two: 'استخدم وسمين أو أقل',
+          few: `استخدم ${n} وسوم أو أقل`,
+          many: `استخدم ${n} وسمًا أو أقل`,
+          other: `استخدم ${n} وسم أو أقل`,
+        }),
+      dateInvalid: 'أدخل تاريخًا صالحًا',
+    },
+    improvePrompt: (p: {
+      key: string;
+      title: string;
+      type: string;
+      priority: string;
+      points: number | null;
+      description: string;
+    }) =>
+      [
+        `حسّن ${p.key || 'هذا البند'}: اقترح عنوانًا أوضح ووصفًا أفضل ومعايير قبول. سأراجع اقتراحاتك وأعدّل البند بنفسي.`,
+        '',
+        `العنوان: ${p.title}`,
+        `النوع: ${p.type} · الأولوية: ${p.priority} · ${p.points === null ? 'غير مقدّر' : storyPoints(p.points)}`,
+        `الوصف: ${p.description || '(لا يوجد)'}`,
+      ].join('\n'),
+  },
+
+  backlog: {
+    title: 'قائمة الانتظار',
+    loadingName: 'قائمة الانتظار',
+    pageName: 'قائمة الانتظار',
+    groupName: 'قائمة الانتظار',
+    fallbackSprint: 'السبرنت',
+    generateTodos: 'توليد البنود',
+    planSprint: 'تخطيط السبرنت',
+    createSprint: 'إنشاء سبرنت',
+    createTodo: 'إنشاء بند',
+    empty: {
+      title: 'قائمة الانتظار فارغة',
+      text: 'دوّن العمل القادم: اكتب عنوانًا في الأسفل، أو دع الذكاء الاصطناعي يصوغ بنودًا من وصف ميزة.',
+    },
+    group: {
+      toggle: (name: string) => `إظهار أو إخفاء ${name}`,
+      rows: (name: string) => `بنود ${name}`,
+      active: 'نشط',
+      planned: 'مخطط',
+      meta: (dates: string, summary: string) => `${dates} · ${summary}`,
+      noMatch: (name: string) => `لا توجد بنود في ${name} تطابق عوامل التصفية`,
+      empty: (name: string) => `لا توجد بنود في ${name} بعد`,
+      dropHint: (name: string) => `اسحب البنود إلى هنا للتخطيط لـ ${name}`,
+    },
+    filters: {
+      label: 'تصفية البنود',
+      search: 'ابحث في البنود',
+      searchPlaceholder: 'ابحث في البنود أو المفاتيح',
+      byPriority: 'تصفية حسب الأولوية',
+      allPriorities: 'كل الأولويات',
+      byType: 'تصفية حسب النوع',
+      allTypes: 'كل الأنواع',
+      showing: (shown: string, total: string) => `عرض ${shown} من ${total}`,
+      clear: 'مسح عوامل التصفية',
+    },
+    quickCreate: {
+      label: 'إنشاء بند',
+      placeholder: 'إنشاء بند — اكتب عنوانًا واضغط Enter',
+      hint: '{enter} للإضافة',
+      created: (key: string) => `${key} أُنشئ`,
+      failed: (title: string, reason: string) => `تعذّر إنشاء «${title}». ${reason}`,
+    },
+    row: {
+      drag: (key: string) => (key ? `اسحب ${key}` : 'اسحب البند'),
+      savingGlyph: '…',
+      saving: 'جارٍ الحفظ',
+      moreLabels: (n: number) => `+${n}`,
+      moreLabelsSpoken: (labels: string) => ` وسوم أخرى: ${labels}`,
+      labelSeparator: '، ',
+      menu: (key: string) => `إجراءات ${key}`,
+      actions: (key: string) => `إجراءات ${key}`,
+      open: 'فتح التفاصيل',
+      moveToTop: 'نقل إلى الأعلى',
+      moveToBottom: 'نقل إلى الأسفل',
+      moveTo: (name: string) => `نقل إلى ${name}`,
+    },
+    moveHelp: 'اسحب الصفوف بين المجموعات، أو حدّد عنوانًا واستخدم {up} {down} لنقله.',
+    rowHelp:
+      'استخدم مفتاحي السهم لأعلى ولأسفل لإعادة ترتيب هذا البند أو نقله بين السبرنتات. اضغط Enter لفتح تفاصيله.',
+    dragInstructions:
+      'لالتقاط بند، اضغط Space أو Enter. استخدم مفتاحي السهم لأعلى ولأسفل لنقله، وSpace أو Enter لإفلاته، وEscape للإلغاء.',
+    dragOff: 'السحب والإفلات متوقف أثناء التصفية. امسح عوامل التصفية لإعادة الترتيب، أو استخدم ⋯ نقل إلى.',
+    moves: {
+      moved: (key: string, name: string, position: string, total: string) =>
+        `${key} نُقل إلى ${name}، الموضع ${position} من ${total}`,
+      movedToast: (key: string, name: string) => `${key} نُقل إلى ${name}`,
+      movedBack: (key: string, name: string) => `${key} أُعيد إلى ${name}`,
+      failed: (key: string, reason: string) => `تعذّر نقل ${key}. ${reason}`,
+      atTop: (key: string) => `${key} في الأعلى بالفعل`,
+      atBottom: (key: string) => `${key} في الأسفل بالفعل`,
+    },
+    sprint: {
+      start: 'بدء السبرنت',
+      complete: 'إكمال السبرنت',
+      blockedBy: (name: string) => `أكمل ${name} أولًا`,
+      menu: (name: string) => `إجراءات ${name}`,
+      actions: (name: string) => `إجراءات ${name}`,
+      edit: 'تعديل السبرنت',
+      delete: 'حذف السبرنت',
+    },
+    toast: {
+      sprintCreated: (name: string) => `${name} أُنشئ · اسحب البنود إليه`,
+      sprintSaved: (name: string) => `${name} حُفظ`,
+      startBlocked: (active: string, name: string) => `أكمل ${active} قبل بدء ${name}.`,
+      goToBoard: 'الذهاب إلى اللوحة',
+      startEmpty: (name: string) => `أضف بنودًا إلى ${name} قبل بدئه.`,
+      started: (name: string) => `${name} بدأ`,
+      sprintDeleted: (name: string, n: number) =>
+        n > 0
+          ? `${name} حُذف · ${count(n, {
+              one: 'نُقل بند واحد إلى قائمة الانتظار',
+              two: 'نُقل بندان إلى قائمة الانتظار',
+              few: `نُقلت ${n} بنود إلى قائمة الانتظار`,
+              many: `نُقل ${n} بندًا إلى قائمة الانتظار`,
+              other: `نُقل ${n} بند إلى قائمة الانتظار`,
+            })}`
+          : `${name} حُذف`,
+      sprintDeleteFailed: (name: string, reason: string) => `تعذّر حذف ${name}. ${reason}`,
+    },
+    deleteSprint: {
+      title: (name: string) => `حذف ${name}؟`,
+      fallbackName: 'السبرنت',
+      withTodos: (n: number) =>
+        count(n, {
+          one: 'سيعود بنده الوحيد إلى قائمة الانتظار؛ لا يُحذف أي بند.',
+          two: 'سيعود بنداه إلى قائمة الانتظار؛ لا يُحذف أي بند.',
+          other: `ستعود بنوده الـ${n} إلى قائمة الانتظار؛ لا يُحذف أي بند.`,
+        }),
+      empty: 'لا يحتوي على بنود. لا يمكن التراجع عن ذلك.',
+    },
+  },
+
+  sprints: {
+    form: {
+      createTitle: 'إنشاء سبرنت',
+      editTitle: (name: string) => `تعديل ${name}`,
+      create: 'إنشاء سبرنت',
+      save: 'حفظ السبرنت',
+      name: 'اسم السبرنت',
+      startDate: 'تاريخ البدء',
+      endDate: 'تاريخ الانتهاء',
+      goal: 'هدف السبرنت',
+      goalHelp: (max: number) =>
+        count(max, {
+          one: 'اختياري · حتى حرف واحد',
+          two: 'اختياري · حتى حرفين',
+          few: `اختياري · حتى ${max} أحرف`,
+          many: `اختياري · حتى ${max} حرفًا`,
+          other: `اختياري · حتى ${max} حرف`,
+        }),
+      goalPlaceholder: 'ماذا يجب أن يُسلّم هذا السبرنت؟',
+    },
+    duration: {
+      bothDates: 'اختر تاريخ البدء والانتهاء لمعرفة المدة',
+      optional: 'التواريخ اختيارية',
+      oneDay: (range: string) => `يوم واحد · ${range}`,
+      length: (length: string, range: string) => `${length} · ${range}`,
+    },
+    validation: {
+      nameRequired: 'امنح السبرنت اسمًا',
+      nameMax: (n: number) =>
+        count(n, {
+          one: 'اجعل الاسم أقصر من حرف واحد',
+          two: 'اجعل الاسم أقصر من حرفين',
+          few: `اجعل الاسم أقصر من ${n} أحرف`,
+          many: `اجعل الاسم أقصر من ${n} حرفًا`,
+          other: `اجعل الاسم أقصر من ${n} حرف`,
+        }),
+      goalMax: (n: number) =>
+        count(n, {
+          one: 'اجعل الهدف أقصر من حرف واحد',
+          two: 'اجعل الهدف أقصر من حرفين',
+          few: `اجعل الهدف أقصر من ${n} أحرف`,
+          many: `اجعل الهدف أقصر من ${n} حرفًا`,
+          other: `اجعل الهدف أقصر من ${n} حرف`,
+        }),
+      endBeforeStart: 'يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء',
+      startRequired: 'اختر تاريخ البدء',
+      endRequired: 'اختر تاريخ الانتهاء',
+    },
+    start: {
+      title: (name: string) => `بدء ${name}`,
+      summary: (counts: string, goal: string) => (goal ? `${counts} · ${goal}` : counts),
+      submit: 'بدء السبرنت',
+      starting: 'جارٍ البدء…',
+      note: 'تنتقل بنوده إلى لوحة السبرنت النشط، حيث تتابعها حتى تكمله.',
+      conflict: say('يوجد سبرنت نشط بالفعل. أكمله قبل بدء سبرنت آخر.'),
+    },
+    notFound: say('لم نعد نجد هذا السبرنت، ربما حُذف.'),
+  },
+
+  dnd: {
+    pickedUp: (key: string) => `التُقط ${key}.`,
+    over: (key: string, list: string) => `${key} فوق ${list}.`,
+    cancelled: (key: string) => `أُلغي النقل. عاد ${key} إلى مكانه.`,
+    fallbackKey: 'البند',
+    fallbackList: 'القائمة',
+  },
+
   errors: {
     generic: GENERIC,
     byCode: {
@@ -428,7 +724,19 @@ export const ar = {
       email: say('أدخل بريدًا صالحًا، مثل name@example.com'),
       password: say('استخدم من 8 إلى 200 حرف'),
       key: say('يجب أن يتكون المفتاح من 2 إلى 6 أحرف لاتينية'),
-      description: say('استخدم 500 حرف أو أقل'),
+      // Projects allow 500 characters and todos 5000: the field name alone can't say which.
+      description: say('الوصف أطول من المسموح. اختصره وحاول مجددًا'),
+      title: say('أدخل عنوانًا من 200 حرف أو أقل'),
+      goal: say('استخدم 300 حرف أو أقل'),
+      startDate: say('أدخل تاريخ بدء صالحًا'),
+      endDate: say('يجب أن يكون تاريخ الانتهاء في يوم البدء أو بعده'),
+      labels: say('استخدم 10 وسوم أو أقل، لا يزيد كل منها على 30 حرفًا'),
+      dueDate: say('أدخل تاريخًا صالحًا'),
+      storyPoints: say('اختر قيمة من القائمة'),
+      status: say('اختر قيمة من القائمة'),
+      type: say('اختر قيمة من القائمة'),
+      priority: say('اختر قيمة من القائمة'),
+      sprintId: say('اختر سبرنتًا نشطًا أو مخططًا، أو قائمة الانتظار'),
     },
     field: say('هذه القيمة غير صالحة'),
   },

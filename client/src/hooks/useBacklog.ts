@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useT } from '@/i18n';
 import type { Sprint, Todo } from '@/types/api';
 import { useSprints } from './useSprints';
 import { useProjectTodos } from './useTodos';
@@ -37,9 +38,13 @@ export function sumPoints(todos: readonly Todo[]): number {
 /**
  * Groups in display order (DESIGN §9 04): the active sprint, the planned sprints (the API
  * already lists them oldest first), then the Backlog. Completed sprints keep their todos as
- * history and aren't shown here.
+ * history and aren't shown here. `backlogName` is the Backlog group's heading in the UI language.
  */
-export function buildBacklogGroups(todosBySprint: Map<string, Todo[]>, sprints: readonly Sprint[]): BacklogGroup[] {
+export function buildBacklogGroups(
+  todosBySprint: Map<string, Todo[]>,
+  sprints: readonly Sprint[],
+  backlogName: string,
+): BacklogGroup[] {
   const group = (kind: BacklogGroupKind, id: string, name: string, sprint: Sprint | null): BacklogGroup => {
     const todos = todosBySprint.get(id) ?? [];
     return { id, kind, name, sprint, todos, points: sumPoints(todos) };
@@ -49,7 +54,7 @@ export function buildBacklogGroups(todosBySprint: Map<string, Todo[]>, sprints: 
   return [
     ...active.map((sprint) => group('active', sprint.id, sprint.name, sprint)),
     ...planned.map((sprint) => group('planned', sprint.id, sprint.name, sprint)),
-    group('backlog', BACKLOG, 'Backlog', null),
+    group('backlog', BACKLOG, backlogName, null),
   ];
 }
 
@@ -58,11 +63,12 @@ export function buildBacklogGroups(todosBySprint: Map<string, Todo[]>, sprints: 
  * (NFR-6) — then split into groups client-side.
  */
 export function useBacklog(projectId: string) {
+  const backlogName = useT().backlog.groupName;
   const todos = useProjectTodos(projectId, bySprint);
   const sprints = useSprints(projectId);
   const groups = useMemo(
-    () => (todos.data && sprints.data ? buildBacklogGroups(todos.data, sprints.data) : undefined),
-    [todos.data, sprints.data],
+    () => (todos.data && sprints.data ? buildBacklogGroups(todos.data, sprints.data, backlogName) : undefined),
+    [todos.data, sprints.data, backlogName],
   );
 
   // Only a failure with nothing to show; a failed background refetch keeps the old data.

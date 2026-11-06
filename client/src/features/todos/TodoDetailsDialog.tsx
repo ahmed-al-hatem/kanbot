@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { useBlocker, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '@/api/errors';
@@ -12,25 +12,31 @@ import { Field } from '@/components/Field/Field';
 import { Input, Textarea } from '@/components/Field/Input';
 import { DateInput, Select } from '@/components/Field/Select';
 import { TagInput } from '@/components/Field/TagInput';
+import { KeyHint } from '@/components/KeyHint/KeyHint';
 import { PageError } from '@/components/PageError/PageError';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
 import { useTodo, useUpdateTodo } from '@/hooks/useTodos';
+import { getT, useFormat, useT, type Messages } from '@/i18n';
+import { overdueDays } from '@/lib/dates';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
-import { applyServerErrors, onInvalidSubmit } from '@/lib/formErrors';
-import { formatTimestamp, overdueDays, plural } from '@/lib/format';
+import { applyLocalizedServerErrors, onInvalidSubmit, useLocalizedErrors } from '@/lib/formErrors';
 import { announce } from '@/stores/announcer';
 import { useAssistant } from '@/stores/assistant';
 import { toast } from '@/stores/toast';
 import { TODO_STATUSES, type Sprint, type Todo } from '@/types/api';
 import styles from './TodoDetailsDialog.module.css';
+import { todoErrorMessage } from './todoErrors';
 import { todoNeighbourFocus, todoOrPageFocus } from './todoFocus';
-import { POINT_OPTIONS, PRIORITY_LABELS, PRIORITY_OPTIONS, STATUS_LABELS, TYPE_LABELS, TYPE_OPTIONS } from './todoMeta';
+import { POINT_OPTIONS, PRIORITY_OPTIONS, TYPE_OPTIONS } from './todoMeta';
 import {
   BACKLOG_VALUE,
   changedFields,
   NO_POINTS,
+  pointsOf,
+  TODO_DESCRIPTION_MAX,
+  TODO_TITLE_MAX,
   todoFormSchema,
   toFormValues,
   toUpdateRequest,
@@ -50,9 +56,6 @@ const FIELDS = [
   'dueDate',
   'sprintId',
 ] as const satisfies readonly (keyof TodoFormValues)[];
-
-const STATUS_HELP = 'Move it into the active sprint to set a status';
-const COMPLETED_HELP = "Todos of a completed sprint can't be moved or change status";
 
 /**
  * Opens Todo details for `?todo=<todoId>` (plan §2 #8). Mounted by the project layout, so the
@@ -92,13 +95,14 @@ interface TodoDetailsDialogProps {
  * project's id) never gets here: the project layout shows the 404 page for it.
  */
 function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
+  const t = useT();
   const { projectId = '' } = useParams();
   const todo = useTodo(todoId);
   const sprints = useSprints(projectId);
   const { data: project } = useCurrentProject();
   const data = todo.data?.projectId === projectId ? todo.data : undefined;
   // A dialog-backed route: "KAN-12 · Kanbot Web · Kanbot" over the page's title while open.
-  useDocumentTitle(open ? titleOf(data?.key ?? 'Todo details', project?.name) : null, 1);
+  useDocumentTitle(open ? titleOf(data?.key ?? t.todos.details.dialogTitle, project?.name) : null, 1);
 
   if (data) {
     return <TodoEditor todo={data} sprints={sprints.data} open={open} onClose={onClose} />;
@@ -112,13 +116,13 @@ function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
     <Dialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Todo details"
+      title={t.todos.details.dialogTitle}
       size="todo"
       fallbackFocus={todoOrPageFocus(todoId)}
     >
       {todo.isError ? (
         <PageError
-          page="this todo"
+          page={t.todos.details.pageName}
           error={todo.error}
           onRetry={() => {
             void todo.refetch();
@@ -127,7 +131,7 @@ function TodoDetailsDialog({ todoId, open, onClose }: TodoDetailsDialogProps) {
           backTo={false}
         />
       ) : (
-        <SkeletonRegion label="todo" className={styles.skeleton}>
+        <SkeletonRegion label={t.todos.details.loadingName} className={styles.skeleton}>
           <Skeleton blockSize={40} />
           <Skeleton blockSize={180} />
           <Skeleton blockSize={36} opacity={0.7} />
@@ -152,6 +156,9 @@ interface TodoEditorProps {
  * (`useBlocker`) and closing the tab (`beforeunload`).
  */
 function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
+  const t = useT();
+  const format = useFormat();
+  const { details } = t.todos;
   const formId = useId();
   const update = useUpdateTodo();
   const removeTodo = useRemoveTodo();
@@ -165,19 +172,23 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
   // Set right before we close or navigate ourselves, so the guard lets that one through.
   const leaving = useRef(false);
 
+  const schema = useMemo(() => todoFormSchema(t), [t]);
+
   const {
     register,
     handleSubmit,
     setError,
     setFocus,
     getValues,
+    trigger,
     control,
     formState: { errors, isDirty },
   } = useForm({
-    resolver: zodResolver(todoFormSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: initial,
   });
+  const setServerError = useLocalizedErrors({ errors, setError, trigger });
   const type = useWatch({ control, name: 'type' });
   const status = useWatch({ control, name: 'status' });
   const sprintId = useWatch({ control, name: 'sprintId' });
@@ -221,7 +232,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       return;
     }
     setAskingDiscard(true);
-    announce('You have unsaved changes');
+    announce(details.unsavedAnnounce);
   };
 
   const keepEditing = () => {
@@ -244,7 +255,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
   const overdue = status === 'done' ? 0 : overdueDays(dueDate || null);
 
   const onSaveError = (error: unknown) => {
-    if (applyServerErrors(error, setError, FIELDS)) return;
+    if (applyLocalizedServerErrors(error, setServerError, FIELDS)) return;
     setSaveError(error);
   };
 
@@ -259,7 +270,8 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       { todo, body },
       {
         onSuccess: (saved) => {
-          toast.success(`${saved.key} saved`);
+          // getT(): the language when the save lands.
+          toast.success(getT().todos.toast.saved(saved.key));
           close();
         },
         onError: onSaveError,
@@ -279,7 +291,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
    * presses Send, and nothing changes here until they edit and save.
    */
   const improve = () => {
-    useAssistant.getState().openWith(todo.projectId, improvePrompt(todo.key, getValues()));
+    useAssistant.getState().openWith(todo.projectId, improvePrompt(todo.key, getValues(), t));
   };
 
   const confirmDelete = () => {
@@ -303,7 +315,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           {todo.key}
         </span>
       }
-      headerMeta={`${TYPE_LABELS[type]} · created ${formatTimestamp(todo.createdAt)}`}
+      headerMeta={details.meta(t.todos.type[type], format.timestamp(todo.createdAt))}
       size="todo"
       fallbackFocus={afterDelete ?? todoOrPageFocus(todo.id)}
       beforeFooter={
@@ -314,23 +326,29 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
                 tone="danger"
                 layout="inline"
                 action={
-                  <Button variant="subtle" size="sm" loading={update.isPending} loadingText="Retrying…" onClick={submit}>
-                    Retry
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    loading={update.isPending}
+                    loadingText={t.common.retrying}
+                    onClick={submit}
+                  >
+                    {t.common.retry}
                   </Button>
                 }
               >
-                {saveErrorText(todo.key, saveError)}
+                {saveErrorText(todo.key, saveError, t)}
               </Banner>
             )}
             {confirming && (
               <ConfirmBar
-                label="Unsaved changes"
-                keepLabel="Keep editing"
-                confirmLabel="Discard"
+                label={details.unsaved}
+                keepLabel={details.keepEditing}
+                confirmLabel={details.discard}
                 onKeep={keepEditing}
                 onConfirm={discard}
               >
-                Discard your unsaved changes?
+                {details.discardQuestion}
               </ConfirmBar>
             )}
           </div>
@@ -344,7 +362,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
             setAskingDelete(true);
           }}
         >
-          Delete
+          {t.common.delete}
         </Button>
       }
       footer={
@@ -352,18 +370,18 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           {isDirty ? (
             <span className={styles.dirtyHint}>
               <span className={styles.dirtyDot} aria-hidden="true" />
-              Unsaved changes
+              {details.unsaved}
             </span>
           ) : (
             <span className={styles.hint}>
-              <kbd>Esc</kbd> to close
+              <KeyHint text={details.escToClose} />
             </span>
           )}
           <Button variant="subtle" onClick={requestClose}>
-            Cancel
+            {t.common.cancel}
           </Button>
-          <Button type="submit" form={formId} variant="primary" loading={update.isPending} loadingText="Saving…">
-            Save changes
+          <Button type="submit" form={formId} variant="primary" loading={update.isPending} loadingText={t.common.saving}>
+            {t.common.saveChanges}
           </Button>
         </>
       }
@@ -378,25 +396,30 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
         }}
       >
         <div className={styles.main}>
-          <Field label="Title" required error={errors.title?.message}>
-            <Input data-autofocus maxLength={200} className={styles.titleInput} {...register('title')} />
+          <Field label={details.title} required error={errors.title?.message}>
+            <Input data-autofocus maxLength={TODO_TITLE_MAX} className={styles.titleInput} {...register('title')} />
           </Field>
-          <Field label="Description" error={errors.description?.message}>
-            <Textarea rows={10} maxLength={5000} placeholder="Add more detail…" {...register('description')} />
+          <Field label={details.description} error={errors.description?.message}>
+            <Textarea
+              rows={10}
+              maxLength={TODO_DESCRIPTION_MAX}
+              placeholder={details.descriptionPlaceholder}
+              {...register('description')}
+            />
           </Field>
           <div className={styles.aiSuggest}>
             <Button variant="ai" size="sm" aria-haspopup="dialog" onClick={improve}>
-              Improve this todo
+              {details.improve}
             </Button>
-            <span className={styles.aiHint}>Ask Kanbot for a clearer title, description and acceptance criteria.</span>
+            <span className={styles.aiHint}>{details.improveHint}</span>
           </div>
         </div>
 
         <div className={styles.side}>
           <Field
-            label="Sprint"
+            label={details.sprint}
             error={errors.sprintId?.message}
-            help={inCompletedSprint ? COMPLETED_HELP : undefined}
+            help={inCompletedSprint ? details.completedHelp : undefined}
           >
             {/* Controlled: a natively disabled registered select would drop its value on submit. */}
             <Controller
@@ -404,7 +427,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
               name="sprintId"
               render={({ field }) => (
                 <Select {...field} disabled={inCompletedSprint}>
-                  {sprintOptions(sprints, todo).map((option) => (
+                  {sprintOptions(sprints, todo, t).map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>
@@ -415,9 +438,9 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           </Field>
 
           <Field
-            label="Status"
+            label={details.status}
             error={errors.status?.message}
-            help={statusEnabled || inCompletedSprint ? undefined : STATUS_HELP}
+            help={statusEnabled || inCompletedSprint ? undefined : details.statusHelp}
           >
             <Controller
               control={control}
@@ -426,7 +449,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
                 <Select {...field} disabled={!statusEnabled}>
                   {TODO_STATUSES.map((value) => (
                     <option key={value} value={value}>
-                      {STATUS_LABELS[value]}
+                      {t.todos.status[value]}
                     </option>
                   ))}
                 </Select>
@@ -435,45 +458,37 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
           </Field>
 
           <div className={styles.pair}>
-            <Field label="Priority" error={errors.priority?.message}>
+            <Field label={details.priority} error={errors.priority?.message}>
               <Select {...register('priority')}>
                 {PRIORITY_OPTIONS.map((value) => (
                   <option key={value} value={value}>
-                    {PRIORITY_LABELS[value]}
+                    {t.todos.priority[value]}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="Type" error={errors.type?.message}>
+            <Field label={details.type} error={errors.type?.message}>
               <Select {...register('type')}>
                 {TYPE_OPTIONS.map((value) => (
                   <option key={value} value={value}>
-                    {TYPE_LABELS[value]}
+                    {t.todos.type[value]}
                   </option>
                 ))}
               </Select>
             </Field>
-            <Field label="Story points" error={errors.storyPoints?.message}>
+            <Field label={details.storyPoints} error={errors.storyPoints?.message}>
               <Select {...register('storyPoints')}>
-                <option value={NO_POINTS}>None</option>
+                <option value={NO_POINTS}>{details.noPoints}</option>
                 {POINT_OPTIONS.map((value) => (
                   <option key={value} value={String(value)}>
-                    {value}
+                    {format.number(value)}
                   </option>
                 ))}
               </Select>
             </Field>
           </div>
 
-          <Field
-            label="Labels"
-            error={errors.labels?.message}
-            help={
-              <>
-                <kbd>Enter</kbd> or <kbd>,</kbd> adds a label, <kbd>Backspace</kbd> removes the last one
-              </>
-            }
-          >
+          <Field label={details.labels} error={errors.labels?.message} help={<KeyHint text={details.labelsHelp} />}>
             <Controller
               control={control}
               name="labels"
@@ -482,16 +497,16 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
                   value={field.value}
                   onChange={field.onChange}
                   onBlur={field.onBlur}
-                  placeholder="Add a label"
+                  placeholder={details.labelPlaceholder}
                 />
               )}
             />
           </Field>
 
           <Field
-            label="Due date"
+            label={details.dueDate}
             error={errors.dueDate?.message}
-            help={overdue > 0 ? <span className={styles.overdue}>Overdue by {plural(overdue, 'day')}</span> : undefined}
+            help={overdue > 0 ? <span className={styles.overdue}>{details.overdueBy(overdue)}</span> : undefined}
           >
             <DateInput aria-invalid={overdue > 0 || undefined} {...register('dueDate')} />
           </Field>
@@ -501,13 +516,15 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       <ConfirmDialog
         open={askingDelete}
         onOpenChange={setAskingDelete}
-        title={`Delete ${todo.key}?`}
+        title={t.todos.delete.title(todo.key)}
         description={
           <>
-            This permanently deletes <b>{todo.key}</b> “{todo.title}”. This can&apos;t be undone.
+            {t.todos.delete.before}
+            <b>{todo.key}</b>
+            {t.todos.delete.after(todo.title)}
           </>
         }
-        confirmLabel="Delete todo"
+        confirmLabel={t.todos.delete.confirm}
         onConfirm={confirmDelete}
         fallbackFocus={afterDelete ?? undefined}
       />
@@ -516,34 +533,35 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
 }
 
 /** Canvas order: the active sprint, the planned ones, then Backlog (BL-3). */
-function sprintOptions(sprints: Sprint[] | undefined, todo: Todo) {
+function sprintOptions(sprints: Sprint[] | undefined, todo: Todo, t: Messages) {
   const options = (sprints ?? [])
     .filter((sprint) => sprint.status !== 'completed' || sprint.id === todo.sprintId)
-    .map((sprint) => ({ value: sprint.id, label: `${sprint.name} (${sprint.status})` }));
+    .map((sprint) => ({ value: sprint.id, label: t.todos.sprintOption[sprint.status](sprint.name) }));
   // Sprints still loading: keep the current value selectable.
   if (todo.sprintId && !options.some((option) => option.value === todo.sprintId)) {
-    options.push({ value: todo.sprintId, label: 'Current sprint' });
+    options.push({ value: todo.sprintId, label: t.todos.details.currentSprint });
   }
-  return [...options, { value: BACKLOG_VALUE, label: 'Backlog' }];
+  return [...options, { value: BACKLOG_VALUE, label: t.backlog.groupName }];
 }
 
-function saveErrorText(key: string, error: unknown) {
+/** Read at render from the failed request, so a bar already on screen follows a language switch. */
+function saveErrorText(key: string, error: unknown, t: Messages) {
   // A message from the API itself (409, 404…) is worth showing; otherwise use the canvas copy.
   if (isApiError(error) && error.code !== 'NETWORK_ERROR' && error.code !== 'TIMEOUT' && error.status < 500) {
-    return `Couldn't save ${key}. ${error.message} Your edits are still here.`;
+    return t.todos.details.saveFailed(key, todoErrorMessage(error, t));
   }
-  return `Couldn't save ${key}. Check your connection and try again — your edits are still here.`;
+  return t.todos.details.saveFailedOffline(key);
 }
 
 /** The "Improve this todo" prompt: what the todo says now, and what to suggest (not to do). */
-function improvePrompt(key: string, values: TodoFormValues): string {
-  const points = values.storyPoints === NO_POINTS ? 'not estimated' : `${values.storyPoints} points`;
-  return [
-    `Improve ${key || 'this todo'}: suggest a clearer title, a better description and acceptance criteria. I'll review your suggestions and edit the todo myself.`,
-    '',
-    `Title: ${values.title.trim()}`,
-    `Type: ${TYPE_LABELS[values.type]} · Priority: ${PRIORITY_LABELS[values.priority]} · ${points}`,
+function improvePrompt(key: string, values: TodoFormValues, t: Messages): string {
+  return t.todos.improvePrompt({
+    key,
+    title: values.title.trim(),
+    type: t.todos.type[values.type],
+    priority: t.todos.priority[values.priority],
+    points: values.storyPoints === NO_POINTS ? null : pointsOf(values.storyPoints),
     // The chat takes 4000 characters a message; a long description is cut to leave room.
-    `Description: ${values.description.trim().slice(0, 3000) || '(none)'}`,
-  ].join('\n');
+    description: values.description.trim().slice(0, 3000),
+  });
 }

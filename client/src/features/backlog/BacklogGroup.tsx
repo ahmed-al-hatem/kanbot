@@ -4,8 +4,8 @@ import { useId, type ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
 import type { BacklogGroup as Group } from '@/hooks/useBacklog';
+import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { formatRange, todosAndPoints } from '@/lib/format';
 import type { Todo } from '@/types/api';
 import styles from './Backlog.module.css';
 import { groupDropId, type DropData } from '@/lib/dnd/sensors';
@@ -56,9 +56,13 @@ export function BacklogGroup({
   empty,
   footer,
 }: BacklogGroupProps) {
+  const t = useT();
+  const format = useFormat();
+  const copy = t.backlog.group;
   const headingId = useId();
   const bodyId = useId();
-  const dates = group.sprint ? formatRange(group.sprint.startDate, group.sprint.endDate) : null;
+  const dates = group.sprint ? format.range(group.sprint.startDate, group.sprint.endDate) : null;
+  const summary = format.todosAndPoints(group.todos.length, group.points);
   const reorderable = group.kind !== 'active';
   const { setNodeRef } = useDroppable({
     id: groupDropId(group.id),
@@ -68,13 +72,13 @@ export function BacklogGroup({
 
   const emptyLine =
     group.todos.length > 0 && filtering ? (
-      <p className={styles.groupMessage}>No todos in {group.name} match your filters</p>
+      <p className={styles.groupMessage}>{copy.noMatch(group.name)}</p>
     ) : (
       (empty ??
       (filtering || group.kind === 'backlog' ? (
-        <p className={styles.groupMessage}>No todos in {group.name} yet</p>
+        <p className={styles.groupMessage}>{copy.empty(group.name)}</p>
       ) : (
-        <p className={cx(styles.groupMessage, styles.dropHint)}>Drag todos here to plan {group.name}</p>
+        <p className={cx(styles.groupMessage, styles.dropHint)}>{copy.dropHint(group.name)}</p>
       )))
     );
 
@@ -85,7 +89,7 @@ export function BacklogGroup({
           size="sm"
           icon="chevron-down"
           className={styles.toggle}
-          aria-label={`Toggle ${group.name}`}
+          aria-label={copy.toggle(group.name)}
           aria-expanded={!collapsed}
           aria-controls={bodyId}
           onClick={() => {
@@ -97,21 +101,18 @@ export function BacklogGroup({
         </h2>
         {group.kind === 'active' && (
           <Lozenge tone="blue" live>
-            Active
+            {copy.active}
           </Lozenge>
         )}
-        {group.kind === 'planned' && <Lozenge>Planned</Lozenge>}
-        <span className={styles.groupMeta}>
-          {dates && `${dates} · `}
-          {todosAndPoints(group.todos.length, group.points)}
-        </span>
+        {group.kind === 'planned' && <Lozenge>{copy.planned}</Lozenge>}
+        <span className={styles.groupMeta}>{dates ? copy.meta(dates, summary) : summary}</span>
         {actions && <span className={styles.groupActions}>{actions}</span>}
       </div>
 
       <div id={bodyId} hidden={collapsed} className={cx('kb-rise', styles.groupBody)}>
         <SortableContext id={group.id} items={rows.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
           {rows.length > 0 ? (
-            <ul className={styles.rows} aria-label={`${group.name} todos`}>
+            <ul className={styles.rows} aria-label={copy.rows(group.name)}>
               {rows.map((todo, index) => (
                 <TodoRow
                   key={todo.id}
