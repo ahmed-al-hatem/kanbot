@@ -7,6 +7,7 @@ import type {
 } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useRef, useState } from 'react';
+import { useT } from '@/i18n';
 import { moveInLists, type Lists } from '@/lib/moveInLists';
 import type { Todo } from '@/types/api';
 import { listCollisions, type DropData, type useDragSensors } from './sensors';
@@ -14,7 +15,7 @@ import { listCollisions, type DropData, type useDragSensors } from './sensors';
 /** A droppable list of todos: a backlog group or a board column. */
 export interface DndList {
   id: string;
-  /** Spoken while dragging: "KAN-21 is over In Progress." */
+  /** Spoken while dragging: "KAN-21 is over In Progress." (already in the UI language). */
   name: string;
   todos: readonly Todo[];
 }
@@ -35,6 +36,7 @@ export type DropHandler<L extends DndList> = (todo: Todo, list: L, index: number
 
 interface ListsDndOptions<L extends DndList> {
   sensors: ReturnType<typeof useDragSensors>;
+  /** The page's own keyboard instructions, from its dictionary section. */
   instructions: ScreenReaderInstructions;
   /** A list whose items can't be reordered by dropping inside it (the backlog's active sprint). */
   reorderable?: (list: L) => boolean;
@@ -50,12 +52,15 @@ const dropData = (data: unknown) => data as DropData | undefined;
  * a list, and move between lists — the dragged todo joins a list's preview as soon as it is over
  * it (dnd-kit's multiple-containers pattern, built on `moveInLists`). The drop reports the final
  * index; the page turns it into the server's `position` and moves the todo optimistically.
+ * The announcements (pick up, over, cancel) come from `t.dnd`; the drop is announced by the page
+ * with the list and position ("KAN-21 moved to Sprint 3, position 2 of 5").
  */
 export function useListsDnd<L extends DndList>(
   lists: readonly L[] | undefined,
   onDrop: DropHandler<L>,
   { sensors, instructions, reorderable = () => true }: ListsDndOptions<L>,
 ) {
+  const t = useT();
   const [drag, setDragState] = useState<DragState<L> | null>(null);
   // dnd-kit can fire dragEnd before the render that follows dragOver; the ref is always current.
   const latest = useRef<DragState<L> | null>(null);
@@ -64,8 +69,10 @@ export function useListsDnd<L extends DndList>(
     setDragState(next);
   };
 
-  const listName = (listId: string | undefined) => lists?.find((list) => list.id === listId)?.name ?? 'the list';
-  const keyOf = (id: unknown) => lists?.flatMap((list) => list.todos).find((todo) => todo.id === id)?.key ?? 'Todo';
+  const listName = (listId: string | undefined) =>
+    lists?.find((list) => list.id === listId)?.name ?? t.dnd.fallbackList;
+  const keyOf = (id: unknown) =>
+    lists?.flatMap((list) => list.todos).find((todo) => todo.id === id)?.key ?? t.dnd.fallbackKey;
 
   const onDragStart = ({ active }: DragStartEvent) => {
     if (!lists) return;
@@ -130,12 +137,12 @@ export function useListsDnd<L extends DndList>(
   };
 
   const announcements: Announcements = {
-    onDragStart: ({ active }) => `Picked up ${keyOf(active.id)}.`,
+    onDragStart: ({ active }) => t.dnd.pickedUp(keyOf(active.id)),
     onDragOver: ({ active, over }) =>
-      over ? `${keyOf(active.id)} is over ${listName(dropData(over.data.current)?.groupId)}.` : undefined,
+      over ? t.dnd.over(keyOf(active.id), listName(dropData(over.data.current)?.groupId)) : undefined,
     // The move itself is announced by the page ("KAN-21 moved to In Progress, position 2 of 3").
     onDragEnd: () => undefined,
-    onDragCancel: ({ active }) => `Move cancelled. ${keyOf(active.id)} is back where it was.`,
+    onDragCancel: ({ active }) => t.dnd.cancelled(keyOf(active.id)),
   };
 
   // Dragging, or dropped and the cache doesn't have the move yet.
