@@ -11,8 +11,9 @@ import { plural } from '../plural';
  *
  * R1: the i18n foundation (formatting, the language switcher, error fallbacks). R2: auth, the
  * shell, projects and the shared components they render. R3: the backlog, Todo details, the
- * sprint form / start / delete and the drag-and-drop announcements. Board, history, AI, 404 (R4)
- * move later. Every English output stays exactly as it was.
+ * sprint form / start / delete and the drag-and-drop announcements. R4: the board, Complete
+ * sprint, Sprints history, the AI drawer and dialogs, 404 and the error pages. Every English
+ * output stays exactly as it was.
  */
 const count = (n: number, one: string, other: string) => plural('en', n, { one, other });
 
@@ -45,6 +46,8 @@ export const en = {
     projects: (n: number) => count(n, `${n} project`, `${n} projects`),
     /** A project tile's footer. */
     backlogTodos: (n: number) => count(n, `${n} backlog todo`, `${n} backlog todos`),
+    /** The Sprints page header meta. */
+    sprints: (n: number) => count(n, `${n} sprint`, `${n} sprints`),
   },
 
   dates: {
@@ -95,6 +98,8 @@ export const en = {
     loading: (what: string) => `Loading ${what}`,
     /** The full-page loader (startup `GET /auth/me`, the first route chunk). */
     loadingWorkspace: 'Loading your workspace',
+    /** The router's fallback while the first route chunk loads. */
+    loadingApp: 'Loading Kanbot',
     /** After a required field's label; the control itself has `aria-required`. */
     requiredMark: ' *',
     /** An avatar with no name. */
@@ -330,7 +335,8 @@ export const en = {
       description: 'Description',
       descriptionPlaceholder: 'What is this project about?',
       starter: 'Generate a starter backlog with AI',
-      starterHelp: 'Uses the description to draft first todos. You review them before anything is added.',
+      starterHelp:
+        'Uses the description to draft first todos. You review them before anything is added.',
       /** Generate todos' prompt for a new project without a usable description. */
       starterPrompt: (name: string) => `First todos for a new project called "${name}"`,
       nameRequired: 'Give your project a name',
@@ -404,7 +410,8 @@ export const en = {
       discard: 'Discard',
       escToClose: '{esc} to close',
       /** Save failed with the API's reason (409, 404, 400…). */
-      saveFailed: (key: string, reason: string) => `Couldn't save ${key}. ${reason} Your edits are still here.`,
+      saveFailed: (key: string, reason: string) =>
+        `Couldn't save ${key}. ${reason} Your edits are still here.`,
       /** Save failed without a response (network, timeout, 5xx). */
       saveFailedOffline: (key: string) =>
         `Couldn't save ${key}. Check your connection and try again — your edits are still here.`,
@@ -447,6 +454,8 @@ export const en = {
     planSprint: 'Plan sprint',
     createSprint: 'Create sprint',
     createTodo: 'Create todo',
+    /** Links to the backlog from the board, Sprints and their toasts. */
+    goTo: 'Go to Backlog',
     empty: {
       title: 'Your backlog is empty',
       text: 'Capture the work ahead: type a title below, or let AI draft todos from a feature description.',
@@ -501,7 +510,8 @@ export const en = {
     rowHelp: 'Press Enter to open its details. Press the up and down arrow keys to move it.',
     dragInstructions:
       'To pick up a todo, press Space or Enter. Use the up and down arrow keys to move it, Space or Enter to drop it, Escape to cancel.',
-    dragOff: 'Drag and drop is off while filters are on. Clear the filters to reorder, or use ⋯ Move to.',
+    dragOff:
+      'Drag and drop is off while filters are on. Clear the filters to reorder, or use ⋯ Move to.',
     moves: {
       moved: (key: string, name: string, position: string, total: string) =>
         `${key} moved to ${name}, position ${position} of ${total}`,
@@ -546,8 +556,64 @@ export const en = {
     },
   },
 
-  /** Create / edit sprint and Start sprint (SPR-1…3). Sprints history is R4. */
+  /** Create / edit sprint, Start sprint (SPR-1…3) and the Sprints history page (SPR-7). */
   sprints: {
+    /** The sprint status lozenges (history, the board header). */
+    status: { active: 'Active', planned: 'Planned', completed: 'Completed' },
+    /** "Goal:" before a sprint's goal (board header, sprint detail). */
+    goalLabel: 'Goal:',
+    /** A sprint's points progress bar (board header, sprint list). */
+    progress: {
+      pointsLabel: (name: string) => `${name} points done`,
+      pointsValue: (done: number, total: number) => `${done} of ${total} points done`,
+      todosLabel: (name: string) => `${name} todos done`,
+      todosValue: (done: number, total: number) => `${done} of ${total} todos done`,
+    },
+    history: {
+      title: 'Sprints',
+      /** Skeleton: "Loading sprints"; page error: "We couldn't load your sprints". */
+      loadingName: 'sprints',
+      pageName: 'your sprints',
+      created: (name: string) => `${name} created · drag todos into it from the backlog`,
+      empty: {
+        title: 'No sprints yet',
+        text: 'Plan a sprint from the backlog: create one, drag todos into it, then start it.',
+      },
+      list: {
+        title: 'All sprints',
+        noDates: 'No dates',
+        /** "13 / 21 pts". */
+        points: (done: number, total: number) => `${done} / ${total} pts`,
+      },
+      detail: {
+        noDates: 'No dates yet',
+        /** After the dates: "Oct 20 – Nov 2 · Completed Nov 2, 2026". */
+        completedOn: (date: string) => ` · Completed ${date}`,
+        tiles: {
+          completed: 'Completed',
+          pointsDone: 'Points done',
+          completion: 'Completion',
+          carriedOver: 'Carried over',
+          notFinished: 'Not finished',
+          fraction: (done: number, total: number) => `${done} / ${total}`,
+          percent: (value: number) => `${value}%`,
+          none: '—',
+        },
+        snapshotNote: 'Numbers as they were when the sprint was completed.',
+        todos: 'Todos',
+        /** After "Todos": " · 5". */
+        todoCount: (n: number) => ` · ${n}`,
+        todosLabel: (name: string) => `${name} todos`,
+        loadingTodos: (name: string) => `Loading ${name} todos`,
+        /** Page error: "We couldn't load Sprint 3's todos". */
+        todosPage: (name: string) => `${name}'s todos`,
+        noTodos: {
+          completed: 'No todos were done in this sprint.',
+          planned: 'No todos planned yet. Drag some in from the backlog.',
+          active: 'No todos in this sprint yet.',
+        },
+      },
+    },
     form: {
       createTitle: 'Create sprint',
       editTitle: (name: string) => `Edit ${name}`,
@@ -587,6 +653,309 @@ export const en = {
     },
     /** 404 on a sprint request (deleted meanwhile), given the server's text. */
     notFound: asSent,
+  },
+
+  /**
+   * The Active Sprint board (SPR-4…6) and Complete sprint. Column names are `todos.status`; row
+   * menus, move announcements and toasts reuse `backlog.row` / `backlog.moves`.
+   */
+  board: {
+    title: 'Active Sprint',
+    /** Skeleton: "Loading active sprint"; page error: "We couldn't load the active sprint". */
+    loadingName: 'active sprint',
+    pageName: 'the active sprint',
+    viewSummary: 'View summary',
+    noActive: {
+      title: 'No active sprint',
+      text: 'Start a planned sprint from the backlog to see its board here.',
+      start: (name: string) => `Start ${name}`,
+    },
+    moveHelp:
+      'Drag cards between columns, or focus a card and use {left} {right} {up} {down} to move it.',
+    /** The cards' description. */
+    cardHelp:
+      'Press Enter to open its details. Press the left and right arrow keys to move it to another column, and the up and down arrow keys to reorder it.',
+    /** dnd-kit's instructions (the board has no keyboard drag sensor: the arrows on a card move it). */
+    dragInstructions:
+      'Focus a card and use the arrow keys to move it between columns or reorder it.',
+    header: {
+      /** After the dates: "· 5 days left". */
+      remaining: (text: string) => `· ${text}`,
+      fraction: (done: number, total: number) => `${done} / ${total}`,
+      /** After the bold "3 / 8". */
+      pointsDone: (_total: number) => ' pts done',
+      todosDone: (_total: number) => ' todos done',
+    },
+    column: {
+      /** The column's region name: "In Progress, 3 todos". */
+      label: (name: string, todos: string) => `${name}, ${todos}`,
+      dropHere: 'Drop todos here',
+    },
+    composer: {
+      open: (column: string) => `Create todo in ${column}`,
+      label: (column: string) => `New todo in ${column}`,
+      placeholder: 'What needs to be done?',
+      hint: '{enter} add · {esc} cancel',
+      add: 'Add',
+      created: (key: string, column: string) => `${key} created in ${column}`,
+    },
+    card: {
+      /** Before the due date, for screen readers: "Overdue, due Nov 2". */
+      overdue: 'Overdue, due ',
+    },
+    moves: {
+      alreadyIn: (key: string, column: string) => `${key} is already in ${column}`,
+      atTop: (key: string, column: string) => `${key} is already at the top of ${column}`,
+      atBottom: (key: string, column: string) => `${key} is already at the bottom of ${column}`,
+    },
+    complete: {
+      title: (name: string) => `Complete ${name}`,
+      /** "3 todos done · 2 unfinished". */
+      description: (done: number, unfinished: number) =>
+        `${count(done, `${done} todo`, `${done} todos`)} done · ${unfinished} unfinished`,
+      done: 'Done',
+      notFinished: 'Not finished',
+      points: (done: number, total: number) => `${done} of ${total} story points completed.`,
+      legend: (n: number) => count(n, 'Move 1 unfinished todo to', `Move ${n} unfinished todos to`),
+      /** After a destination's name: "· planned, starts Nov 16". */
+      hint: (text: string) => `· ${text}`,
+      plannedStarts: (date: string) => `planned, starts ${date}`,
+      planned: 'planned',
+      allDone: 'Every todo is done — nothing to move.',
+      confirm: 'Complete sprint',
+      completing: 'Completing…',
+      /** The destination in the toast when the unfinished todos go to the backlog. */
+      toBacklog: 'the backlog',
+      completed: (name: string) => `${name} completed`,
+      completedMoved: (name: string, n: number, destination: string) =>
+        `${name} completed · ${count(n, '1 todo', `${n} todos`)} moved to ${destination}`,
+    },
+  },
+
+  /** The AI surfaces (AI-1…5). Replies from the server are data and are shown as they come. */
+  ai: {
+    /** AI-5: carried by every AI surface. */
+    disclaimer: 'AI can make mistakes. Review before saving.',
+    /** The API's own name for its mode; the same in every language (glossary). */
+    mockBadge: 'Mock AI',
+    mockHint: 'No AI key is configured: answers come from a built-in demo assistant.',
+    tryingAgain: 'Trying again…',
+    /** "Nov 4, 2026, 3:42 PM · 2 min ago". */
+    generatedAt: (date: string, ago: string) => `${date} · ${ago}`,
+    summaryOption: {
+      label: 'Generate AI summary',
+      help: 'Written after the sprint is completed; it opens with the sprint in Sprints history.',
+    },
+    drawer: {
+      title: 'Kanbot Assistant',
+      subtitle: 'AI can make mistakes',
+      newChat: 'New chat',
+      close: 'Close assistant',
+      quickActions: 'Quick actions',
+      createTodos: 'Create todos',
+      planSprint: 'Plan sprint',
+      summarizeSprint: 'Summarize sprint',
+      nothingToSummarize: 'Start a sprint first: there is nothing to summarize yet.',
+      log: 'Conversation',
+      emptyTitle: 'How can I help with your sprint?',
+      emptyText: 'Ask about this project, or try one of these:',
+      /** Page-aware example prompts (Requirements §9 "Suggested prompts … backlog vs board"). */
+      examples: {
+        backlog: [
+          'Which backlog todos should go into the next sprint?',
+          'Which todos are missing story points?',
+          'Suggest a goal for the next sprint',
+        ],
+        board: [
+          "What's blocking the active sprint?",
+          'What should I work on next?',
+          'Are we on track to finish this sprint?',
+        ],
+        sprints: [
+          'How did the last sprint go?',
+          'What should we improve next sprint?',
+          'Compare our last two sprints',
+        ],
+      },
+      youSaid: 'You said:',
+      kanbotSaid: 'Kanbot said:',
+      copy: 'Copy',
+      copied: 'Copied',
+      copyFailed: "Couldn't copy. Select the text and copy it instead.",
+      thinking: 'Thinking',
+      failedTitle: "Kanbot couldn't answer",
+      failedHint: 'Your message is kept.',
+      composerLabel: 'Message Kanbot',
+      placeholder: 'Ask Kanbot…',
+      send: 'Send',
+      composerHelp: 'Enter sends, Shift+Enter adds a new line.',
+      answered: 'Kanbot answered',
+      newChatStarted: 'New chat started',
+      /** The user's message for the Summarize sprint chip. */
+      summarizePrompt: (name: string) => `Summarize ${name}`,
+    },
+    generate: {
+      title: 'Generate todos with AI',
+      prompt: 'Describe the feature',
+      promptPlaceholder: 'e.g. User profile page with avatar upload',
+      promptRequired: 'Describe the feature so Kanbot knows what to break down',
+      counter: (length: number, max: number) => `${length} / ${max}`,
+      count: 'Number of todos',
+      hint: "Drafts aren't saved until you add them.",
+      generate: 'Generate',
+      regenerate: 'Regenerate',
+      generating: 'Generating…',
+      drafting: 'Kanbot is drafting todos',
+      failedTitle: "Kanbot couldn't generate todos right now",
+      failedHint: 'Your description is kept — try again.',
+      noDrafts: "Kanbot didn't suggest any todos. Try describing the feature in more detail.",
+      intro: 'Describe a feature and Kanbot drafts todos for you to review.',
+      suggested: 'Suggested todos',
+      suggestedCount: (n: number) => `(${n})`,
+      selectAll: 'Select all',
+      points: 'Points',
+      draftName: (n: number) => `draft ${n}`,
+      include: (name: string) => `Include ${name}`,
+      titleOf: (n: number) => `Title of draft ${n}`,
+      typeOf: (n: number) => `Type of draft ${n}`,
+      priorityOf: (n: number) => `Priority of draft ${n}`,
+      pointsOf: (n: number) => `Points of draft ${n}`,
+      blankTitle: 'Give this todo a title, or uncheck it',
+      /** The footer total: "<b>13 pts</b> total". */
+      totalPoints: (n: number) => `${n} pts`,
+      totalSuffix: ' total',
+      add: (n: number) => `Add ${count(n, '1 todo', `${n} todos`)} to Backlog`,
+      adding: 'Adding…',
+      addFailed: (reason: string) => `Couldn't add the todos. ${reason}`,
+      ready: (n: number) =>
+        count(n, '1 draft todo ready to review', `${n} draft todos ready to review`),
+      /** Toasts (AiDialogsHost). */
+      added: (n: number) => `${count(n, '1 todo', `${n} todos`)} added to the backlog`,
+      viewBacklog: 'View backlog',
+    },
+    plan: {
+      title: 'Plan sprint with AI',
+      capacity: 'Capacity (story points)',
+      capacityError: (min: number, max: number) =>
+        `Enter a whole number of points from ${min} to ${max}`,
+      focus: 'Focus / goal (optional)',
+      focusPlaceholder: 'e.g. finish user profile',
+      suggest: 'Suggest plan',
+      suggestAgain: 'Suggest again',
+      planning: 'Planning…',
+      planningSprint: 'Planning sprint',
+      emptyText: 'Add or generate todos first, then Kanbot can plan a sprint from them.',
+      failedTitle: "Kanbot couldn't plan the sprint right now",
+      failedHint: 'Your capacity and focus are kept.',
+      goal: 'Suggested sprint goal',
+      backlogTodos: 'Backlog todos',
+      total: 'Total',
+      barLabel: 'Points against capacity',
+      barValue: (total: number, capacity: number | null) => `${total} of ${capacity ?? '?'} points`,
+      totalValue: (total: number, capacity: number | null) => `${total} / ${capacity ?? '–'} pts`,
+      over: (n: number) => `Over capacity by ${n} pts. Unselect a todo or raise capacity.`,
+      suggestion: "AI's suggestion",
+      /** The plan as computed from the picks: "3 todos · 8 / 10 pts". */
+      fact: (todos: number, points: number, capacity: number) =>
+        `${count(todos, '1 todo', `${todos} todos`)} · ${points} / ${capacity} pts`,
+      asSuggested: 'As first suggested. Your changes show in the list and its total.',
+      reasoning: "AI's reasoning",
+      caveat:
+        "The AI's notes may not match the plan above — the plan is checked against your backlog and capacity.",
+      leftOut: "Some todos the AI mentioned aren't in this plan.",
+      loadingBacklog: 'Loading your backlog…',
+      intro: (n: number) =>
+        `Kanbot picks backlog todos that fit your capacity, highest priority first. ${count(n, '1 todo', `${n} todos`)} in the backlog.`,
+      create: (name: string, n: number) =>
+        `Create ${name} with ${count(n, '1 todo', `${n} todos`)}`,
+      createFailed: (name: string, reason: string) => `Couldn't create ${name}. ${reason}`,
+      ready: (todos: number, points: number, capacity: number) =>
+        `Plan ready: ${count(todos, '1 todo', `${todos} todos`)}, ${points} of ${capacity} points`,
+      /** Toast (AiDialogsHost). */
+      created: (name: string, n: number) =>
+        `${name} created with ${count(n, '1 todo', `${n} todos`)}`,
+    },
+    summary: {
+      title: 'AI summary',
+      midSprint: 'Mid-sprint summary',
+      midSprintDay: (day: number, total: number) => `Mid-sprint summary · Day ${day} of ${total}`,
+      /** The board's summary dialog. */
+      dialogTitle: (name: string) => `${name} · AI summary`,
+      summarize: 'Summarize',
+      summarizing: 'Summarizing…',
+      regenerate: 'Regenerate',
+      regenerating: 'Regenerating…',
+      ready: (name: string) => `${name} summary ready`,
+      generating: 'Generating summary',
+      failedTitle: "Kanbot couldn't write the summary",
+      emptyActive:
+        'Get a quick read on how this sprint is going: progress, risks and what to do next.',
+      emptyCompleted: 'No summary yet. Kanbot can write one from what this sprint delivered.',
+      soFar: 'So far: ',
+      liveStats: (doneTodos: number, totalTodos: number, donePoints: number, totalPoints: number) =>
+        `${doneTodos} of ${totalTodos} todos done · ${donePoints} of ${totalPoints} pts done`,
+      /** After the live stats: " · 5 days left". */
+      left: (text: string) => ` · ${text}`,
+      /** "Generated <time>. AI can make mistakes. Review before sharing." */
+      generatedBefore: 'Generated ',
+      generatedAfter: '. AI can make mistakes. Review before sharing.',
+      /** Toast when Complete sprint's summary fails (the sprint stays completed). */
+      failedAfterComplete: (name: string, reason: string) =>
+        `${name} is completed, but its AI summary failed. ${reason}`,
+    },
+  },
+
+  /** DESIGN §9 404 (every cause). */
+  notFound: {
+    /** `document.title`: "Page not found · Kanbot". */
+    pageTitle: 'Page not found',
+    code: 'Error 404',
+    requested: 'Requested address: ',
+    goToProjects: 'Go to Projects',
+    openActiveSprint: 'Open Active Sprint',
+    askAi: 'Ask AI to find it',
+    /**
+     * Variants by cause. The API answers 404 both for ids that don't exist and for other users'
+     * ids, so "no access" reads like "doesn't exist" and the copy mentions both.
+     */
+    route: {
+      title: "We can't find that page",
+      body: 'The link may be broken, or the project or todo was moved or deleted. Check the address, or head back to somewhere you know.',
+    },
+    project: {
+      title: "This project doesn't exist",
+      body: "It may have been deleted, or it belongs to an account you're not signed in to. Check the address, or pick one of your projects.",
+    },
+    sprint: {
+      title: "This sprint doesn't exist",
+      body: 'It may have been deleted, or it belongs to another project. Check the sprint list for the one you meant.',
+    },
+    todo: {
+      title: "This todo doesn't exist",
+      body: 'It may have been deleted. Check the backlog for similar todos.',
+    },
+    /** What "Ask AI to find it" puts in the composer. Nothing is sent until the user does. */
+    findItPrompt: (path: string) =>
+      `I tried to open ${path} and got "Page not found". Can you help me find what I was looking for?`,
+  },
+
+  /** Error boundaries (plan §9.3): a page that crashed, a new deploy, the last-line crash screen. */
+  errorPages: {
+    crashTitle: 'Something went wrong',
+    crashText:
+      'Kanbot hit an unexpected error. Reloading usually fixes it, and everything you saved is safe on the server.',
+    /** RenderErrorPage: "We couldn't load this page". */
+    thisPage: 'this page',
+    updateTitle: 'A new version is available',
+    updateText:
+      'Kanbot was updated while this tab was open. Reload to get the latest version — everything you saved is safe.',
+    /** The route boundary's version (a page chunk failed). */
+    updatePageText:
+      "Kanbot was updated while this tab was open, so this page couldn't load. Reload to get the latest version — everything you saved is safe.",
+    updateTag: 'Update',
+    /** `document.title`: "Update available · Kanbot". */
+    updateDocumentTitle: 'Update available',
+    reload: 'Reload',
   },
 
   /** dnd-kit's screen-reader announcements, shared by the backlog and the board (lib/dnd). */
