@@ -32,7 +32,12 @@ interface DragState<L extends DndList> {
 }
 
 /** Called on a drop that changes something: `index` is the todo's index in `rows` (the list's items after the drop). */
-export type DropHandler<L extends DndList> = (todo: Todo, list: L, index: number, rows: readonly Todo[]) => void;
+export type DropHandler<L extends DndList> = (
+  todo: Todo,
+  list: L,
+  index: number,
+  rows: readonly Todo[],
+) => void;
 
 interface ListsDndOptions<L extends DndList> {
   sensors: ReturnType<typeof useDragSensors>;
@@ -78,7 +83,9 @@ export function useListsDnd<L extends DndList>(
     if (!lists) return;
     const items: Lists<Todo> = Object.fromEntries(lists.map((list) => [list.id, list.todos]));
     const fromList = containerOf(items, active.id);
-    const fromIndex = fromList ? (items[fromList] ?? []).findIndex((todo) => todo.id === active.id) : -1;
+    const fromIndex = fromList
+      ? (items[fromList] ?? []).findIndex((todo) => todo.id === active.id)
+      : -1;
     const todo = fromList ? items[fromList]?.[fromIndex] : undefined;
     if (!fromList || !todo) return;
     setDrag({ todo, fromList, fromIndex, lists: items, overList: fromList, droppedOn: null });
@@ -123,12 +130,18 @@ export function useListsDnd<L extends DndList>(
     }
     const index = rows.findIndex((todo) => todo.id === active.id);
     const unchanged =
-      container === current.fromList && (index === current.fromIndex || (list !== undefined && !reorderable(list)));
+      container === current.fromList &&
+      (index === current.fromIndex || (list !== undefined && !reorderable(list)));
     if (!over || !list || index < 0 || unchanged) {
       setDrag(null);
       return;
     }
-    setDrag({ ...current, lists: { ...current.lists, [list.id]: rows }, overList: null, droppedOn: lists });
+    setDrag({
+      ...current,
+      lists: { ...current.lists, [list.id]: rows },
+      overList: null,
+      droppedOn: lists,
+    });
     onDrop(current.todo, list, index, rows);
   };
 
@@ -139,7 +152,9 @@ export function useListsDnd<L extends DndList>(
   const announcements: Announcements = {
     onDragStart: ({ active }) => t.dnd.pickedUp(keyOf(active.id)),
     onDragOver: ({ active, over }) =>
-      over ? t.dnd.over(keyOf(active.id), listName(dropData(over.data.current)?.groupId)) : undefined,
+      over
+        ? t.dnd.over(keyOf(active.id), listName(dropData(over.data.current)?.groupId))
+        : undefined,
     // The move itself is announced by the page ("KAN-21 moved to In Progress, position 2 of 3").
     onDragEnd: () => undefined,
     onDragCancel: ({ active }) => t.dnd.cancelled(keyOf(active.id)),

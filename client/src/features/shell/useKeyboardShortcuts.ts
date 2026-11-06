@@ -75,7 +75,8 @@ export function useKeyboardShortcuts() {
     };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (event.defaultPrevented || event.repeat || event.ctrlKey || event.metaKey || event.altKey)
+        return;
       if (isTypingTarget(event.target) || overlayOpen()) {
         waitingForGo = false;
         return;

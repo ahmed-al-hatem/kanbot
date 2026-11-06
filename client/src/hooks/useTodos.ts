@@ -1,5 +1,12 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
-import { bulkCreateTodos, createTodo, deleteTodo, getTodo, listTodos, updateTodo } from '@/api/todos';
+import {
+  bulkCreateTodos,
+  createTodo,
+  deleteTodo,
+  getTodo,
+  listTodos,
+  updateTodo,
+} from '@/api/todos';
 import { queryClient } from '@/app/queryClient';
 import type { CreateTodoRequest, Todo, TodoStatus, UpdateTodoRequest } from '@/types/api';
 import { qk } from './queryKeys';
@@ -58,7 +65,8 @@ function invalidateAfterTodoChange(projectId: string, sprintIds: (string | null)
   void queryClient.invalidateQueries({ queryKey: qk.todos(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.project(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.projects });
-  if (sprintIds.some(Boolean)) void queryClient.invalidateQueries({ queryKey: qk.sprints(projectId) });
+  if (sprintIds.some(Boolean))
+    void queryClient.invalidateQueries({ queryKey: qk.sprints(projectId) });
   for (const sprintId of new Set(sprintIds)) {
     if (sprintId) void queryClient.invalidateQueries({ queryKey: qk.board(sprintId) });
   }
@@ -71,11 +79,15 @@ function invalidateAfterTodoChange(projectId: string, sprintIds: (string | null)
  */
 function replaceInLists(projectId: string, id: string, next: Todo | null) {
   queryClient.setQueriesData<Todo[]>({ queryKey: qk.todos(projectId) }, (list) =>
-    next ? list?.map((item) => (item.id === id ? next : item)) : list?.filter((item) => item.id !== id),
+    next
+      ? list?.map((item) => (item.id === id ? next : item))
+      : list?.filter((item) => item.id !== id),
   );
   updateCachedBoards((todos) => {
     if (!todos.some((item) => item.id === id)) return todos;
-    return next ? todos.map((item) => (item.id === id ? next : item)) : todos.filter((item) => item.id !== id);
+    return next
+      ? todos.map((item) => (item.id === id ? next : item))
+      : todos.filter((item) => item.id !== id);
   });
 }
 
@@ -117,7 +129,8 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
   const mutationKey = ['create-todo', projectId] as const;
   const mutation = useMutation({
     mutationKey,
-    mutationFn: ({ body }: CreateVariables) => enqueue(projectId, () => createTodo(projectId, body)),
+    mutationFn: ({ body }: CreateVariables) =>
+      enqueue(projectId, () => createTodo(projectId, body)),
     onMutate: async ({ body, tempId }) => {
       await queryClient.cancelQueries({ queryKey: listKey });
       const now = new Date().toISOString();
@@ -142,7 +155,9 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
       queryClient.setQueryData<Todo[]>(listKey, (list) => (list ? [...list, temp] : list));
       if (temp.sprintId) {
         await queryClient.cancelQueries({ queryKey: qk.board(temp.sprintId) });
-        updateCachedBoards((todos, board) => (board.sprint.id === temp.sprintId ? [...todos, temp] : todos));
+        updateCachedBoards((todos, board) =>
+          board.sprint.id === temp.sprintId ? [...todos, temp] : todos,
+        );
       }
     },
     // Hook-level callbacks: per-call ones only fire for the latest `mutate` (TanStack v5).
@@ -157,7 +172,8 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
     onSettled: (_data, _error, { body }) => {
       // Still counted while settling: 1 means no other create is waiting (plan §9.2). A board
       // composer creates in one sprint at a time, so its board and the sprint stats follow.
-      if (queryClient.isMutating({ mutationKey }) === 1) invalidateAfterTodoChange(projectId, [body.sprintId ?? null]);
+      if (queryClient.isMutating({ mutationKey }) === 1)
+        invalidateAfterTodoChange(projectId, [body.sprintId ?? null]);
     },
   });
 
@@ -170,7 +186,9 @@ export function useCreateTodo(projectId: string, { onCreated, onFailed }: Create
     create: (title: string, place?: CreatePlace) => {
       tempCounter += 1;
       const tempId = `${TEMP_PREFIX}${tempCounter}`;
-      const body: CreateTodoRequest = place ? { title, sprintId: place.sprintId, status: place.status } : { title };
+      const body: CreateTodoRequest = place
+        ? { title, sprintId: place.sprintId, status: place.status }
+        : { title };
       mutation.mutate({ body, tempId });
       return tempId;
     },
@@ -186,7 +204,9 @@ export function useBulkCreateTodos(projectId: string) {
   return useMutation({
     mutationFn: (todos: CreateTodoRequest[]) => bulkCreateTodos(projectId, { todos }),
     onSuccess: (created) => {
-      queryClient.setQueryData<Todo[]>(qk.todos(projectId, {}), (list) => (list ? [...list, ...created] : list));
+      queryClient.setQueryData<Todo[]>(qk.todos(projectId, {}), (list) =>
+        list ? [...list, ...created] : list,
+      );
       invalidateAfterTodoChange(projectId, []);
     },
   });
@@ -195,7 +215,8 @@ export function useBulkCreateTodos(projectId: string) {
 /** `PATCH /todos/:id` (BL-3). Puts the saved todo in the caches, then refetches (plan §5.1). */
 export function useUpdateTodo() {
   return useMutation({
-    mutationFn: ({ todo, body }: { todo: Todo; body: UpdateTodoRequest }) => updateTodo(todo.id, body),
+    mutationFn: ({ todo, body }: { todo: Todo; body: UpdateTodoRequest }) =>
+      updateTodo(todo.id, body),
     onSuccess: (saved, { todo }) => {
       queryClient.setQueryData(qk.todo(saved.id), saved);
       replaceInLists(saved.projectId, saved.id, saved);
@@ -229,7 +250,8 @@ export function useDeleteTodo({ onDeleted, onFailed }: DeleteHandlers = {}) {
       return { previous };
     },
     onError: (error, todo, context) => {
-      for (const [queryKey, list] of context?.previous ?? []) queryClient.setQueryData(queryKey, list);
+      for (const [queryKey, list] of context?.previous ?? [])
+        queryClient.setQueryData(queryKey, list);
       onFailed?.(error, todo);
     },
     onSuccess: (_data, todo) => {

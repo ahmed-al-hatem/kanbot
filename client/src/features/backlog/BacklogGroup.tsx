@@ -83,7 +83,11 @@ export function BacklogGroup({
     );
 
   return (
-    <section ref={setNodeRef} className={cx(styles.group, isOver && styles.over)} aria-labelledby={headingId}>
+    <section
+      ref={setNodeRef}
+      className={cx(styles.group, isOver && styles.over)}
+      aria-labelledby={headingId}
+    >
       <div className={styles.groupHeader}>
         <IconButton
           size="sm"
@@ -110,7 +114,11 @@ export function BacklogGroup({
       </div>
 
       <div id={bodyId} hidden={collapsed} className={cx('kb-rise', styles.groupBody)}>
-        <SortableContext id={group.id} items={rows.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          id={group.id}
+          items={rows.map((todo) => todo.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {rows.length > 0 ? (
             <ul className={styles.rows} aria-label={copy.rows(group.name)}>
               {rows.map((todo, index) => (

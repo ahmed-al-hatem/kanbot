@@ -71,12 +71,18 @@ export function ProjectsPage() {
   const markHighlight = useHighlight((s) => s.markProject);
   const clearHighlight = useHighlight((s) => s.clearProject);
   const [form, setForm] = useState<FormState>({ open: false, project: null, session: 0 });
-  const [toDelete, setToDelete] = useState<DeleteState>({ open: false, project: null, focus: undefined });
+  const [toDelete, setToDelete] = useState<DeleteState>({
+    open: false,
+    project: null,
+    focus: undefined,
+  });
 
   const list = projects.data;
   const needle = query.trim().toLowerCase();
   const shown = list && needle ? list.filter((project) => matches(project, needle)) : list;
-  const highlightShown = Boolean(highlightId && shown?.some((project) => project.id === highlightId));
+  const highlightShown = Boolean(
+    highlightId && shown?.some((project) => project.id === highlightId),
+  );
 
   // The highlight plays once: cleared after its animation, once the tile is actually on screen.
   useEffect(() => {
@@ -104,12 +110,18 @@ export function ProjectsPage() {
   const openCreate = () => {
     setForm((state) => ({ open: true, project: null, session: state.session + 1 }));
   };
-  const openEdit = useCallback((project: ProjectWithStats) => {
-    setForm((state) => ({ open: true, project, session: state.session + 1 }));
-  }, [setForm]);
-  const askDelete = useCallback((project: ProjectWithStats) => {
-    setToDelete({ open: true, project, focus: projectNeighbourFocus(project.id) });
-  }, [setToDelete]);
+  const openEdit = useCallback(
+    (project: ProjectWithStats) => {
+      setForm((state) => ({ open: true, project, session: state.session + 1 }));
+    },
+    [setForm],
+  );
+  const askDelete = useCallback(
+    (project: ProjectWithStats) => {
+      setToDelete({ open: true, project, focus: projectNeighbourFocus(project.id) });
+    },
+    [setToDelete],
+  );
 
   const onSaved = (saved: ProjectWithStats, { starter }: { starter: boolean }) => {
     setForm((state) => ({ ...state, open: false }));
@@ -121,7 +133,14 @@ export function ProjectsPage() {
     markHighlight(saved.id);
     // Plan §9.4: the starter backlog is Generate todos on the new backlog, pre-filled from the
     // description — the user reviews the drafts; nothing is added until they click Add.
-    if (starter) useAssistant.getState().openDialog({ kind: 'generate', projectId: saved.id, prompt: starterPrompt(saved, getT()) });
+    if (starter)
+      useAssistant
+        .getState()
+        .openDialog({
+          kind: 'generate',
+          projectId: saved.id,
+          prompt: starterPrompt(saved, getT()),
+        });
     // PRJ-2: a new project opens on its backlog.
     void navigate(`/projects/${saved.id}/backlog`);
   };
@@ -140,7 +159,9 @@ export function ProjectsPage() {
       },
       onError: (error) => {
         const messages = getT();
-        const reason = isApiError(error) ? errorMessage(error, messages) : messages.common.pleaseTryAgain;
+        const reason = isApiError(error)
+          ? errorMessage(error, messages)
+          : messages.common.pleaseTryAgain;
         toast.error(messages.projects.toast.deleteFailed(project.name, reason));
       },
     });
@@ -156,7 +177,13 @@ export function ProjectsPage() {
         title={t.projects.title}
         meta={count === undefined ? undefined : t.count.projects(count)}
         actions={
-          <Button variant="primary" icon="add" onClick={openCreate} data-new-project data-shortcut="create">
+          <Button
+            variant="primary"
+            icon="add"
+            onClick={openCreate}
+            data-new-project
+            data-shortcut="create"
+          >
             {t.projects.newProject}
           </Button>
         }

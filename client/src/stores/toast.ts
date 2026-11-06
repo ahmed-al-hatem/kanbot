@@ -38,7 +38,12 @@ export const useToast = create<ToastState>()((set, get) => ({
   show: ({ duration, ...input }) => {
     const id = nextId++;
     // `null` is kept: it means "until dismissed".
-    const ms = duration === undefined ? (input.action ? ACTION_TOAST_DURATION : DEFAULT_TOAST_DURATION) : duration;
+    const ms =
+      duration === undefined
+        ? input.action
+          ? ACTION_TOAST_DURATION
+          : DEFAULT_TOAST_DURATION
+        : duration;
     set({ toast: { ...input, id, duration: ms } });
     return id;
   },

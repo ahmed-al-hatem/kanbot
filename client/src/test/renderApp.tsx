@@ -53,6 +53,10 @@ export const TEST_USER: User = {
 };
 
 /** An `ApiErrorBody` response body. */
-export function errorBody(code: string, message: string, details?: { path: string; message: string }[]) {
+export function errorBody(
+  code: string,
+  message: string,
+  details?: { path: string; message: string }[],
+) {
   return { error: { code, message, ...(details ? { details } : {}) } };
 }

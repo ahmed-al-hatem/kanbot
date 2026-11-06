@@ -50,7 +50,9 @@ describe('create sprint in Arabic', () => {
     const endDate = form.getByLabelText('تاريخ الانتهاء');
     // Sprint 3 ends on Nov 15: the new one starts the next day and lasts two weeks.
     expect(endDate).toHaveAccessibleDescription('أسبوعان · 16 تشرين الثاني – 30 تشرين الثاني');
-    expect(form.getByRole('textbox', { name: 'هدف السبرنت' })).toHaveAccessibleDescription('اختياري · حتى 300 حرف');
+    expect(form.getByRole('textbox', { name: 'هدف السبرنت' })).toHaveAccessibleDescription(
+      'اختياري · حتى 300 حرف',
+    );
     expect(form.getByRole('textbox', { name: 'هدف السبرنت' })).toHaveAttribute(
       'placeholder',
       'ماذا يجب أن يُسلّم هذا السبرنت؟',
@@ -101,7 +103,9 @@ describe('create sprint in Arabic', () => {
     await user.click(within(dialog).getByRole('button', { name: 'إنشاء سبرنت' }));
     const endDate = within(dialog).getByLabelText('تاريخ الانتهاء');
     await waitFor(() => {
-      expect(endDate).toHaveAccessibleDescription('يجب أن يكون تاريخ الانتهاء في يوم البدء أو بعده');
+      expect(endDate).toHaveAccessibleDescription(
+        'يجب أن يكون تاريخ الانتهاء في يوم البدء أو بعده',
+      );
     });
     expect(screen.queryByText(/on or after/)).not.toBeInTheDocument();
   });
@@ -165,7 +169,10 @@ describe('start sprint in Arabic', () => {
     server.use(
       http.post(apiUrl('/sprints/:sprintId/start'), () =>
         HttpResponse.json(
-          errorBody('CONFLICT', '"Sprint 3" is still active. Complete it before starting another sprint.'),
+          errorBody(
+            'CONFLICT',
+            '"Sprint 3" is still active. Complete it before starting another sprint.',
+          ),
           { status: 409 },
         ),
       ),
@@ -176,7 +183,9 @@ describe('start sprint in Arabic', () => {
     const dialog = await screen.findByRole('dialog', { name: 'بدء Sprint 4' });
     await user.click(within(dialog).getByRole('button', { name: 'بدء السبرنت' }));
 
-    expect(await within(dialog).findByText('يوجد سبرنت نشط بالفعل. أكمله قبل بدء سبرنت آخر.')).toBeInTheDocument();
+    expect(
+      await within(dialog).findByText('يوجد سبرنت نشط بالفعل. أكمله قبل بدء سبرنت آخر.'),
+    ).toBeInTheDocument();
     expect(screen.queryByText(/still active/)).not.toBeInTheDocument();
     expect(db.calls.startSprint).toEqual([]);
   });

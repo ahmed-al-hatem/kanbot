@@ -74,7 +74,9 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
     await user.keyboard('{ArrowUp}');
 
     // Backlog → the planned Sprint 4 just above it.
-    expect(await within(group('Sprint 4')).findByRole('button', { name: 'Login screen' })).toBeInTheDocument();
+    expect(
+      await within(group('Sprint 4')).findByRole('button', { name: 'Login screen' }),
+    ).toBeInTheDocument();
     expect(live()).toHaveTextContent('KAN-31 moved to Sprint 4, position 1 of 1');
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Login screen' })).toHaveFocus();
@@ -104,7 +106,9 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
     await focusTitle('Drag and drop on the board');
     await user.keyboard('{ArrowDown}');
 
-    expect(await within(group('Sprint 4')).findByRole('button', { name: 'Drag and drop on the board' })).toBeInTheDocument();
+    expect(
+      await within(group('Sprint 4')).findByRole('button', { name: 'Drag and drop on the board' }),
+    ).toBeInTheDocument();
     expect(live()).toHaveTextContent('KAN-28 moved to Sprint 4, position 1 of 1');
     await waitFor(() => {
       expect(db.calls.move).toEqual([{ todoId: 't1', body: { sprintId: 's4', position: 0 } }]);
@@ -130,7 +134,11 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
         await delay(50);
         const todo = db.todos.find((item) => item.id === params.todoId)!;
         db.calls.move.push({ todoId: todo.id, body });
-        serverMove(db, todo, { sprintId: body.sprintId ?? null, status: todo.status, position: body.position });
+        serverMove(db, todo, {
+          sprintId: body.sprintId ?? null,
+          status: todo.status,
+          position: body.position,
+        });
         inFlight -= 1;
         return HttpResponse.json({ todo });
       }),
@@ -171,7 +179,9 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
     server.use(
       http.post(apiUrl('/todos/:todoId/move'), async () => {
         await delay(100);
-        return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), { status: 500 });
+        return HttpResponse.json(errorBody('INTERNAL_ERROR', 'Something went wrong'), {
+          status: 500,
+        });
       }),
     );
     renderApp('/projects/p1/backlog');
@@ -182,7 +192,9 @@ describe('keyboard moves (BL-5, DESIGN §10.1)', () => {
       expect(titlesIn('Backlog')).toEqual(['Fix crash on save', 'Login screen', 'Sprint summary']);
     });
 
-    expect(await screen.findByText("Couldn't move KAN-31. Something went wrong")).toBeInTheDocument();
+    expect(
+      await screen.findByText("Couldn't move KAN-31. Something went wrong"),
+    ).toBeInTheDocument();
     expect(titlesIn('Backlog')).toEqual(['Login screen', 'Fix crash on save', 'Sprint summary']);
   });
 });
@@ -220,11 +232,15 @@ describe('row menu moves (BL-5, BL-7)', () => {
     // Every other group; not its own.
     expect(within(menu).getByRole('menuitem', { name: 'Move to Sprint 3' })).toBeInTheDocument();
     expect(within(menu).getByRole('menuitem', { name: 'Move to Sprint 4' })).toBeInTheDocument();
-    expect(within(menu).queryByRole('menuitem', { name: 'Move to Backlog' })).not.toBeInTheDocument();
+    expect(
+      within(menu).queryByRole('menuitem', { name: 'Move to Backlog' }),
+    ).not.toBeInTheDocument();
     await user.click(within(menu).getByRole('menuitem', { name: 'Move to Sprint 3' }));
 
     await waitFor(() => {
-      expect(within(group('Sprint 3')).getByRole('button', { name: 'Fix crash on save' })).toBeInTheDocument();
+      expect(
+        within(group('Sprint 3')).getByRole('button', { name: 'Fix crash on save' }),
+      ).toBeInTheDocument();
     });
     expect(await screen.findByText('KAN-32 moved to Sprint 3')).toBeInTheDocument();
     await waitFor(() => {
@@ -237,7 +253,9 @@ describe('row menu moves (BL-5, BL-7)', () => {
     expect(within(again).queryByRole('menuitem', { name: 'Move to top' })).not.toBeInTheDocument();
     await user.click(within(again).getByRole('menuitem', { name: 'Move to Backlog' }));
     await waitFor(() => {
-      expect(within(group('Backlog')).getByRole('button', { name: 'Fix crash on save' })).toBeInTheDocument();
+      expect(
+        within(group('Backlog')).getByRole('button', { name: 'Fix crash on save' }),
+      ).toBeInTheDocument();
     });
     await waitFor(() => {
       expect(db.calls.move[1]).toEqual({ todoId: 't3', body: { sprintId: null, position: 0 } });

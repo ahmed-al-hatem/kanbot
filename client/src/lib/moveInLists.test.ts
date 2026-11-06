@@ -4,10 +4,16 @@ import { applyMove, currentPlace, dropTarget, moveInLists } from './moveInLists'
 
 const item = (id: string) => ({ id });
 const ids = (lists: Readonly<Record<string, readonly { id: string }[]>>) =>
-  Object.fromEntries(Object.entries(lists).map(([key, list]) => [key, list.map((entry) => entry.id)]));
+  Object.fromEntries(
+    Object.entries(lists).map(([key, list]) => [key, list.map((entry) => entry.id)]),
+  );
 
 describe('moveInLists (plan §3.5: position = index after removing the item)', () => {
-  const lists = { backlog: ['a', 'b', 'c', 'd'].map(item), sprint: ['x', 'y'].map(item), empty: [] };
+  const lists = {
+    backlog: ['a', 'b', 'c', 'd'].map(item),
+    sprint: ['x', 'y'].map(item),
+    empty: [],
+  };
 
   it('reorders inside one list, down and up', () => {
     expect(ids(moveInLists(lists, 'a', 'backlog', 2)).backlog).toEqual(['b', 'c', 'a', 'd']);
@@ -40,8 +46,22 @@ describe('applyMove (the server rules on the cached project list)', () => {
     makeTodo({ id: 'b1', key: 'KAN-1', title: 'one', order: 0 }),
     makeTodo({ id: 'b2', key: 'KAN-2', title: 'two', order: 1 }),
     makeTodo({ id: 'b3', key: 'KAN-3', title: 'three', order: 2 }),
-    makeTodo({ id: 's1', key: 'KAN-4', title: 'todo col', sprintId: 's', status: 'todo', order: 0 }),
-    makeTodo({ id: 's2', key: 'KAN-5', title: 'doing col', sprintId: 's', status: 'in_progress', order: 0 }),
+    makeTodo({
+      id: 's1',
+      key: 'KAN-4',
+      title: 'todo col',
+      sprintId: 's',
+      status: 'todo',
+      order: 0,
+    }),
+    makeTodo({
+      id: 's2',
+      key: 'KAN-5',
+      title: 'doing col',
+      sprintId: 's',
+      status: 'in_progress',
+      order: 0,
+    }),
   ];
 
   it('reorders the backlog and renumbers `order`', () => {
@@ -56,8 +76,14 @@ describe('applyMove (the server rules on the cached project list)', () => {
 
   it('moves into a sprint status column and keeps the server order (columns, then order)', () => {
     const next = applyMove(todos, 'b1', { sprintId: 's', status: 'todo', position: 0 });
-    expect(next.filter((todo) => todo.sprintId === 's').map((todo) => todo.id)).toEqual(['b1', 's1', 's2']);
-    expect(next.filter((todo) => todo.sprintId === null).map((todo) => [todo.id, todo.order])).toEqual([
+    expect(next.filter((todo) => todo.sprintId === 's').map((todo) => todo.id)).toEqual([
+      'b1',
+      's1',
+      's2',
+    ]);
+    expect(
+      next.filter((todo) => todo.sprintId === null).map((todo) => [todo.id, todo.order]),
+    ).toEqual([
       ['b2', 0],
       ['b3', 1],
     ]);
@@ -68,7 +94,11 @@ describe('applyMove (the server rules on the cached project list)', () => {
     expect(from).toEqual({ sprintId: null, status: 'todo', position: 1 });
     const moved = applyMove(todos, 'b2', { sprintId: 's', status: 'todo', position: 1 });
     const back = applyMove(moved, 'b2', from!);
-    expect(back.filter((todo) => todo.sprintId === null).map((todo) => todo.id)).toEqual(['b1', 'b2', 'b3']);
+    expect(back.filter((todo) => todo.sprintId === null).map((todo) => todo.id)).toEqual([
+      'b1',
+      'b2',
+      'b3',
+    ]);
   });
 });
 
@@ -81,7 +111,11 @@ describe('dropTarget (group index → server position)', () => {
   const incoming = makeTodo({ id: 'n', key: 'KAN-9', title: 'new' });
 
   it('uses the index as the position in the backlog', () => {
-    expect(dropTarget(sprintRows, incoming, null, 2)).toEqual({ sprintId: null, status: 'todo', position: 2 });
+    expect(dropTarget(sprintRows, incoming, null, 2)).toEqual({
+      sprintId: null,
+      status: 'todo',
+      position: 2,
+    });
   });
 
   it('counts only same-status todos above the drop point in a sprint', () => {

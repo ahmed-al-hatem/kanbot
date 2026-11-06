@@ -22,7 +22,9 @@ describe('safeRedirect()', () => {
 
 describe('loginPath() / withRedirect()', () => {
   it('encodes the page to come back to, and skips the root', () => {
-    expect(loginPath('/projects/p1/board?todo=t1')).toBe('/login?redirect=%2Fprojects%2Fp1%2Fboard%3Ftodo%3Dt1');
+    expect(loginPath('/projects/p1/board?todo=t1')).toBe(
+      '/login?redirect=%2Fprojects%2Fp1%2Fboard%3Ftodo%3Dt1',
+    );
     expect(loginPath('/')).toBe('/login');
     expect(loginPath()).toBe('/login');
   });
@@ -49,10 +51,17 @@ describe('passwordStrength()', () => {
 });
 
 describe('registerSchema', () => {
-  const valid = { name: 'Sara', email: 'sara@example.com', password: 'password123', confirm: 'password123' };
+  const valid = {
+    name: 'Sara',
+    email: 'sara@example.com',
+    password: 'password123',
+    confirm: 'password123',
+  };
 
   it('accepts valid values and trims name and email', () => {
-    expect(registerSchema(en).parse({ ...valid, name: '  Sara ', email: ' sara@example.com ' })).toMatchObject({
+    expect(
+      registerSchema(en).parse({ ...valid, name: '  Sara ', email: ' sara@example.com ' }),
+    ).toMatchObject({
       name: 'Sara',
       email: 'sara@example.com',
     });
@@ -65,7 +74,12 @@ describe('registerSchema', () => {
   });
 
   it('follows the server limits', () => {
-    const result = registerSchema(en).safeParse({ ...valid, name: 'x'.repeat(81), password: 'short', confirm: 'short' });
+    const result = registerSchema(en).safeParse({
+      ...valid,
+      name: 'x'.repeat(81),
+      password: 'short',
+      confirm: 'short',
+    });
     expect(result.error?.issues.map((issue) => issue.message)).toEqual(
       expect.arrayContaining(['Use 80 characters or fewer', 'Use at least 8 characters']),
     );

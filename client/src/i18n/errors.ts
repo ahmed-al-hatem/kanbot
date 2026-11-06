@@ -33,7 +33,12 @@ export type ServerMessages = Partial<Record<ServerErrorCode, (serverMessage: str
 
 type ServerErrorCode = Exclude<ApiErrorCode, 'NETWORK_ERROR' | 'TIMEOUT'>;
 
-function codeMessage(code: ApiErrorCode, serverMessage: string, t: Messages, byCode: ServerMessages): string {
+function codeMessage(
+  code: ApiErrorCode,
+  serverMessage: string,
+  t: Messages,
+  byCode: ServerMessages,
+): string {
   if (code === 'NETWORK_ERROR' || code === 'TIMEOUT') return t.errors.byCode[code];
   return (byCode[code] ?? t.errors.server[code])(serverMessage);
 }

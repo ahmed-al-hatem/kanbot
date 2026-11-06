@@ -1,5 +1,12 @@
 import { lazy, Suspense, useEffect, useRef, useState, type RefObject } from 'react';
-import { NavigationType, Outlet, ScrollRestoration, useLocation, useMatch, useNavigationType } from 'react-router';
+import {
+  NavigationType,
+  Outlet,
+  ScrollRestoration,
+  useLocation,
+  useMatch,
+  useNavigationType,
+} from 'react-router';
 import { useAssistant } from '@/stores/assistant';
 import { useNotFound } from '@/stores/notFound';
 import { MobileTopBar } from './MobileTopBar';

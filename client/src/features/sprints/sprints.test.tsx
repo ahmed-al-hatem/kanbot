@@ -9,7 +9,15 @@ import { expectNoAxeViolations } from '@/test/axe';
 import { projectHandlers } from '@/test/projects';
 import { preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
-import { makeSprint, makeTodoDb, seedTodos, SPRINT_3, SPRINT_4, todoHandlers, type TodoDb } from '@/test/todos';
+import {
+  makeSprint,
+  makeTodoDb,
+  seedTodos,
+  SPRINT_3,
+  SPRINT_4,
+  todoHandlers,
+  type TodoDb,
+} from '@/test/todos';
 import { createDefaults, durationHint, nextSprintName } from './sprintForm';
 
 let db: TodoDb;
@@ -45,8 +53,12 @@ describe('sprint form defaults (SPR-1, DESIGN §9 13)', () => {
     });
     // No dates anywhere: today.
     expect(createDefaults([SPRINT_4], '2026-11-04').startDate).toBe('2026-11-04');
-    expect(durationHint('2026-11-16', '2026-11-30', getFormat(), getT())).toBe('2 weeks · Nov 16 – Nov 30');
-    expect(durationHint('2026-11-16', '2026-11-26', getFormat(), getT())).toBe('10 days · Nov 16 – Nov 26');
+    expect(durationHint('2026-11-16', '2026-11-30', getFormat(), getT())).toBe(
+      '2 weeks · Nov 16 – Nov 30',
+    );
+    expect(durationHint('2026-11-16', '2026-11-26', getFormat(), getT())).toBe(
+      '10 days · Nov 16 – Nov 26',
+    );
     expect(durationHint('2026-11-16', '2026-11-10', getFormat(), getT())).toBeNull();
   });
 });
@@ -72,7 +84,12 @@ describe('create and edit a sprint (SPR-1, SPR-2)', () => {
 
     expect(await screen.findByText('Sprint 5 created · drag todos into it')).toBeInTheDocument();
     expect(db.calls.createSprint).toEqual([
-      { name: 'Sprint 5', goal: 'Ship drag and drop', startDate: '2026-11-16', endDate: '2026-11-30' },
+      {
+        name: 'Sprint 5',
+        goal: 'Ship drag and drop',
+        startDate: '2026-11-16',
+        endDate: '2026-11-30',
+      },
     ]);
     expect(await screen.findByRole('heading', { name: 'Sprint 5', level: 2 })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -93,7 +110,9 @@ describe('create and edit a sprint (SPR-1, SPR-2)', () => {
 
     fireEvent.change(endDate, { target: { value: '2026-11-20' } });
     fireEvent.blur(endDate);
-    expect(await within(dialog).findByText('End date must be after start date')).toBeInTheDocument();
+    expect(
+      await within(dialog).findByText('End date must be after start date'),
+    ).toBeInTheDocument();
     expect(endDate).toHaveAttribute('aria-invalid', 'true');
 
     await user.click(within(dialog).getByRole('button', { name: 'Create sprint' }));
@@ -102,7 +121,9 @@ describe('create and edit a sprint (SPR-1, SPR-2)', () => {
     // The same day is allowed (the API only rejects an end before the start).
     fireEvent.change(endDate, { target: { value: '2026-12-01' } });
     await waitFor(() => {
-      expect(within(dialog).queryByText('End date must be after start date')).not.toBeInTheDocument();
+      expect(
+        within(dialog).queryByText('End date must be after start date'),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -133,7 +154,11 @@ describe('delete a planned sprint (SPR-2)', () => {
     start(makeTodoDb(todos));
     renderApp('/projects/p1/backlog');
 
-    expect(await within(await screen.findByRole('region', { name: 'Sprint 4' })).findByRole('button', { name: 'Login screen' })).toBeInTheDocument();
+    expect(
+      await within(await screen.findByRole('region', { name: 'Sprint 4' })).findByRole('button', {
+        name: 'Login screen',
+      }),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Actions for Sprint 4' }));
     await user.click(await screen.findByRole('menuitem', { name: 'Delete sprint' }));
 
@@ -141,10 +166,14 @@ describe('delete a planned sprint (SPR-2)', () => {
     expect(confirm).toHaveTextContent('Its 1 todo goes back to the backlog');
     await user.click(within(confirm).getByRole('button', { name: 'Delete sprint' }));
 
-    expect(await screen.findByText('Sprint 4 deleted · 1 todo moved to the backlog')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Sprint 4 deleted · 1 todo moved to the backlog'),
+    ).toBeInTheDocument();
     expect(db.calls.deleteSprint).toEqual(['s4']);
     expect(screen.queryByRole('heading', { name: 'Sprint 4' })).not.toBeInTheDocument();
-    expect(within(group('Backlog')).getByRole('button', { name: 'Login screen' })).toBeInTheDocument();
+    expect(
+      within(group('Backlog')).getByRole('button', { name: 'Login screen' }),
+    ).toBeInTheDocument();
   });
 
   it("doesn't offer Delete for the active sprint, which links to the board instead", async () => {
@@ -153,7 +182,10 @@ describe('delete a planned sprint (SPR-2)', () => {
     renderApp('/projects/p1/backlog');
 
     const active = await screen.findByRole('region', { name: 'Sprint 3' });
-    expect(within(active).getByRole('link', { name: 'Complete sprint' })).toHaveAttribute('href', '/projects/p1/board');
+    expect(within(active).getByRole('link', { name: 'Complete sprint' })).toHaveAttribute(
+      'href',
+      '/projects/p1/board',
+    );
     await user.click(within(active).getByRole('button', { name: 'Actions for Sprint 3' }));
     expect(await screen.findByRole('menuitem', { name: 'Edit sprint' })).toBeInTheDocument();
     expect(screen.queryByRole('menuitem', { name: 'Delete sprint' })).not.toBeInTheDocument();
@@ -166,14 +198,19 @@ describe('start a sprint (SPR-3)', () => {
     start(makeTodoDb());
     const { router } = renderApp('/projects/p1/backlog');
 
-    const button = await within(await screen.findByRole('region', { name: 'Sprint 4' })).findByRole('button', {
-      name: 'Start sprint',
-    });
+    const button = await within(await screen.findByRole('region', { name: 'Sprint 4' })).findByRole(
+      'button',
+      {
+        name: 'Start sprint',
+      },
+    );
     expect(button).toHaveAttribute('aria-disabled', 'true');
     expect(button).toHaveAccessibleDescription('Complete Sprint 3 first');
 
     await user.click(button);
-    expect(await screen.findByText('Complete Sprint 3 before starting Sprint 4.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Complete Sprint 3 before starting Sprint 4.'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Go to board' }));
     await waitFor(() => {
@@ -183,11 +220,18 @@ describe('start a sprint (SPR-3)', () => {
 
   it('blocks an empty sprint with a toast', async () => {
     const user = userEvent.setup();
-    start(makeTodoDb(seedTodos().filter((todo) => todo.sprintId === null), [SPRINT_4]));
+    start(
+      makeTodoDb(
+        seedTodos().filter((todo) => todo.sprintId === null),
+        [SPRINT_4],
+      ),
+    );
     renderApp('/projects/p1/backlog');
 
     await user.click(await screen.findByRole('button', { name: 'Start sprint' }));
-    expect(await screen.findByText('Add todos to Sprint 4 before starting it.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Add todos to Sprint 4 before starting it.'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
@@ -209,7 +253,9 @@ describe('start a sprint (SPR-3)', () => {
     await waitFor(() => {
       expect(router.state.location.pathname).toBe('/projects/p1/board');
     });
-    expect(db.calls.startSprint).toEqual([{ sprintId: 's5', body: { startDate: today, endDate: addDays(today, 14) } }]);
+    expect(db.calls.startSprint).toEqual([
+      { sprintId: 's5', body: { startDate: today, endDate: addDays(today, 14) } },
+    ]);
     expect(await screen.findByText('Sprint 5 started')).toBeInTheDocument();
   });
 });

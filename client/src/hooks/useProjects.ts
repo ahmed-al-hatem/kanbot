@@ -1,7 +1,13 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useCallback } from 'react';
 import { useParams } from 'react-router';
-import { createProject, deleteProject, getProject, listProjects, updateProject } from '@/api/projects';
+import {
+  createProject,
+  deleteProject,
+  getProject,
+  listProjects,
+  updateProject,
+} from '@/api/projects';
 import { queryClient } from '@/app/queryClient';
 import { prefetchChunk, type ProjectSection } from '@/routeChunks';
 import type { ProjectWithStats, UpdateProjectRequest } from '@/types/api';
@@ -22,7 +28,8 @@ function projectQuery(projectId: string) {
   return queryOptions({
     queryKey: qk.project(projectId),
     queryFn: ({ signal }) => getProject(projectId, signal),
-    initialData: () => queryClient.getQueryData(projectsQuery.queryKey)?.find((project) => project.id === projectId),
+    initialData: () =>
+      queryClient.getQueryData(projectsQuery.queryKey)?.find((project) => project.id === projectId),
     initialDataUpdatedAt: () => queryClient.getQueryState(qk.projects)?.dataUpdatedAt,
   });
 }
@@ -59,7 +66,9 @@ export function usePrefetchProject() {
       // The board needs the active sprint's id from the project; the history needs the sprint list.
       if (section === 'board') {
         void project
-          .then(({ stats }) => (stats.activeSprint ? client.query(boardQuery(stats.activeSprint.id)) : undefined))
+          .then(({ stats }) =>
+            stats.activeSprint ? client.query(boardQuery(stats.activeSprint.id)) : undefined,
+          )
           .catch(() => undefined);
       }
       if (section === 'sprints') void client.query(sprintsQuery(projectId)).catch(() => undefined);

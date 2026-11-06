@@ -41,7 +41,9 @@ describe('Button', () => {
         </Button>,
       );
       // Both labels are always rendered in the same grid cell; only visibility flips.
-      expect(screen.getByRole('button', { name: 'Save changes' })).toHaveTextContent('Save changesSaving…');
+      expect(screen.getByRole('button', { name: 'Save changes' })).toHaveTextContent(
+        'Save changesSaving…',
+      );
 
       rerender(
         <Button loading loadingText="Saving…">

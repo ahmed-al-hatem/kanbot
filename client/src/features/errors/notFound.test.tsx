@@ -33,7 +33,8 @@ const signIn = () => {
   useSession.setState({ token: 'test.jwt.token' });
 };
 const nav = () => screen.getByRole('navigation', { name: 'Main' });
-const heading = (name: string) => screen.findByRole('heading', { name, level: 1 }, { timeout: 3000 });
+const heading = (name: string) =>
+  screen.findByRole('heading', { name, level: 1 }, { timeout: 3000 });
 
 describe('404 page (DESIGN §9 Global — 404)', () => {
   it('renders an unknown route inside the shell, with no nav item current and the page title', async () => {
@@ -45,7 +46,10 @@ describe('404 page (DESIGN §9 Global — 404)', () => {
     expect(router.state.location.pathname).toBe('/teams/42');
     expect(screen.getByText('Error 404')).toBeInTheDocument();
     expect(screen.getByText(/\/teams\/42\?tab=members$/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Go to Projects' })).toHaveAttribute('href', '/projects');
+    expect(screen.getByRole('link', { name: 'Go to Projects' })).toHaveAttribute(
+      'href',
+      '/projects',
+    );
     // No current project: no "Open Active Sprint".
     expect(screen.queryByRole('link', { name: 'Open Active Sprint' })).not.toBeInTheDocument();
     expect(within(nav()).queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
@@ -85,8 +89,14 @@ describe('404 page (DESIGN §9 Global — 404)', () => {
     renderApp('/projects/p1/sprints/nope');
 
     expect(await heading("This sprint doesn't exist")).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open Active Sprint' })).toHaveAttribute('href', '/projects/p1/board');
-    expect(within(nav()).getByRole('link', { name: 'Sprints' })).not.toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: 'Open Active Sprint' })).toHaveAttribute(
+      'href',
+      '/projects/p1/board',
+    );
+    expect(within(nav()).getByRole('link', { name: 'Sprints' })).not.toHaveAttribute(
+      'aria-current',
+      'page',
+    );
   });
 
   it('shows the missing-todo variant for an id the API answers 404 for', async () => {
@@ -94,7 +104,9 @@ describe('404 page (DESIGN §9 Global — 404)', () => {
     renderApp('/projects/p1/board?todo=nope');
 
     expect(await heading("This todo doesn't exist")).toBeInTheDocument();
-    expect(screen.getByText('It may have been deleted. Check the backlog for similar todos.')).toBeInTheDocument();
+    expect(
+      screen.getByText('It may have been deleted. Check the backlog for similar todos.'),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 

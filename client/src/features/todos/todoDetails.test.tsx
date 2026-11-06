@@ -93,12 +93,16 @@ describe('Todo details (BL-3)', () => {
     await user.click(details.getByRole('button', { name: 'Save changes' }));
 
     expect(await screen.findByText('KAN-31 saved')).toBeInTheDocument();
-    expect(db.calls.update).toEqual([{ priority: 'high', storyPoints: null, labels: ['auth', 'frontend', 'forms', 'api'] }]);
+    expect(db.calls.update).toEqual([
+      { priority: 'high', storyPoints: null, labels: ['auth', 'frontend', 'forms', 'api'] },
+    ]);
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     });
     expect(router.state.location.search).toBe('');
-    expect(within(screen.getByRole('button', { name: 'Login screen' }).closest('li')!).getByText('High')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('button', { name: 'Login screen' }).closest('li')!).getByText('High'),
+    ).toBeInTheDocument();
     // Focus goes back to the row that opened it.
     expect(screen.getByRole('button', { name: 'Login screen' })).toHaveFocus();
   });
@@ -159,7 +163,9 @@ describe('Todo details (BL-3)', () => {
     await user.click(details.getByRole('button', { name: 'Save changes' }));
 
     const bar = await details.findByRole('alert');
-    expect(bar).toHaveTextContent("Couldn't save KAN-31. Check your connection and try again — your edits are still here.");
+    expect(bar).toHaveTextContent(
+      "Couldn't save KAN-31. Check your connection and try again — your edits are still here.",
+    );
     expect(title).toHaveValue('Login and register screens');
 
     server.use(...todoHandlers(db));
@@ -184,8 +190,12 @@ describe('Todo details (BL-3)', () => {
 
       // `networkMode: 'always'`: no paused mutation and endless spinner, the error UI instead.
       const bar = await details.findByRole('alert');
-      expect(bar).toHaveTextContent("Couldn't save KAN-31. Check your connection and try again — your edits are still here.");
-      expect(details.getByRole('button', { name: 'Save changes' })).not.toHaveAttribute('aria-busy');
+      expect(bar).toHaveTextContent(
+        "Couldn't save KAN-31. Check your connection and try again — your edits are still here.",
+      );
+      expect(details.getByRole('button', { name: 'Save changes' })).not.toHaveAttribute(
+        'aria-busy',
+      );
       expect(details.getByRole('combobox', { name: 'Priority' })).toHaveValue('urgent');
     } finally {
       act(() => {
@@ -194,7 +204,9 @@ describe('Todo details (BL-3)', () => {
     }
 
     server.use(...todoHandlers(db));
-    await user.click(within(await details.findByRole('alert')).getByRole('button', { name: 'Retry' }));
+    await user.click(
+      within(await details.findByRole('alert')).getByRole('button', { name: 'Retry' }),
+    );
     expect(await screen.findByText('KAN-31 saved')).toBeInTheDocument();
     expect(db.calls.update).toEqual([{ priority: 'urgent' }]);
   });
@@ -219,7 +231,9 @@ describe('unsaved changes guard (BL-3)', () => {
 
     // Cancel asks too.
     await user.click(details.getByRole('button', { name: 'Cancel' }));
-    await user.click(within(await details.findByRole('alertdialog')).getByRole('button', { name: 'Discard' }));
+    await user.click(
+      within(await details.findByRole('alertdialog')).getByRole('button', { name: 'Discard' }),
+    );
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
@@ -287,7 +301,9 @@ describe('delete from Todo details (BL-4)', () => {
   it('shows the 404 page for an unknown id', async () => {
     renderApp('/projects/p1/backlog?todo=nope');
 
-    expect(await screen.findByRole('heading', { name: "This todo doesn't exist", level: 1 })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { name: "This todo doesn't exist", level: 1 }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(document.title).toBe('Page not found · Kanbot');
   });

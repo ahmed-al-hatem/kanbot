@@ -12,7 +12,10 @@ function saved(): unknown {
 }
 
 async function rehydrateWith(locale: string) {
-  window.localStorage.setItem(STORAGE_KEYS.locale, JSON.stringify({ state: { locale }, version: 0 }));
+  window.localStorage.setItem(
+    STORAGE_KEYS.locale,
+    JSON.stringify({ state: { locale }, version: 0 }),
+  );
   await useLocaleStore.persist.rehydrate();
 }
 

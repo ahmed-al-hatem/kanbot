@@ -101,7 +101,9 @@ export function useMoveTodo(projectId: string, { onApplied, onFailed }: MoveHand
     onError: (error, _variables, context) => {
       if (!context) return;
       const { todo, from } = context;
-      queryClient.setQueryData<Todo[]>(listKey, (list) => (list ? applyMove(list, todo.id, from) : list));
+      queryClient.setQueryData<Todo[]>(listKey, (list) =>
+        list ? applyMove(list, todo.id, from) : list,
+      );
       moveInCachedBoards(todo.id, todo, from);
       onFailed?.(error, todo);
     },
@@ -124,7 +126,12 @@ export function useMoveTodo(projectId: string, { onApplied, onFailed }: MoveHand
     (todoId: string, target: MoveTarget, options: { undo?: boolean } = {}) => {
       // The status as it will be when this request runs (earlier moves are applied already).
       const current = locate(projectId, todoId)?.todo.status;
-      mutate({ todoId, target, undo: options.undo ?? false, sendStatus: current !== undefined && current !== target.status });
+      mutate({
+        todoId,
+        target,
+        undo: options.undo ?? false,
+        sendStatus: current !== undefined && current !== target.status,
+      });
     },
     [mutate, projectId],
   );

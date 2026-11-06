@@ -4,7 +4,8 @@ import { cx } from '@/lib/cx';
 import styles from './Chip.module.css';
 
 /** `neutral` for type/priority, `danger` for overdue, a lozenge hue for labels. */
-export type ChipTone = 'neutral' | 'danger' | 'blue' | 'purple' | 'green' | 'orange' | 'teal' | 'magenta' | 'gray';
+export type ChipTone =
+  'neutral' | 'danger' | 'blue' | 'purple' | 'green' | 'orange' | 'teal' | 'magenta' | 'gray';
 
 type RemoveProps =
   | { onRemove?: undefined; removeLabel?: undefined }
@@ -26,7 +27,15 @@ type ChipProps = RemoveProps & {
 };
 
 /** DESIGN §7 Chip: 22px, radius 4, 12/500, gap 6, icon 12. */
-export function Chip({ children, icon, leading, tone = 'neutral', onRemove, removeLabel, className }: ChipProps) {
+export function Chip({
+  children,
+  icon,
+  leading,
+  tone = 'neutral',
+  onRemove,
+  removeLabel,
+  className,
+}: ChipProps) {
   return (
     <span className={cx(styles.chip, styles[tone], className)}>
       {icon ? <Icon name={icon} size={12} /> : leading}

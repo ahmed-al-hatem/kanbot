@@ -24,7 +24,15 @@ interface FieldProps {
  * DESIGN §7 Text field: label 4px above the control, then the error or the help text,
  * both linked to the control with `aria-describedby` (DESIGN §10.5).
  */
-export function Field({ label, children, help, error, required = false, id, className }: FieldProps) {
+export function Field({
+  label,
+  children,
+  help,
+  error,
+  required = false,
+  id,
+  className,
+}: FieldProps) {
   const t = useT();
   const autoId = useId();
   const controlId = id ?? `field${autoId}`;

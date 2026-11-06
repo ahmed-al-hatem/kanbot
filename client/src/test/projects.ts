@@ -5,7 +5,9 @@ import { apiUrl } from './server';
 import { makeSprint } from './todos';
 
 /** A `ProjectWithStats` with test defaults. */
-export function makeProject(overrides: Partial<ProjectWithStats> & Pick<ProjectWithStats, 'id' | 'name' | 'key'>) {
+export function makeProject(
+  overrides: Partial<ProjectWithStats> & Pick<ProjectWithStats, 'id' | 'name' | 'key'>,
+) {
   return {
     description: '',
     createdAt: '2026-11-01T09:00:00.000Z',

@@ -15,9 +15,21 @@ interface SkeletonProps {
 }
 
 /** DESIGN §7 Skeleton: a `--neutral` block with a shimmer. Always hidden from screen readers. */
-export function Skeleton({ inlineSize, blockSize = 16, radius = 'medium', opacity, className }: SkeletonProps) {
+export function Skeleton({
+  inlineSize,
+  blockSize = 16,
+  radius = 'medium',
+  opacity,
+  className,
+}: SkeletonProps) {
   const style: CSSProperties = { inlineSize, blockSize, opacity };
-  return <span className={cx(styles.skeleton, styles[radius], className)} style={style} aria-hidden="true" />;
+  return (
+    <span
+      className={cx(styles.skeleton, styles[radius], className)}
+      style={style}
+      aria-hidden="true"
+    />
+  );
 }
 
 interface SkeletonRegionProps {

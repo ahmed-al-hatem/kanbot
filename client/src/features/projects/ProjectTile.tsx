@@ -72,7 +72,11 @@ export const ProjectTile = memo(function ProjectTile({
               if (action === 'delete') onDelete(project);
             }}
             trigger={
-              <IconButton size="sm" icon="show-more-horizontal" aria-label={t.projects.tile.actions(project.name)} />
+              <IconButton
+                size="sm"
+                icon="show-more-horizontal"
+                aria-label={t.projects.tile.actions(project.name)}
+              />
             }
           >
             <MenuItem
@@ -105,7 +109,9 @@ export const ProjectTile = memo(function ProjectTile({
         </div>
       </div>
 
-      <p className={cx(styles.tileDescription, !project.description && styles.tileDescriptionEmpty)}>
+      <p
+        className={cx(styles.tileDescription, !project.description && styles.tileDescriptionEmpty)}
+      >
         {project.description || t.projects.tile.noDescription}
       </p>
 

@@ -1,6 +1,13 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { memo, useEffect, useRef, type CSSProperties, type KeyboardEvent, type KeyboardEventHandler } from 'react';
+import {
+  memo,
+  useEffect,
+  useRef,
+  type CSSProperties,
+  type KeyboardEvent,
+  type KeyboardEventHandler,
+} from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { Chip } from '@/components/Chip/Chip';
 import { PointsPill } from '@/components/Chip/PointsPill';
@@ -90,7 +97,15 @@ export const TodoRow = memo(function TodoRow({
   const saving = isTempTodo(todo.id);
   const extraLabels = todo.labels.length - MAX_LABELS;
 
-  const { setNodeRef, setActivatorNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    setActivatorNodeRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: todo.id,
     data: { type: 'row', groupId } satisfies DropData,
     // The active sprint's order is per status column (the board's), so its rows aren't drop
@@ -197,7 +212,9 @@ export const TodoRow = memo(function TodoRow({
             {extraLabels > 0 && (
               <span className={styles.moreLabels}>
                 {copy.moreLabels(extraLabels)}
-                <span className="visually-hidden">{copy.moreLabelsSpoken(todo.labels.slice(MAX_LABELS).join(copy.labelSeparator))}</span>
+                <span className="visually-hidden">
+                  {copy.moreLabelsSpoken(todo.labels.slice(MAX_LABELS).join(copy.labelSeparator))}
+                </span>
               </span>
             )}
           </span>
@@ -215,7 +232,13 @@ export const TodoRow = memo(function TodoRow({
               if (action === 'open') onOpen(todo.id);
               if (action === 'delete') onDelete(todo);
             }}
-            trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={copy.actions(todo.key)} />}
+            trigger={
+              <IconButton
+                size="sm"
+                icon="show-more-horizontal"
+                aria-label={copy.actions(todo.key)}
+              />
+            }
           >
             <MenuItem
               icon="arrow-right"

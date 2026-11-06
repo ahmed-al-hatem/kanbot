@@ -41,7 +41,10 @@ class MousePointerSensor extends PointerSensor {
     {
       eventName: 'onPointerDown' as const,
       handler: ({ nativeEvent: event }: ReactPointerEvent) =>
-        event.isPrimary && event.button === 0 && event.pointerType !== 'touch' && startsDrag(event.target),
+        event.isPrimary &&
+        event.button === 0 &&
+        event.pointerType !== 'touch' &&
+        startsDrag(event.target),
     },
   ];
 }
@@ -50,7 +53,8 @@ class LongPressTouchSensor extends TouchSensor {
   static override activators = [
     {
       eventName: 'onTouchStart' as const,
-      handler: ({ nativeEvent: event }: ReactTouchEvent) => event.touches.length === 1 && startsDrag(event.target),
+      handler: ({ nativeEvent: event }: ReactTouchEvent) =>
+        event.touches.length === 1 && startsDrag(event.target),
     },
   ];
 }
@@ -63,7 +67,9 @@ class LongPressTouchSensor extends TouchSensor {
  */
 export function useDragSensors({ keyboard }: { keyboard: boolean }) {
   const pointer = useSensor(MousePointerSensor, { activationConstraint: { distance: 4 } });
-  const touch = useSensor(LongPressTouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } });
+  const touch = useSensor(LongPressTouchSensor, {
+    activationConstraint: { delay: 200, tolerance: 8 },
+  });
   const keys = useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates });
   return useSensors(pointer, touch, ...(keyboard ? [keys] : []));
 }
@@ -78,10 +84,14 @@ const isItem = (container: DroppableContainer | undefined) =>
 export const listCollisions: CollisionDetection = (args) => {
   if (args.pointerCoordinates) {
     const within = pointerWithin(args);
-    const items = within.filter((collision) => isItem(args.droppableContainers.find((c) => c.id === collision.id)));
+    const items = within.filter((collision) =>
+      isItem(args.droppableContainers.find((c) => c.id === collision.id)),
+    );
     if (items.length > 0) return items;
     if (within.length > 0) return within;
   }
   const itemContainers = args.droppableContainers.filter(isItem);
-  return closestCenter(itemContainers.length > 0 ? { ...args, droppableContainers: itemContainers } : args);
+  return closestCenter(
+    itemContainers.length > 0 ? { ...args, droppableContainers: itemContainers } : args,
+  );
 };

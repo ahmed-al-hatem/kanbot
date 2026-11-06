@@ -1,5 +1,12 @@
 import { queryOptions, useMutation, useQuery } from '@tanstack/react-query';
-import { completeSprint, createSprint, deleteSprint, listSprints, startSprint, updateSprint } from '@/api/sprints';
+import {
+  completeSprint,
+  createSprint,
+  deleteSprint,
+  listSprints,
+  startSprint,
+  updateSprint,
+} from '@/api/sprints';
 import { queryClient } from '@/app/queryClient';
 import { compareTodos } from '@/lib/moveInLists';
 import type {
@@ -31,7 +38,10 @@ export function useSprints(projectId: string) {
  * active sprint) and the projects list (tiles show it); complete also adds the board of the
  * planned sprint that took the unfinished todos.
  */
-function invalidateAfterSprintChange(projectId: string, { boards = [] }: { boards?: string[] } = {}) {
+function invalidateAfterSprintChange(
+  projectId: string,
+  { boards = [] }: { boards?: string[] } = {},
+) {
   void queryClient.invalidateQueries({ queryKey: qk.sprints(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.todos(projectId) });
   void queryClient.invalidateQueries({ queryKey: qk.project(projectId) });
@@ -46,7 +56,10 @@ function invalidateAfterSprintChange(projectId: string, { boards = [] }: { board
  * The project's active sprint changes the moment the server says so: the board reads it from
  * `project.stats.activeSprint` (plan §5.3), so it must not wait for the refetch.
  */
-function setActiveSprint(projectId: string, activeSprint: ProjectWithStats['stats']['activeSprint']) {
+function setActiveSprint(
+  projectId: string,
+  activeSprint: ProjectWithStats['stats']['activeSprint'],
+) {
   queryClient.setQueryData<ProjectWithStats>(qk.project(projectId), (project) =>
     project ? { ...project, stats: { ...project.stats, activeSprint } } : project,
   );
@@ -85,7 +98,8 @@ export function useCreateSprint(projectId: string) {
 /** `PATCH /sprints/:id` (SPR-2). */
 export function useUpdateSprint(projectId: string) {
   return useMutation({
-    mutationFn: ({ sprintId, body }: { sprintId: string; body: UpdateSprintRequest }) => updateSprint(sprintId, body),
+    mutationFn: ({ sprintId, body }: { sprintId: string; body: UpdateSprintRequest }) =>
+      updateSprint(sprintId, body),
     onSuccess: (sprint) => {
       putSprint(projectId, sprint);
       queryClient.setQueryData(qk.sprint(sprint.id), sprint);
@@ -99,13 +113,20 @@ export function useDeleteSprint(projectId: string) {
   return useMutation({
     mutationFn: (sprint: Sprint) => deleteSprint(sprint.id),
     onSuccess: (_data, sprint) => {
-      queryClient.setQueryData<Sprint[]>(qk.sprints(projectId), (list) => list?.filter((item) => item.id !== sprint.id));
+      queryClient.setQueryData<Sprint[]>(qk.sprints(projectId), (list) =>
+        list?.filter((item) => item.id !== sprint.id),
+      );
       // Same as the server: its todos go to the end of the backlog, in their sprint order.
       queryClient.setQueryData<Todo[]>(qk.todos(projectId, {}), (list) => {
         if (!list) return list;
-        let order = Math.max(-1, ...list.filter((todo) => todo.sprintId === null).map((todo) => todo.order));
+        let order = Math.max(
+          -1,
+          ...list.filter((todo) => todo.sprintId === null).map((todo) => todo.order),
+        );
         return list
-          .map((todo) => (todo.sprintId === sprint.id ? { ...todo, sprintId: null, order: (order += 1) } : todo))
+          .map((todo) =>
+            todo.sprintId === sprint.id ? { ...todo, sprintId: null, order: (order += 1) } : todo,
+          )
           .sort(compareTodos);
       });
       queryClient.removeQueries({ queryKey: qk.sprint(sprint.id) });
@@ -117,7 +138,8 @@ export function useDeleteSprint(projectId: string) {
 /** `POST /sprints/:id/start` (SPR-3). */
 export function useStartSprint(projectId: string) {
   return useMutation({
-    mutationFn: ({ sprintId, body }: { sprintId: string; body: StartSprintRequest }) => startSprint(sprintId, body),
+    mutationFn: ({ sprintId, body }: { sprintId: string; body: StartSprintRequest }) =>
+      startSprint(sprintId, body),
     onSuccess: (sprint) => {
       putSprint(projectId, sprint);
       setActiveSprint(projectId, { id: sprint.id, name: sprint.name });
@@ -132,12 +154,14 @@ export function useStartSprint(projectId: string) {
  */
 export function useCompleteSprint(projectId: string) {
   return useMutation({
-    mutationFn: ({ sprintId, body }: { sprintId: string; body: CompleteSprintRequest }) => completeSprint(sprintId, body),
+    mutationFn: ({ sprintId, body }: { sprintId: string; body: CompleteSprintRequest }) =>
+      completeSprint(sprintId, body),
     onSuccess: (sprint, { body }) => {
       putSprint(projectId, sprint);
       queryClient.setQueryData(qk.sprint(sprint.id), sprint);
       setActiveSprint(projectId, null);
-      const boards = body.moveUnfinishedTo === 'backlog' ? [sprint.id] : [sprint.id, body.moveUnfinishedTo];
+      const boards =
+        body.moveUnfinishedTo === 'backlog' ? [sprint.id] : [sprint.id, body.moveUnfinishedTo];
       invalidateAfterSprintChange(projectId, { boards });
     },
   });

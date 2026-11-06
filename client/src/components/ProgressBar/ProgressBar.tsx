@@ -16,7 +16,15 @@ interface ProgressBarProps {
 }
 
 /** DESIGN §7 Progress bar: pill track `--progress`, fill `--progress-done`, width eases over 500ms. */
-export function ProgressBar({ value, max, label, valueText, height = 6, over = false, className }: ProgressBarProps) {
+export function ProgressBar({
+  value,
+  max,
+  label,
+  valueText,
+  height = 6,
+  over = false,
+  className,
+}: ProgressBarProps) {
   const ratio = max > 0 ? Math.min(Math.max(value / max, 0), 1) : 0;
   return (
     <div

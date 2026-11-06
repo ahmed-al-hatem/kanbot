@@ -27,7 +27,11 @@ export function ProfileMenu() {
         label={t.shell.profile.menu}
         align="start"
         trigger={
-          <button type="button" className={styles.profileButton} data-tip={user?.name ?? t.shell.profile.menu}>
+          <button
+            type="button"
+            className={styles.profileButton}
+            data-tip={user?.name ?? t.shell.profile.menu}
+          >
             <Avatar name={user?.name ?? ''} size={32} decorative />
             <span className={styles.profileText}>
               <span className={styles.profileName}>{user?.name}</span>

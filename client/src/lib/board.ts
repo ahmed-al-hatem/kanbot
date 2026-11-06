@@ -1,4 +1,10 @@
-import { TODO_STATUSES, type SprintBoardResponse, type SprintStats, type Todo, type TodoStatus } from '@/types/api';
+import {
+  TODO_STATUSES,
+  type SprintBoardResponse,
+  type SprintStats,
+  type Todo,
+  type TodoStatus,
+} from '@/types/api';
 import { compareTodos } from './moveInLists';
 
 /**
@@ -13,7 +19,10 @@ export function boardTodos(board: SprintBoardResponse): Todo[] {
 
 /** The server's `statsFor`: Done-only points (plan §2 #10); a todo without points counts 0. */
 export function sprintStatsOf(todos: readonly Todo[]): SprintStats {
-  const byStatus = Object.fromEntries(TODO_STATUSES.map((status) => [status, 0])) as Record<TodoStatus, number>;
+  const byStatus = Object.fromEntries(TODO_STATUSES.map((status) => [status, 0])) as Record<
+    TodoStatus,
+    number
+  >;
   let totalPoints = 0;
   let donePoints = 0;
   for (const todo of todos) {
@@ -29,13 +38,17 @@ export function sprintStatsOf(todos: readonly Todo[]): SprintStats {
  * server's order, with the sprint's live stats recomputed (so the header progress follows
  * an optimistic move at once). A column that didn't change keeps its array identity.
  */
-export function withBoardTodos(board: SprintBoardResponse, todos: readonly Todo[]): SprintBoardResponse {
+export function withBoardTodos(
+  board: SprintBoardResponse,
+  todos: readonly Todo[],
+): SprintBoardResponse {
   const mine = todos.filter((todo) => todo.sprintId === board.sprint.id).sort(compareTodos);
   const columns = {} as Record<TodoStatus, Todo[]>;
   for (const status of TODO_STATUSES) {
     const next = mine.filter((todo) => todo.status === status);
     const previous = board.columns[status];
-    const same = next.length === previous.length && next.every((todo, index) => todo === previous[index]);
+    const same =
+      next.length === previous.length && next.every((todo, index) => todo === previous[index]);
     columns[status] = same ? previous : next;
   }
   return { sprint: { ...board.sprint, stats: sprintStatsOf(mine) }, columns };

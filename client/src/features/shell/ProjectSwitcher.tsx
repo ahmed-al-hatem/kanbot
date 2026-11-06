@@ -33,7 +33,9 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
       className={styles.switcher}
       // The label contains all the visible text, name and key (WCAG 2.5.3 Label in Name): without
       // the key it failed axe's label-content-name-mismatch.
-      aria-label={project ? t.shell.switcher.label(project.name, project.key) : t.shell.switcher.choose}
+      aria-label={
+        project ? t.shell.switcher.label(project.name, project.key) : t.shell.switcher.choose
+      }
       // The tablet rail's tooltip (AppShell.module.css).
       data-tip={project ? project.name : t.shell.switcher.choose}
     >
@@ -69,10 +71,17 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
   );
 
   return (
-    <Menu trigger={trigger} label={t.shell.switcher.menu} align="start" className={styles.switcherMenu}>
+    <Menu
+      trigger={trigger}
+      label={t.shell.switcher.menu}
+      align="start"
+      className={styles.switcherMenu}
+    >
       <MenuLabel>{t.shell.switcher.heading}</MenuLabel>
       {projects.isPending && <MenuItem disabled>{t.shell.switcher.loading}</MenuItem>}
-      {projects.isError && !projects.data && <MenuItem disabled>{t.shell.switcher.loadFailed}</MenuItem>}
+      {projects.isError && !projects.data && (
+        <MenuItem disabled>{t.shell.switcher.loadFailed}</MenuItem>
+      )}
       {projects.data?.length === 0 && <MenuItem disabled>{t.shell.switcher.empty}</MenuItem>}
       {projects.data?.map((item) => (
         <MenuItem
@@ -87,7 +96,13 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
           <span className={styles.menuProject}>
             <ProjectAvatar id={item.id} name={item.name} size={22} />
             <span className={styles.menuProjectName}>{item.name}</span>
-            {item.id === projectId && <Icon name="check-mark" label={t.shell.switcher.current} className={styles.menuCurrent} />}
+            {item.id === projectId && (
+              <Icon
+                name="check-mark"
+                label={t.shell.switcher.current}
+                className={styles.menuCurrent}
+              />
+            )}
           </span>
         </MenuItem>
       ))}

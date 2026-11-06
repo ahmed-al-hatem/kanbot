@@ -3,7 +3,12 @@ import { Button } from '@/components/Button/Button';
 import { Input } from '@/components/Field/Input';
 import { Select } from '@/components/Field/Select';
 import { Icon } from '@/components/Icon/Icon';
-import { PRIORITY_OPTIONS, TYPE_OPTIONS, isTodoPriority, isTodoType } from '@/features/todos/todoMeta';
+import {
+  PRIORITY_OPTIONS,
+  TYPE_OPTIONS,
+  isTodoPriority,
+  isTodoType,
+} from '@/features/todos/todoMeta';
 import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './Backlog.module.css';

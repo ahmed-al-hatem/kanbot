@@ -25,7 +25,11 @@ let counter = 0;
 function apply() {
   let winner: Entry | undefined;
   for (const entry of entries.values()) {
-    if (!winner || entry.level > winner.level || (entry.level === winner.level && entry.order > winner.order)) {
+    if (
+      !winner ||
+      entry.level > winner.level ||
+      (entry.level === winner.level && entry.order > winner.order)
+    ) {
       winner = entry;
     }
   }

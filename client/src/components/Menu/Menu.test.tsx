@@ -7,7 +7,10 @@ import { Menu, MenuItem, MenuSeparator } from './Menu';
 
 function RowMenu({ onDelete = vi.fn() }: { onDelete?: () => void }) {
   return (
-    <Menu label="KAN-12 actions" trigger={<IconButton icon="show-more-horizontal" aria-label="Actions for KAN-12" />}>
+    <Menu
+      label="KAN-12 actions"
+      trigger={<IconButton icon="show-more-horizontal" aria-label="Actions for KAN-12" />}
+    >
       <MenuItem icon="pencil">Open details</MenuItem>
       <MenuItem>Move to Sprint 4</MenuItem>
       <MenuItem disabled>Move to top</MenuItem>

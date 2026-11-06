@@ -56,7 +56,13 @@ interface AssistantState {
   reset: () => void;
 }
 
-const initialState = { open: false, chats: {}, composer: {}, dialog: null, target: null } satisfies Partial<AssistantState>;
+const initialState = {
+  open: false,
+  chats: {},
+  composer: {},
+  dialog: null,
+  target: null,
+} satisfies Partial<AssistantState>;
 
 let nextId = 1;
 let nextDialogKey = 1;
@@ -74,18 +80,24 @@ export const useAssistant = create<AssistantState>()(
         set((state) => ({
           open: true,
           target: projectId,
-          composer: prompt === undefined ? state.composer : { ...state.composer, [projectId]: prompt },
+          composer:
+            prompt === undefined ? state.composer : { ...state.composer, [projectId]: prompt },
         }));
       },
       append: (projectId, message) => {
         const entry: ChatEntry = { ...message, id: entryId(), createdAt: new Date().toISOString() };
-        set((state) => ({ chats: { ...state.chats, [projectId]: [...(state.chats[projectId] ?? []), entry] } }));
+        set((state) => ({
+          chats: { ...state.chats, [projectId]: [...(state.chats[projectId] ?? []), entry] },
+        }));
       },
       setComposer: (projectId, text) => {
         set((state) => ({ composer: { ...state.composer, [projectId]: text } }));
       },
       newChat: (projectId) => {
-        set((state) => ({ chats: omitKey(state.chats, projectId), composer: omitKey(state.composer, projectId) }));
+        set((state) => ({
+          chats: omitKey(state.chats, projectId),
+          composer: omitKey(state.composer, projectId),
+        }));
       },
       openDialog: (request) => {
         set({ open: false, dialog: { ...request, key: nextDialogKey++ } });
@@ -116,6 +128,11 @@ export const CHAT_MAX_MESSAGES = 30;
 export const CHAT_MAX_CONTENT = 4000;
 
 /** The last `limit` messages, as the API wants them (ChatRequest: 1–30, content ≤ 4000). */
-export function toChatRequest(entries: readonly ChatEntry[], limit = CHAT_MAX_MESSAGES): ChatMessage[] {
-  return entries.slice(-limit).map(({ role, content }) => ({ role, content: content.slice(0, CHAT_MAX_CONTENT) }));
+export function toChatRequest(
+  entries: readonly ChatEntry[],
+  limit = CHAT_MAX_MESSAGES,
+): ChatMessage[] {
+  return entries
+    .slice(-limit)
+    .map(({ role, content }) => ({ role, content: content.slice(0, CHAT_MAX_CONTENT) }));
 }

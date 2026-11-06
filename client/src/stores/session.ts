@@ -26,7 +26,11 @@ interface SessionState {
   reset: () => void;
 }
 
-const initialState = { token: null, sessionExpired: false, signedOut: false } satisfies Partial<SessionState>;
+const initialState = {
+  token: null,
+  sessionExpired: false,
+  signedOut: false,
+} satisfies Partial<SessionState>;
 
 export const useSession = create<SessionState>()(
   persist(

@@ -25,12 +25,21 @@ interface SprintActionsProps {
  * in a toast) and ⋯ with Edit and Delete (SPR-2). Active: a **Complete sprint** link to the
  * board and ⋯ with Edit only; active sprints can't be deleted (the server answers 409).
  */
-export function SprintActions({ group, sprint, activeSprint, boardPath, onStart, onEdit, onDelete }: SprintActionsProps) {
+export function SprintActions({
+  group,
+  sprint,
+  activeSprint,
+  boardPath,
+  onStart,
+  onEdit,
+  onDelete,
+}: SprintActionsProps) {
   const t = useT();
   const copy = t.backlog.sprint;
   const reasonId = useId();
   const pending = useRef<SprintAction | null>(null);
-  const blockedBy = group.kind === 'planned' && activeSprint && activeSprint.id !== sprint.id ? activeSprint : null;
+  const blockedBy =
+    group.kind === 'planned' && activeSprint && activeSprint.id !== sprint.id ? activeSprint : null;
 
   return (
     <>
@@ -67,7 +76,13 @@ export function SprintActions({ group, sprint, activeSprint, boardPath, onStart,
           if (action === 'edit') onEdit(sprint);
           if (action === 'delete') onDelete(group);
         }}
-        trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={copy.actions(sprint.name)} />}
+        trigger={
+          <IconButton
+            size="sm"
+            icon="show-more-horizontal"
+            aria-label={copy.actions(sprint.name)}
+          />
+        }
       >
         <MenuItem
           icon="pencil"

@@ -44,7 +44,9 @@ export function SessionExpiredDialog({ redirectTo }: SessionExpiredDialogProps) 
             <span className={styles.badge}>
               <Icon name="lock-locked" size={20} />
             </span>
-            <AlertDialog.Title className={styles.title}>{t.auth.sessionExpired.title}</AlertDialog.Title>
+            <AlertDialog.Title className={styles.title}>
+              {t.auth.sessionExpired.title}
+            </AlertDialog.Title>
             <AlertDialog.Description className={styles.text}>
               {t.auth.sessionExpired.text}
             </AlertDialog.Description>

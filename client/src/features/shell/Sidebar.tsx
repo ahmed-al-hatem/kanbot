@@ -41,13 +41,21 @@ export function Sidebar({ projectId, open }: SidebarProps) {
   const prefetch = usePrefetchProject();
   const sectionMatch = useMatch('/projects/:projectId/:section/*');
   const current = sectionMatch?.params.section;
-  const section: ProjectSection = current === 'board' || current === 'sprints' ? current : 'backlog';
+  const section: ProjectSection =
+    current === 'board' || current === 'sprints' ? current : 'backlog';
   // DESIGN §9 404: the sidebar stays, with no item current.
   const notFound = useNotFound((s) => s.cause !== null);
-  const linkProps = { className: navClass(notFound), 'aria-current': notFound ? false : 'page' } as const;
+  const linkProps = {
+    className: navClass(notFound),
+    'aria-current': notFound ? false : 'page',
+  } as const;
 
   return (
-    <nav id={NAV_ID} aria-label={t.shell.nav.label} className={cx(styles.nav, open && styles.navOpen)}>
+    <nav
+      id={NAV_ID}
+      aria-label={t.shell.nav.label}
+      className={cx(styles.nav, open && styles.navOpen)}
+    >
       <div className={styles.brand}>
         <Logo size={28} />
         <span className={styles.wordmark} aria-hidden="true">

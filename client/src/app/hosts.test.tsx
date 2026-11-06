@@ -92,7 +92,9 @@ describe('LiveRegion', () => {
     act(() => {
       announce('KAN-21 moved to In Progress, position 2 of 3');
     });
-    expect(screen.getByTestId('live-polite')).toHaveTextContent('KAN-21 moved to In Progress, position 2 of 3');
+    expect(screen.getByTestId('live-polite')).toHaveTextContent(
+      'KAN-21 moved to In Progress, position 2 of 3',
+    );
     expect(screen.getByTestId('live-polite')).toHaveAttribute('aria-live', 'polite');
 
     act(() => {

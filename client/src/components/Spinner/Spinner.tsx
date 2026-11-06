@@ -14,7 +14,9 @@ interface SpinnerProps {
 
 /** Ring that spins in 700ms, colored by the text around it. */
 export function Spinner({ size = 14, label, className }: SpinnerProps) {
-  const ring = <span className={cx(styles.spinner, styles[`s${size}`], className)} aria-hidden="true" />;
+  const ring = (
+    <span className={cx(styles.spinner, styles[`s${size}`], className)} aria-hidden="true" />
+  );
   if (!label) return ring;
   return (
     <span role="status" className={styles.labelled}>

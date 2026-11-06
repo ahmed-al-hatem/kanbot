@@ -66,7 +66,9 @@ export function Menu({
             // counts: Radix also refocuses the panel when the pointer leaves an item.
             if (!justOpened.current || event.target !== event.currentTarget) return;
             justOpened.current = false;
-            event.currentTarget.querySelector<HTMLElement>('[role^="menuitem"]:not([data-disabled])')?.focus();
+            event.currentTarget
+              .querySelector<HTMLElement>('[role^="menuitem"]:not([data-disabled])')
+              ?.focus();
           }}
         >
           {children}
@@ -87,7 +89,14 @@ interface MenuItemProps {
   onFocus?: () => void;
 }
 
-export function MenuItem({ children, onSelect, icon, tone = 'default', disabled, onFocus }: MenuItemProps) {
+export function MenuItem({
+  children,
+  onSelect,
+  icon,
+  tone = 'default',
+  disabled,
+  onFocus,
+}: MenuItemProps) {
   return (
     <DropdownMenu.Item
       className={cx(styles.item, tone === 'danger' && styles.danger)}

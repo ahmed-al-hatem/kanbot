@@ -55,7 +55,11 @@ export function firstConnected(selectors: (string | null | undefined)[]): HTMLEl
  * `[attribute="id"]` and returns a resolver for `refocusAfterRemoval`: the next item, the
  * previous one, then `fallbacks` (selectors), e.g. the page title.
  */
-export function neighbourFocus(attribute: string, id: string, fallbacks: string[]): () => HTMLElement | null {
+export function neighbourFocus(
+  attribute: string,
+  id: string,
+  fallbacks: string[],
+): () => HTMLElement | null {
   const all = Array.from(document.querySelectorAll<HTMLElement>(`[${attribute}]`));
   const index = all.findIndex((element) => element.getAttribute(attribute) === id);
   const neighbours = index < 0 ? [] : [all[index + 1], all[index - 1]];
