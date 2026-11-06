@@ -16,8 +16,8 @@ import { TypeIcon } from '@/features/todos/TypeIcon';
 import { usePlanSprint } from '@/hooks/useAi';
 import { useCreateSprint, useSprints } from '@/hooks/useSprints';
 import { useProjectTodos } from '@/hooks/useTodos';
+import { getT, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { plural } from '@/lib/format';
 import { announce } from '@/stores/announcer';
 import type { Sprint, Todo } from '@/types/api';
 import { aiErrorMessage } from './aiCopy';
@@ -30,15 +30,19 @@ const CAPACITY_MIN = 1;
 const CAPACITY_MAX = 200;
 const FOCUS_MAX = 300;
 const DEFAULT_CAPACITY = '20';
-const CAPACITY_ERROR = `Enter a whole number of points from ${CAPACITY_MIN} to ${CAPACITY_MAX}`;
 
-const PRIORITY_RANK = Object.fromEntries(PRIORITY_OPTIONS.map((priority, index) => [priority, index]));
+const PRIORITY_RANK = Object.fromEntries(
+  PRIORITY_OPTIONS.map((priority, index) => [priority, index]),
+);
 
 /** Backlog todos, highest priority first (DESIGN §9 09); ties keep the backlog order. */
 function backlogByPriority(todos: Todo[]): Todo[] {
   return todos
     .filter((todo) => todo.sprintId === null)
-    .sort((a, b) => (PRIORITY_RANK[a.priority] ?? 0) - (PRIORITY_RANK[b.priority] ?? 0) || a.order - b.order);
+    .sort(
+      (a, b) =>
+        (PRIORITY_RANK[a.priority] ?? 0) - (PRIORITY_RANK[b.priority] ?? 0) || a.order - b.order,
+    );
 }
 
 /**
@@ -56,10 +60,6 @@ interface Suggestion {
   /** The reasoning names todo keys that aren't among the picks (in the backlog or not). */
   mentionsOthers: boolean;
 }
-
-const LEFT_OUT_NOTE = "Some todos the AI mentioned aren't in this plan.";
-const NOTES_CAVEAT =
-  "The AI's notes may not match the plan above — the plan is checked against your backlog and capacity.";
 
 function parseCapacity(value: string): number | null {
   if (!/^\d+$/.test(value.trim())) return null;
@@ -94,7 +94,14 @@ export function PlanSprintDialog({
   onGenerate,
   fallbackFocus,
 }: PlanSprintDialogProps) {
+  const t = useT();
+  const copy = t.ai.plan;
   const formId = useId();
+  const fieldIds = {
+    capacity: `${formId}-capacity`,
+    todos: `${formId}-todos`,
+    why: `${formId}-why`,
+  };
   const plan = usePlanSprint(projectId);
   const create = useCreateSprint(projectId);
   const todos = useProjectTodos(projectId, backlogByPriority);
@@ -105,11 +112,13 @@ export function PlanSprintDialog({
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [goal, setGoal] = useState('');
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
-  const [createError, setCreateError] = useState<string | null>(null);
+  // The failed request, not its text: the banner reads it at render, in the UI language.
+  const [createError, setCreateError] = useState<unknown>(null);
 
   const candidates = useMemo(() => todos.data ?? [], [todos.data]);
   const cap = parseCapacity(capacity);
-  const capacityError = touched && cap === null ? CAPACITY_ERROR : undefined;
+  const capacityError =
+    touched && cap === null ? copy.capacityError(CAPACITY_MIN, CAPACITY_MAX) : undefined;
   const picked = candidates.filter((todo) => selected.has(todo.id));
   const total = picked.reduce((sum, todo) => sum + (todo.storyPoints ?? 0), 0);
   const over = cap !== null && total > cap;
@@ -119,8 +128,8 @@ export function PlanSprintDialog({
   const suggest = () => {
     setTouched(true);
     if (cap === null) {
-      document.getElementById(`${formId}-capacity`)?.focus();
-      announce('1 field needs attention');
+      document.getElementById(fieldIds.capacity)?.focus();
+      announce(getT().common.fieldsNeedAttention(1));
       return;
     }
     setCreateError(null);
@@ -145,7 +154,7 @@ export function PlanSprintDialog({
           });
           setGoal(stripInternalIds(response.goal).slice(0, SPRINT_GOAL_MAX));
           setSelected(new Set(ids));
-          announce(`Plan ready: ${plural(ids.length, 'todo')}, ${points} of ${cap} points`);
+          announce(getT().ai.plan.ready(ids.length, points, cap));
         },
       },
     );
@@ -174,7 +183,7 @@ export function PlanSprintDialog({
           onCreated(sprint, todoIds.length);
         },
         onError: (error) => {
-          setCreateError(`Couldn't create ${sprintName}. ${aiErrorMessage(error)}`);
+          setCreateError(error);
         },
       },
     );
@@ -193,7 +202,7 @@ export function PlanSprintDialog({
           <span className={styles.titleIcon} aria-hidden="true">
             <Icon name="ai-sparkle" />
           </span>
-          Plan sprint with AI
+          {copy.title}
         </span>
       }
       beforeFooter={
@@ -203,12 +212,12 @@ export function PlanSprintDialog({
             {over && (
               <p role="alert" className={cx(styles.overMessage, 'kb-pop')}>
                 <Icon name="status-error" size={12} />
-                Over capacity by {total - cap} pts. Unselect a todo or raise capacity.
+                {copy.over(total - cap)}
               </p>
             )}
-            {createError && (
+            {createError !== null && (
               <Banner tone="danger" layout="inline">
-                {createError}
+                {copy.createFailed(sprintName, aiErrorMessage(createError, t))}
               </Banner>
             )}
           </div>
@@ -223,16 +232,16 @@ export function PlanSprintDialog({
             }}
             disabled={create.isPending}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="primary"
             disabled={!suggestion || picked.length === 0 || over || cap === null || plan.isPending}
             loading={create.isPending}
-            loadingText="Creating…"
+            loadingText={t.common.creating}
             onClick={createSprint}
           >
-            Create {sprintName} with {plural(picked.length, 'todo')}
+            {copy.create(sprintName, picked.length)}
           </Button>
         </>
       }
@@ -246,8 +255,8 @@ export function PlanSprintDialog({
         }}
       >
         <Field
-          id={`${formId}-capacity`}
-          label="Capacity (story points)"
+          id={fieldIds.capacity}
+          label={copy.capacity}
           required
           error={capacityError}
           className={styles.capacityField}
@@ -268,10 +277,10 @@ export function PlanSprintDialog({
             }}
           />
         </Field>
-        <Field label="Focus / goal (optional)" className={styles.focusField}>
+        <Field label={copy.focus} className={styles.focusField}>
           <Input
             maxLength={FOCUS_MAX}
-            placeholder="e.g. finish user profile"
+            placeholder={copy.focusPlaceholder}
             value={focus}
             onChange={(event) => {
               setFocus(event.target.value);
@@ -283,10 +292,10 @@ export function PlanSprintDialog({
           variant="ai"
           className={styles.suggest}
           loading={plan.isPending}
-          loadingText="Planning…"
+          loadingText={copy.planning}
           disabled={backlogEmpty || create.isPending}
         >
-          {suggestion ? 'Suggest again' : 'Suggest plan'}
+          {suggestion ? copy.suggestAgain : copy.suggest}
         </Button>
       </form>
 
@@ -295,17 +304,17 @@ export function PlanSprintDialog({
           icon="backlog"
           headingLevel={3}
           variant="dashed"
-          title="Your backlog is empty"
-          description="Add or generate todos first, then Kanbot can plan a sprint from them."
+          title={t.backlog.empty.title}
+          description={copy.emptyText}
           actions={
             <Button variant="ai" onClick={onGenerate}>
-              Generate todos
+              {t.backlog.generateTodos}
             </Button>
           }
         />
       ) : plan.isPending ? (
         <div role="status" aria-busy="true" className={styles.planSkeleton}>
-          <span className="visually-hidden">Planning sprint</span>
+          <span className="visually-hidden">{copy.planningSprint}</span>
           <div className={styles.planMain}>
             <Skeleton blockSize={56} radius="large" />
             {[1, 0.8, 0.6, 0.4].map((opacity) => (
@@ -318,15 +327,15 @@ export function PlanSprintDialog({
         </div>
       ) : plan.isError ? (
         <AiErrorPanel
-          title="Kanbot couldn't plan the sprint right now"
+          title={copy.failedTitle}
           error={plan.error}
-          hint="Your capacity and focus are kept."
+          hint={copy.failedHint}
           onRetry={suggest}
         />
       ) : suggestion ? (
         <div className={styles.planResult}>
           <div className={cx(styles.goalBox, 'kb-rise')}>
-            <Field label="Suggested sprint goal" className={styles.goalField}>
+            <Field label={copy.goal} className={styles.goalField}>
               <Input
                 maxLength={SPRINT_GOAL_MAX}
                 value={goal}
@@ -338,9 +347,9 @@ export function PlanSprintDialog({
           </div>
 
           <div className={styles.planColumns}>
-            <section className={styles.planMain} aria-labelledby={`${formId}-todos`}>
-              <h3 id={`${formId}-todos`} className={styles.sectionLabel}>
-                Backlog todos
+            <section className={styles.planMain} aria-labelledby={fieldIds.todos}>
+              <h3 id={fieldIds.todos} className={styles.sectionLabel}>
+                {copy.backlogTodos}
               </h3>
               <div className={styles.candidates}>
                 <ul className={styles.candidateList}>
@@ -355,41 +364,42 @@ export function PlanSprintDialog({
                   ))}
                 </ul>
                 <div className={styles.totalRow}>
-                  <span className={styles.totalLabel}>Total</span>
+                  <span className={styles.totalLabel}>{copy.total}</span>
                   <ProgressBar
                     value={total}
                     max={cap ?? total}
                     height={8}
                     over={over}
-                    label="Points against capacity"
-                    valueText={`${total} of ${cap ?? '?'} points`}
+                    label={copy.barLabel}
+                    valueText={copy.barValue(total, cap)}
                     className={styles.capacityBar}
                   />
                   <span className={cx(styles.totalValue, over && styles.overText)}>
-                    {total} / {cap ?? '–'} pts
+                    {copy.totalValue(total, cap)}
                   </span>
                 </div>
               </div>
             </section>
 
-            <section className={styles.planSide} aria-labelledby={`${formId}-why`}>
-              <h3 id={`${formId}-why`} className={styles.sectionLabel}>
-                AI&apos;s suggestion
+            <section className={styles.planSide} aria-labelledby={fieldIds.why}>
+              <h3 id={fieldIds.why} className={styles.sectionLabel}>
+                {copy.suggestion}
               </h3>
               <div className={styles.reasoning}>
                 {/* The fact, computed from the picks that are really in the backlog. */}
                 <p className={styles.planFact}>
-                  {plural(suggestion.todoIds.length, 'todo')} · {suggestion.points} / {suggestion.capacity} pts
+                  {copy.fact(suggestion.todoIds.length, suggestion.points, suggestion.capacity)}
                 </p>
-                <p className={styles.asSuggested}>As first suggested. Your changes show in the list and its total.</p>
+                <p className={styles.asSuggested}>{copy.asSuggested}</p>
                 <div className={styles.opinion}>
-                  <h4 className={styles.sectionLabel}>AI&apos;s reasoning</h4>
+                  <h4 className={styles.sectionLabel}>{copy.reasoning}</h4>
+                  {/* The model's text is data: shown as it came (internal ids stripped). */}
                   <p>{suggestion.reasoning}</p>
-                  <p className={styles.caveat}>{NOTES_CAVEAT}</p>
+                  <p className={styles.caveat}>{copy.caveat}</p>
                   {suggestion.mentionsOthers && (
                     <p className={styles.leftOut}>
                       <Icon name="warning-outline" size={12} />
-                      {LEFT_OUT_NOTE}
+                      {copy.leftOut}
                     </p>
                   )}
                 </div>
@@ -400,9 +410,7 @@ export function PlanSprintDialog({
         </div>
       ) : (
         <p className={styles.emptyNote}>
-          {todos.isPending
-            ? 'Loading your backlog…'
-            : `Kanbot picks backlog todos that fit your capacity, highest priority first. ${plural(candidates.length, 'todo')} in the backlog.`}
+          {todos.isPending ? copy.loadingBacklog : copy.intro(candidates.length)}
         </p>
       )}
 

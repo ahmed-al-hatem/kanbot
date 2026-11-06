@@ -1,5 +1,5 @@
 import { createBrowserRouter, Navigate, type RouteObject } from 'react-router';
-import { FullPageLoader } from '@/components/FullPageLoader/FullPageLoader';
+import { AppLoading } from '@/app/AppLoading';
 import { GuestRoute } from '@/features/auth/GuestRoute';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
 import { RootErrorBoundary, RouteErrorBoundary } from '@/features/errors/RouteErrorBoundary';
@@ -35,7 +35,7 @@ const devRoutes: RouteObject[] = import.meta.env.DEV
 export const routes: RouteObject[] = [
   {
     // Shown while the first route chunk loads.
-    hydrateFallbackElement: <FullPageLoader label="Loading Kanbot" />,
+    hydrateFallbackElement: <AppLoading />,
     ErrorBoundary: RootErrorBoundary,
     children: [
       ...devRoutes,

@@ -1,8 +1,8 @@
 import { useCallback, useLayoutEffect, useRef } from 'react';
-import { isApiError } from '@/api/errors';
+import { todoErrorMessage } from '@/features/todos/todoErrors';
 import { todoFocusSelector } from '@/features/todos/todoFocus';
-import { STATUS_LABELS } from '@/features/todos/todoMeta';
 import { useMoveTodo } from '@/hooks/useMoveTodo';
+import { getFormat, getT } from '@/i18n';
 import type { MoveTarget } from '@/lib/moveInLists';
 import { refocusAfterRemoval } from '@/lib/refocus';
 import { announce } from '@/stores/announcer';
@@ -24,9 +24,14 @@ function keepFocusOn(todoId: string) {
  * optimistically (the header progress and column counts follow from the cache), announces
  * "KAN-21 moved to In Progress, position 2 of 3", plays `kbDrop` on the card and, when the
  * status changed, offers Undo (plan §10 decision 2). The callbacks are stable (they read the
- * latest columns from a ref), so memoized cards don't re-render.
+ * latest columns from a ref), so memoized cards don't re-render; their text comes from `getT()`
+ * when they run, so it is in the language of that moment (the backlog's `moves` messages).
  */
-export function useBoardMoves(projectId: string, sprintId: string | undefined, columns: readonly BoardColumn[] | undefined) {
+export function useBoardMoves(
+  projectId: string,
+  sprintId: string | undefined,
+  columns: readonly BoardColumn[] | undefined,
+) {
   const markTodo = useHighlight((s) => s.markTodo);
   const latest = useRef({ sprintId, columns });
   useLayoutEffect(() => {
@@ -40,19 +45,24 @@ export function useBoardMoves(projectId: string, sprintId: string | undefined, c
     onApplied: ({ todo, from, target, board, undo }) => {
       const column = board?.columns[target.status] ?? [];
       const position = column.findIndex((item) => item.id === todo.id) + 1;
-      const name = STATUS_LABELS[target.status];
+      const t = getT();
+      const format = getFormat();
+      const { moves } = t.backlog;
+      const name = t.todos.status[target.status];
       announce(
-        position > 0 ? `${todo.key} moved to ${name}, position ${position} of ${column.length}` : `${todo.key} moved to ${name}`,
+        position > 0
+          ? moves.moved(todo.key, name, format.number(position), format.number(column.length))
+          : moves.movedToast(todo.key, name),
       );
       markTodo(todo.id);
       if (target.status === todo.status) return;
       if (undo) {
-        toast.success(`${todo.key} moved back to ${name}`);
+        toast.success(moves.movedBack(todo.key, name));
         return;
       }
-      toast.success(`${todo.key} moved to ${name}`, {
+      toast.success(moves.movedToast(todo.key, name), {
         action: {
-          label: 'Undo',
+          label: t.common.undo,
           onClick: () => {
             undoRef.current(todo.id, from);
           },
@@ -60,7 +70,8 @@ export function useBoardMoves(projectId: string, sprintId: string | undefined, c
       });
     },
     onFailed: (error, todo) => {
-      toast.error(`Couldn't move ${todo.key}. ${isApiError(error) ? error.message : 'Please try again.'}`);
+      const t = getT();
+      toast.error(t.backlog.moves.failed(todo.key, todoErrorMessage(error, t)));
     },
   });
 
@@ -95,14 +106,19 @@ export function useBoardMoves(projectId: string, sprintId: string | undefined, c
       if (direction === 'left' || direction === 'right') {
         const next = all[columnIndex + (direction === 'left' ? -1 : 1)];
         if (!next) {
-          announce(`${todo.key} is already in ${column.name}`);
+          announce(getT().board.moves.alreadyIn(todo.key, column.name));
           return;
         }
         moveTo(todo, next, Math.min(row, next.todos.length));
       } else {
         const to = row + (direction === 'up' ? -1 : 1);
         if (to < 0 || to >= column.todos.length) {
-          announce(`${todo.key} is already at the ${direction === 'up' ? 'top' : 'bottom'} of ${column.name}`);
+          const { moves } = getT().board;
+          announce(
+            direction === 'up'
+              ? moves.atTop(todo.key, column.name)
+              : moves.atBottom(todo.key, column.name),
+          );
           return;
         }
         moveTo(todo, column, to);

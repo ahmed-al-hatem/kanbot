@@ -1,11 +1,14 @@
 import type { LozengeTone } from '@/components/Lozenge/Lozenge';
 import type { Sprint, SprintStatus } from '@/types/api';
 
-/** DESIGN §7 Lozenge for sprint status: Planned gray, Active blue (pulsing dot), Completed green. */
-export const SPRINT_STATUS: Record<SprintStatus, { label: string; tone: LozengeTone; live: boolean }> = {
-  active: { label: 'Active', tone: 'blue', live: true },
-  planned: { label: 'Planned', tone: 'gray', live: false },
-  completed: { label: 'Completed', tone: 'green', live: false },
+/**
+ * DESIGN §7 Lozenge for sprint status: Planned gray, Active blue (pulsing dot), Completed green.
+ * The names are `t.sprints.status[status]`.
+ */
+export const SPRINT_STATUS: Record<SprintStatus, { tone: LozengeTone; live: boolean }> = {
+  active: { tone: 'blue', live: true },
+  planned: { tone: 'gray', live: false },
+  completed: { tone: 'green', live: false },
 };
 
 /**

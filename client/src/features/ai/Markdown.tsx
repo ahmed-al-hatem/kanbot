@@ -11,14 +11,20 @@ const OpenTodoContext = createContext<((todoId: string) => void) | undefined>(un
  * A linked todo key (`#todo=<id>`, see `linkTodoKeys`) opens `?todo=<id>` in the app; any other
  * link leaves in a new tab without access to the app (plan §9.5).
  */
-function Link({ node: _node, href = '', children, ...props }: ComponentPropsWithoutRef<'a'> & { node?: unknown }) {
+function Link({
+  node: _node,
+  href = '',
+  children,
+  ...props
+}: ComponentPropsWithoutRef<'a'> & { node?: unknown }) {
   const openTodo = use(OpenTodoContext);
   if (href.startsWith(TODO_HREF_PREFIX)) {
     const todoId = decodeURIComponent(href.slice(TODO_HREF_PREFIX.length));
+    const todoHref = `?todo=${encodeURIComponent(todoId)}`;
     return (
       <a
         {...props}
-        href={`?todo=${encodeURIComponent(todoId)}`}
+        href={todoHref}
         className={styles.todoLink}
         onClick={(event) => {
           event.preventDefault();

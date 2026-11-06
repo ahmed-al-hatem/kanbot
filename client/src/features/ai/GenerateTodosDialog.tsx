@@ -11,15 +11,13 @@ import {
   isTodoPriority,
   isTodoType,
   POINT_OPTIONS,
-  PRIORITY_LABELS,
   PRIORITY_OPTIONS,
-  TYPE_LABELS,
   TYPE_OPTIONS,
 } from '@/features/todos/todoMeta';
 import { useGenerateTodos } from '@/hooks/useAi';
 import { useBulkCreateTodos } from '@/hooks/useTodos';
+import { getT, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { plural } from '@/lib/format';
 import { announce } from '@/stores/announcer';
 import { useHighlight } from '@/stores/highlight';
 import type { CreateTodoRequest, DraftTodo, Todo } from '@/types/api';
@@ -69,7 +67,11 @@ export function GenerateTodosDialog({
   onAdded,
   fallbackFocus,
 }: GenerateTodosDialogProps) {
+  const t = useT();
+  const copy = t.ai.generate;
   const formId = useId();
+  const promptId = `${formId}-prompt`;
+  const draftsId = `${formId}-drafts`;
   const generate = useGenerateTodos(projectId);
   const add = useBulkCreateTodos(projectId);
   const markTodo = useHighlight((s) => s.markTodo);
@@ -77,11 +79,11 @@ export function GenerateTodosDialog({
   const [count, setCount] = useState(DEFAULT_COUNT);
   const [touched, setTouched] = useState(false);
   const [drafts, setDrafts] = useState<Draft[] | null>(null);
-  const [addError, setAddError] = useState<string | null>(null);
+  // The failed request, not its text: the banner reads it at render, in the UI language.
+  const [addError, setAddError] = useState<unknown>(null);
 
   const trimmed = prompt.trim();
-  const promptError =
-    touched && trimmed.length < PROMPT_MIN ? 'Describe the feature so Kanbot knows what to break down' : undefined;
+  const promptError = touched && trimmed.length < PROMPT_MIN ? copy.promptRequired : undefined;
   const checked = drafts?.filter((draft) => draft.checked) ?? [];
   const blankTitle = checked.some((draft) => !draft.title.trim());
   const points = checked.reduce((sum, draft) => sum + (draft.storyPoints ?? 0), 0);
@@ -90,8 +92,8 @@ export function GenerateTodosDialog({
   const run = () => {
     setTouched(true);
     if (trimmed.length < PROMPT_MIN) {
-      document.getElementById(`${formId}-prompt`)?.focus();
-      announce('1 field needs attention');
+      document.getElementById(promptId)?.focus();
+      announce(getT().common.fieldsNeedAttention(1));
       return;
     }
     setAddError(null);
@@ -99,15 +101,24 @@ export function GenerateTodosDialog({
       { prompt: trimmed, count },
       {
         onSuccess: ({ todos }) => {
-          setDrafts(todos.map((todo) => ({ ...todo, title: todo.title.slice(0, TITLE_MAX), key: draftKey++, checked: true })));
-          announce(`${plural(todos.length, 'draft todo')} ready to review`);
+          setDrafts(
+            todos.map((todo) => ({
+              ...todo,
+              title: todo.title.slice(0, TITLE_MAX),
+              key: draftKey++,
+              checked: true,
+            })),
+          );
+          announce(getT().ai.generate.ready(todos.length));
         },
       },
     );
   };
 
   const update = (key: number, patch: Partial<Draft>) => {
-    setDrafts((list) => list?.map((draft) => (draft.key === key ? { ...draft, ...patch } : draft)) ?? null);
+    setDrafts(
+      (list) => list?.map((draft) => (draft.key === key ? { ...draft, ...patch } : draft)) ?? null,
+    );
   };
 
   const toggleAll = () => {
@@ -130,7 +141,7 @@ export function GenerateTodosDialog({
         onAdded(created);
       },
       onError: (error) => {
-        setAddError(`Couldn't add the todos. ${aiErrorMessage(error)}`);
+        setAddError(error);
       },
     });
   };
@@ -148,14 +159,14 @@ export function GenerateTodosDialog({
           <span className={styles.titleIcon} aria-hidden="true">
             <Icon name="ai-sparkle" />
           </span>
-          Generate todos with AI
+          {copy.title}
         </span>
       }
       beforeFooter={
-        addError && (
+        addError !== null && (
           <div className={styles.bar}>
             <Banner tone="danger" layout="inline">
-              {addError}
+              {copy.addFailed(aiErrorMessage(addError, t))}
             </Banner>
           </div>
         )
@@ -163,7 +174,8 @@ export function GenerateTodosDialog({
       footerStart={
         drafts && drafts.length > 0 ? (
           <span className={styles.total}>
-            <b>{points} pts</b> total
+            <b>{copy.totalPoints(points)}</b>
+            {copy.totalSuffix}
           </span>
         ) : undefined
       }
@@ -176,16 +188,16 @@ export function GenerateTodosDialog({
             }}
             disabled={add.isPending}
           >
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button
             variant="primary"
             disabled={checked.length === 0 || blankTitle || generate.isPending}
             loading={add.isPending}
-            loadingText="Adding…"
+            loadingText={copy.adding}
             onClick={save}
           >
-            Add {plural(checked.length, 'todo')} to Backlog
+            {copy.add(checked.length)}
           </Button>
         </>
       }
@@ -200,21 +212,17 @@ export function GenerateTodosDialog({
         }}
       >
         <Field
-          id={`${formId}-prompt`}
-          label="Describe the feature"
+          id={promptId}
+          label={copy.prompt}
           required
           error={promptError}
-          help={
-            <span className={styles.counter}>
-              {prompt.length} / {PROMPT_MAX}
-            </span>
-          }
+          help={<span className={styles.counter}>{copy.counter(prompt.length, PROMPT_MAX)}</span>}
         >
           <Textarea
             data-autofocus
             rows={3}
             maxLength={PROMPT_MAX}
-            placeholder="e.g. User profile page with avatar upload"
+            placeholder={copy.promptPlaceholder}
             value={prompt}
             onChange={(event) => {
               setPrompt(event.target.value);
@@ -226,7 +234,7 @@ export function GenerateTodosDialog({
         </Field>
 
         <div className={styles.generateRow}>
-          <Field label="Number of todos" className={styles.countField}>
+          <Field label={copy.count} className={styles.countField}>
             <Select
               value={String(count)}
               onChange={(event) => {
@@ -240,9 +248,15 @@ export function GenerateTodosDialog({
               ))}
             </Select>
           </Field>
-          <span className={styles.hint}>Drafts aren&apos;t saved until you add them.</span>
-          <Button type="submit" variant="ai" loading={generate.isPending} loadingText="Generating…" disabled={add.isPending}>
-            {drafts ? 'Regenerate' : 'Generate'}
+          <span className={styles.hint}>{copy.hint}</span>
+          <Button
+            type="submit"
+            variant="ai"
+            loading={generate.isPending}
+            loadingText={copy.generating}
+            disabled={add.isPending}
+          >
+            {drafts ? copy.regenerate : copy.generate}
           </Button>
         </div>
       </form>
@@ -252,7 +266,7 @@ export function GenerateTodosDialog({
       {generate.isPending ? (
         <div role="status" aria-busy="true" className={styles.loading}>
           <span className={styles.loadingText}>
-            Kanbot is drafting todos <ThinkingDots />
+            {copy.drafting} <ThinkingDots />
           </span>
           {[1, 0.8, 0.6].map((opacity) => (
             <Skeleton key={opacity} blockSize={48} radius="large" opacity={opacity} />
@@ -260,18 +274,19 @@ export function GenerateTodosDialog({
         </div>
       ) : generate.isError ? (
         <AiErrorPanel
-          title="Kanbot couldn't generate todos right now"
+          title={copy.failedTitle}
           error={generate.error}
-          hint="Your description is kept — try again."
+          hint={copy.failedHint}
           onRetry={run}
         />
       ) : drafts?.length === 0 ? (
-        <p className={styles.emptyNote}>Kanbot didn&apos;t suggest any todos. Try describing the feature in more detail.</p>
+        <p className={styles.emptyNote}>{copy.noDrafts}</p>
       ) : drafts ? (
-        <section className={styles.drafts} aria-labelledby={`${formId}-drafts`}>
+        <section className={styles.drafts} aria-labelledby={draftsId}>
           <div className={styles.draftsHead}>
-            <h3 id={`${formId}-drafts`} className={styles.sectionTitle}>
-              Suggested todos <span className={styles.muted}>({drafts.length})</span>
+            <h3 id={draftsId} className={styles.sectionTitle}>
+              {copy.suggested}{' '}
+              <span className={styles.muted}>{copy.suggestedCount(drafts.length)}</span>
             </h3>
             <label className={styles.selectAll}>
               <input
@@ -282,16 +297,16 @@ export function GenerateTodosDialog({
                 }}
                 onChange={toggleAll}
               />
-              Select all
+              {copy.selectAll}
             </label>
           </div>
           <div className={styles.draftScroll}>
             <div className={cx(styles.draftGrid, styles.draftHeader)} aria-hidden="true">
               <span />
-              <span>Title</span>
-              <span>Type</span>
-              <span>Priority</span>
-              <span>Points</span>
+              <span>{t.todos.details.title}</span>
+              <span>{t.todos.details.type}</span>
+              <span>{t.todos.details.priority}</span>
+              <span>{copy.points}</span>
             </div>
             <ul className={styles.draftList}>
               {drafts.map((draft, index) => (
@@ -301,7 +316,7 @@ export function GenerateTodosDialog({
           </div>
         </section>
       ) : (
-        <p className={styles.emptyNote}>Describe a feature and Kanbot drafts todos for you to review.</p>
+        <p className={styles.emptyNote}>{copy.intro}</p>
       )}
 
       <AiDisclaimer className={styles.disclaimer} />
@@ -316,18 +331,25 @@ interface DraftRowProps {
 }
 
 function DraftRow({ draft, index, onChange }: DraftRowProps) {
+  const t = useT();
+  const copy = t.ai.generate;
   const n = index + 1;
-  const name = draft.title.trim() || `draft ${n}`;
+  const name = draft.title.trim() || copy.draftName(n);
   const invalid = draft.checked && !draft.title.trim();
   return (
     <li
-      className={cx(styles.draftGrid, styles.draftRow, !draft.checked && styles.unchecked, 'kb-rise')}
+      className={cx(
+        styles.draftGrid,
+        styles.draftRow,
+        !draft.checked && styles.unchecked,
+        'kb-rise',
+      )}
       style={{ animationDelay: `${index * 45}ms` }}
     >
       <input
         type="checkbox"
         checked={draft.checked}
-        aria-label={`Include ${name}`}
+        aria-label={copy.include(name)}
         onChange={(event) => {
           onChange(draft.key, { checked: event.target.checked });
         }}
@@ -337,16 +359,16 @@ function DraftRow({ draft, index, onChange }: DraftRowProps) {
         type="text"
         maxLength={TITLE_MAX}
         value={draft.title}
-        aria-label={`Title of draft ${n}`}
+        aria-label={copy.titleOf(n)}
         aria-invalid={invalid || undefined}
-        title={invalid ? 'Give this todo a title, or uncheck it' : undefined}
+        title={invalid ? copy.blankTitle : undefined}
         onChange={(event) => {
           onChange(draft.key, { title: event.target.value });
         }}
       />
       <select
         className={styles.control}
-        aria-label={`Type of draft ${n}`}
+        aria-label={copy.typeOf(n)}
         value={draft.type}
         onChange={(event) => {
           const value = event.target.value;
@@ -355,13 +377,13 @@ function DraftRow({ draft, index, onChange }: DraftRowProps) {
       >
         {TYPE_OPTIONS.map((value) => (
           <option key={value} value={value}>
-            {TYPE_LABELS[value]}
+            {t.todos.type[value]}
           </option>
         ))}
       </select>
       <select
         className={styles.control}
-        aria-label={`Priority of draft ${n}`}
+        aria-label={copy.priorityOf(n)}
         value={draft.priority}
         onChange={(event) => {
           const value = event.target.value;
@@ -370,20 +392,22 @@ function DraftRow({ draft, index, onChange }: DraftRowProps) {
       >
         {PRIORITY_OPTIONS.map((value) => (
           <option key={value} value={value}>
-            {PRIORITY_LABELS[value]}
+            {t.todos.priority[value]}
           </option>
         ))}
       </select>
       <select
         className={styles.control}
-        aria-label={`Points of draft ${n}`}
+        aria-label={copy.pointsOf(n)}
         value={draft.storyPoints === null ? NO_POINTS : String(draft.storyPoints)}
         onChange={(event) => {
           const value = event.target.value;
-          onChange(draft.key, { storyPoints: POINT_OPTIONS.find((points) => String(points) === value) ?? null });
+          onChange(draft.key, {
+            storyPoints: POINT_OPTIONS.find((points) => String(points) === value) ?? null,
+          });
         }}
       >
-        <option value={NO_POINTS}>None</option>
+        <option value={NO_POINTS}>{t.todos.details.noPoints}</option>
         {POINT_OPTIONS.map((value) => (
           <option key={value} value={String(value)}>
             {value}

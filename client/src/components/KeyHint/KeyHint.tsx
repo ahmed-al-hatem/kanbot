@@ -8,6 +8,8 @@ const KEYS = {
   comma: ',',
   up: '↑',
   down: '↓',
+  left: '←',
+  right: '→',
 } as const;
 
 type KeyName = keyof typeof KEYS;
@@ -15,7 +17,7 @@ type KeyName = keyof typeof KEYS;
 const isKey = (name: string): name is KeyName => Object.hasOwn(KEYS, name);
 
 interface KeyHintProps {
-  /** A message with `{enter}`, `{esc}`, `{backspace}`, `{comma}`, `{up}`, `{down}` where the keys go. */
+  /** A message with `{enter}`, `{esc}`, `{backspace}`, `{comma}`, `{up}`, `{down}`, `{left}`, `{right}` where the keys go. */
   text: string;
 }
 
@@ -30,7 +32,11 @@ export function KeyHint({ text }: KeyHintProps) {
       {parts.map((part, index) => {
         // `split` with a capture group puts the token names at the odd indexes.
         if (index % 2 === 1) {
-          return isKey(part) ? <kbd key={index}>{KEYS[part]}</kbd> : <Fragment key={index}>{part}</Fragment>;
+          return isKey(part) ? (
+            <kbd key={index}>{KEYS[part]}</kbd>
+          ) : (
+            <Fragment key={index}>{part}</Fragment>
+          );
         }
         return part && <Fragment key={index}>{part}</Fragment>;
       })}

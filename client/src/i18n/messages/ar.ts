@@ -38,6 +38,34 @@ const storyPoints = (n: number) =>
     other: `${n} نقطة قصة`,
   });
 
+/** The noun after a total: «8 نقاط» · «13 نقطة» (the number's form decides). */
+const pointsNoun = (n: number) => count(n, { few: 'نقاط', other: 'نقطة' });
+
+/** «3 / 5 بنود منجزة» · «11 / 12 بندًا منجزًا» · «1 / 1 بند منجز». */
+const doneTodosNoun = (n: number) =>
+  count(n, { few: 'بنود منجزة', many: 'بندًا منجزًا', other: 'بند منجز' });
+
+/** «نُقل بند واحد إلى …» · «نُقلت 3 بنود إلى …». */
+const movedTodos = (n: number, destination: string) =>
+  count(n, {
+    one: `نُقل بند واحد إلى ${destination}`,
+    two: `نُقل بندان إلى ${destination}`,
+    few: `نُقلت ${n} بنود إلى ${destination}`,
+    many: `نُقل ${n} بندًا إلى ${destination}`,
+    other: `نُقل ${n} بند إلى ${destination}`,
+  });
+
+/** «… ببند واحد» · «… ببندين» · «… بـ 3 بنود»: the preposition takes the genitive. */
+const withTodos = (n: number) =>
+  count(n, {
+    zero: 'بلا بنود',
+    one: 'ببند واحد',
+    two: 'ببندين',
+    few: `بـ ${n} بنود`,
+    many: `بـ ${n} بندًا`,
+    other: `بـ ${n} بند`,
+  });
+
 const GENERIC = 'حدث خطأ ما. حاول مجددًا.';
 
 /** Arabic never shows the API's English text: each code and field says its meaning instead. */
@@ -91,6 +119,15 @@ export const ar = {
         other: `${n} مشروع`,
       }),
     backlogTodos: (n: number) => `${todos(n)} في قائمة الانتظار`,
+    sprints: (n: number) =>
+      count(n, {
+        zero: 'لا سبرنتات',
+        one: 'سبرنت واحد',
+        two: 'سبرنتان',
+        few: `${n} سبرنتات`,
+        many: `${n} سبرنتًا`,
+        other: `${n} سبرنت`,
+      }),
   },
 
   dates: {
@@ -173,6 +210,7 @@ export const ar = {
     backToProjects: 'العودة إلى المشاريع',
     loading: (what: string) => `جارٍ تحميل ${what}`,
     loadingWorkspace: 'جارٍ تحميل مساحة عملك',
+    loadingApp: 'جارٍ تحميل Kanbot',
     requiredMark: ' *',
     unassigned: 'غير مُسند',
     notEstimated: 'غير مقدّر',
@@ -425,7 +463,12 @@ export const ar = {
   todos: {
     type: { story: 'قصة', task: 'مهمة', bug: 'خلل' },
     priority: { urgent: 'عاجلة', high: 'عالية', medium: 'متوسطة', low: 'منخفضة' },
-    status: { todo: 'للتنفيذ', in_progress: 'قيد التنفيذ', in_review: 'قيد المراجعة', done: 'منجز' },
+    status: {
+      todo: 'للتنفيذ',
+      in_progress: 'قيد التنفيذ',
+      in_review: 'قيد المراجعة',
+      done: 'منجز',
+    },
     sprintOption: {
       active: (name: string) => `${name} (نشط)`,
       planned: (name: string) => `${name} (مخطط)`,
@@ -482,7 +525,8 @@ export const ar = {
       keepEditing: 'متابعة التعديل',
       discard: 'تجاهل',
       escToClose: '{esc} للإغلاق',
-      saveFailed: (key: string, reason: string) => `تعذّر حفظ ${key}. ${reason} تعديلاتك ما زالت هنا.`,
+      saveFailed: (key: string, reason: string) =>
+        `تعذّر حفظ ${key}. ${reason} تعديلاتك ما زالت هنا.`,
       saveFailedOffline: (key: string) =>
         `تعذّر حفظ ${key}. تحقق من اتصالك وحاول مجددًا — تعديلاتك ما زالت هنا.`,
     },
@@ -535,6 +579,7 @@ export const ar = {
     planSprint: 'تخطيط السبرنت',
     createSprint: 'إنشاء سبرنت',
     createTodo: 'إنشاء بند',
+    goTo: 'الذهاب إلى قائمة الانتظار',
     empty: {
       title: 'قائمة الانتظار فارغة',
       text: 'دوّن العمل القادم: اكتب عنوانًا في الأسفل، أو دع الذكاء الاصطناعي يصوغ بنودًا من وصف ميزة.',
@@ -586,7 +631,8 @@ export const ar = {
       'استخدم مفتاحي السهم لأعلى ولأسفل لإعادة ترتيب هذا البند أو نقله بين السبرنتات. اضغط Enter لفتح تفاصيله.',
     dragInstructions:
       'لالتقاط بند، اضغط Space أو Enter. استخدم مفتاحي السهم لأعلى ولأسفل لنقله، وSpace أو Enter لإفلاته، وEscape للإلغاء.',
-    dragOff: 'السحب والإفلات متوقف أثناء التصفية. امسح عوامل التصفية لإعادة الترتيب، أو استخدم ⋯ نقل إلى.',
+    dragOff:
+      'السحب والإفلات متوقف أثناء التصفية. امسح عوامل التصفية لإعادة الترتيب، أو استخدم ⋯ نقل إلى.',
     moves: {
       moved: (key: string, name: string, position: string, total: string) =>
         `${key} نُقل إلى ${name}، الموضع ${position} من ${total}`,
@@ -638,6 +684,55 @@ export const ar = {
   },
 
   sprints: {
+    status: { active: 'نشط', planned: 'مخطط', completed: 'مكتمل' },
+    goalLabel: 'الهدف:',
+    progress: {
+      pointsLabel: (name: string) => `النقاط المنجزة في ${name}`,
+      pointsValue: (done: number, total: number) =>
+        `${done} من ${total} ${pointsNoun(total)} منجزة`,
+      todosLabel: (name: string) => `البنود المنجزة في ${name}`,
+      todosValue: (done: number, total: number) => `${done} من ${total} ${doneTodosNoun(total)}`,
+    },
+    history: {
+      title: 'السبرنتات',
+      loadingName: 'السبرنتات',
+      pageName: 'سبرنتاتك',
+      created: (name: string) => `${name} أُنشئ · اسحب البنود إليه من قائمة الانتظار`,
+      empty: {
+        title: 'لا توجد سبرنتات بعد',
+        text: 'خطّط لسبرنت من قائمة الانتظار: أنشئ واحدًا، واسحب البنود إليه، ثم ابدأه.',
+      },
+      list: {
+        title: 'كل السبرنتات',
+        noDates: 'بلا تواريخ',
+        points: (done: number, total: number) => `${done} / ${total} ${pointsNoun(total)}`,
+      },
+      detail: {
+        noDates: 'لا تواريخ بعد',
+        completedOn: (date: string) => ` · اكتمل في ${date}`,
+        tiles: {
+          completed: 'البنود المكتملة',
+          pointsDone: 'النقاط المنجزة',
+          completion: 'نسبة الإنجاز',
+          carriedOver: 'المُرحَّل',
+          notFinished: 'غير منجز',
+          fraction: (done: number, total: number) => `${done} / ${total}`,
+          percent: (value: number) => `${value}%`,
+          none: '—',
+        },
+        snapshotNote: 'الأرقام كما كانت عند إكمال السبرنت.',
+        todos: 'البنود',
+        todoCount: (n: number) => ` · ${n}`,
+        todosLabel: (name: string) => `بنود ${name}`,
+        loadingTodos: (name: string) => `جارٍ تحميل بنود ${name}`,
+        todosPage: (name: string) => `بنود ${name}`,
+        noTodos: {
+          completed: 'لم يصل أي بند إلى «منجز» في هذا السبرنت.',
+          planned: 'لا بنود مخططة بعد. اسحب بعضها من قائمة الانتظار.',
+          active: 'لا بنود في هذا السبرنت بعد.',
+        },
+      },
+    },
     form: {
       createTitle: 'إنشاء سبرنت',
       editTitle: (name: string) => `تعديل ${name}`,
@@ -694,6 +789,304 @@ export const ar = {
       conflict: say('يوجد سبرنت نشط بالفعل. أكمله قبل بدء سبرنت آخر.'),
     },
     notFound: say('لم نعد نجد هذا السبرنت، ربما حُذف.'),
+  },
+
+  board: {
+    title: 'السبرنت النشط',
+    loadingName: 'السبرنت النشط',
+    pageName: 'السبرنت النشط',
+    viewSummary: 'عرض الملخص',
+    noActive: {
+      title: 'لا يوجد سبرنت نشط',
+      text: 'ابدأ سبرنتًا مخططًا من قائمة الانتظار لترى لوحته هنا.',
+      start: (name: string) => `بدء ${name}`,
+    },
+    moveHelp: 'اسحب البطاقات بين الأعمدة، أو حدّد بطاقة واستخدم {left} {right} {up} {down} لنقلها.',
+    cardHelp:
+      'اضغط Enter لفتح تفاصيلها. استخدم مفتاحي السهم لليمين ولليسار لنقلها إلى عمود آخر، ومفتاحي السهم لأعلى ولأسفل لإعادة ترتيبها.',
+    dragInstructions: 'حدّد بطاقة واستخدم مفاتيح الأسهم لنقلها بين الأعمدة أو إعادة ترتيبها.',
+    header: {
+      remaining: (text: string) => `· ${text}`,
+      fraction: (done: number, total: number) => `${done} / ${total}`,
+      pointsDone: (total: number) => ` ${pointsNoun(total)} منجزة`,
+      todosDone: (total: number) => ` ${doneTodosNoun(total)}`,
+    },
+    column: {
+      label: (name: string, todoCount: string) => `${name}، ${todoCount}`,
+      dropHere: 'أفلت البنود هنا',
+    },
+    composer: {
+      open: (column: string) => `إنشاء بند في ${column}`,
+      label: (column: string) => `بند جديد في ${column}`,
+      placeholder: 'ما الذي يجب إنجازه؟',
+      hint: '{enter} إضافة · {esc} إلغاء',
+      add: 'إضافة',
+      created: (key: string, column: string) => `${key} أُنشئ في ${column}`,
+    },
+    card: {
+      overdue: 'متأخر، الاستحقاق ',
+    },
+    moves: {
+      alreadyIn: (key: string, column: string) => `${key} في ${column} بالفعل`,
+      atTop: (key: string, column: string) => `${key} في أعلى ${column} بالفعل`,
+      atBottom: (key: string, column: string) => `${key} في أسفل ${column} بالفعل`,
+    },
+    complete: {
+      title: (name: string) => `إكمال ${name}`,
+      description: (done: number, unfinished: number) =>
+        `منجز: ${todos(done)} · غير منجز: ${todos(unfinished)}`,
+      done: 'منجز',
+      notFinished: 'غير منجز',
+      points: (done: number, total: number) =>
+        count(total, {
+          zero: 'لا نقاط قصة في هذا السبرنت.',
+          one: `اكتمل ${done} من نقطة قصة واحدة.`,
+          two: `اكتمل ${done} من نقطتَي قصة.`,
+          few: `اكتمل ${done} من ${total} نقاط قصة.`,
+          many: `اكتمل ${done} من ${total} نقطة قصة.`,
+          other: `اكتمل ${done} من ${total} نقطة قصة.`,
+        }),
+      legend: (n: number) =>
+        count(n, {
+          one: 'انقل البند غير المنجز إلى',
+          two: 'انقل البندين غير المنجزين إلى',
+          few: `انقل ${n} بنود غير منجزة إلى`,
+          many: `انقل ${n} بندًا غير منجز إلى`,
+          other: `انقل ${n} بند غير منجز إلى`,
+        }),
+      hint: (text: string) => `· ${text}`,
+      plannedStarts: (date: string) => `مخطط، يبدأ ${date}`,
+      planned: 'مخطط',
+      allDone: 'كل البنود منجزة — لا شيء لنقله.',
+      confirm: 'إكمال السبرنت',
+      completing: 'جارٍ الإكمال…',
+      toBacklog: 'قائمة الانتظار',
+      completed: (name: string) => `${name} اكتمل`,
+      completedMoved: (name: string, n: number, destination: string) =>
+        `${name} اكتمل · ${movedTodos(n, destination)}`,
+    },
+  },
+
+  ai: {
+    disclaimer: 'قد يخطئ الذكاء الاصطناعي. راجع قبل الحفظ.',
+    mockBadge: 'Mock AI',
+    mockHint: 'لم يُعدّ مفتاح للذكاء الاصطناعي: الإجابات من مساعد تجريبي مدمج.',
+    tryingAgain: 'جارٍ إعادة المحاولة…',
+    generatedAt: (date: string, ago: string) => `${date} · ${ago}`,
+    summaryOption: {
+      label: 'توليد ملخص بالذكاء الاصطناعي',
+      help: 'يُكتب بعد إكمال السبرنت، ويفتح الملخص معه في سجل السبرنتات.',
+    },
+    drawer: {
+      title: 'مساعد Kanbot',
+      subtitle: 'قد يخطئ الذكاء الاصطناعي',
+      newChat: 'محادثة جديدة',
+      close: 'إغلاق المساعد',
+      quickActions: 'إجراءات سريعة',
+      createTodos: 'إنشاء بنود',
+      planSprint: 'تخطيط السبرنت',
+      summarizeSprint: 'لخّص السبرنت',
+      nothingToSummarize: 'ابدأ سبرنتًا أولًا: لا يوجد ما يُلخَّص بعد.',
+      log: 'المحادثة',
+      emptyTitle: 'كيف أساعدك في السبرنت؟',
+      emptyText: 'اسأل عن هذا المشروع، أو جرّب أحد هذه الاقتراحات:',
+      examples: {
+        backlog: [
+          'أي بنود قائمة الانتظار يجب أن تدخل السبرنت القادم؟',
+          'أي البنود تنقصها نقاط القصة؟',
+          'اقترح هدفًا للسبرنت القادم',
+        ],
+        board: [
+          'ما الذي يعيق السبرنت النشط؟',
+          'على ماذا أعمل بعد ذلك؟',
+          'هل نحن على المسار لإنهاء هذا السبرنت؟',
+        ],
+        sprints: [
+          'كيف سار السبرنت الأخير؟',
+          'ما الذي يجب أن نحسّنه في السبرنت القادم؟',
+          'قارن آخر سبرنتين',
+        ],
+      },
+      youSaid: 'قلت:',
+      kanbotSaid: 'قال Kanbot:',
+      copy: 'نسخ',
+      copied: 'نُسخ',
+      copyFailed: 'تعذّر النسخ. حدّد النص وانسخه بنفسك.',
+      thinking: 'يفكّر',
+      failedTitle: 'تعذّر على Kanbot الرد',
+      failedHint: 'رسالتك محفوظة.',
+      composerLabel: 'راسل Kanbot',
+      placeholder: 'اسأل Kanbot…',
+      send: 'إرسال',
+      composerHelp: 'Enter للإرسال، وShift+Enter لسطر جديد.',
+      answered: 'أجاب Kanbot',
+      newChatStarted: 'بدأت محادثة جديدة',
+      summarizePrompt: (name: string) => `لخّص ${name}`,
+    },
+    generate: {
+      title: 'توليد البنود بالذكاء الاصطناعي',
+      prompt: 'صف الميزة',
+      promptPlaceholder: 'مثال: صفحة الملف الشخصي مع رفع الصورة',
+      promptRequired: 'صف الميزة ليعرف Kanbot ما الذي يجب تقسيمه',
+      counter: (length: number, max: number) => `${length} / ${max}`,
+      count: 'عدد البنود',
+      hint: 'لا تُحفظ المسودات حتى تضيفها.',
+      generate: 'توليد',
+      regenerate: 'إعادة التوليد',
+      generating: 'جارٍ التوليد…',
+      drafting: 'Kanbot يصوغ البنود',
+      failedTitle: 'تعذّر على Kanbot توليد البنود الآن',
+      failedHint: 'وصفك محفوظ — حاول مجددًا.',
+      noDrafts: 'لم يقترح Kanbot أي بنود. جرّب وصف الميزة بتفصيل أكثر.',
+      intro: 'صف ميزة ويصوغ Kanbot بنودًا لتراجعها.',
+      suggested: 'البنود المقترحة',
+      suggestedCount: (n: number) => `(${n})`,
+      selectAll: 'تحديد الكل',
+      points: 'النقاط',
+      draftName: (n: number) => `المسودة ${n}`,
+      include: (name: string) => `تضمين ${name}`,
+      titleOf: (n: number) => `عنوان المسودة ${n}`,
+      typeOf: (n: number) => `نوع المسودة ${n}`,
+      priorityOf: (n: number) => `أولوية المسودة ${n}`,
+      pointsOf: (n: number) => `نقاط المسودة ${n}`,
+      blankTitle: 'امنح هذا البند عنوانًا، أو ألغِ تحديده',
+      totalPoints: (n: number) => `${n} ${pointsNoun(n)}`,
+      totalSuffix: ' إجمالًا',
+      add: (n: number) =>
+        count(n, {
+          zero: 'إضافة إلى قائمة الانتظار',
+          one: 'إضافة بند واحد إلى قائمة الانتظار',
+          two: 'إضافة بندين إلى قائمة الانتظار',
+          few: `إضافة ${n} بنود إلى قائمة الانتظار`,
+          many: `إضافة ${n} بندًا إلى قائمة الانتظار`,
+          other: `إضافة ${n} بند إلى قائمة الانتظار`,
+        }),
+      adding: 'جارٍ الإضافة…',
+      addFailed: (reason: string) => `تعذّرت إضافة البنود. ${reason}`,
+      ready: (n: number) =>
+        count(n, {
+          zero: 'لا مسودات للمراجعة',
+          one: 'مسودة بند واحدة جاهزة للمراجعة',
+          two: 'مسودتا بند جاهزتان للمراجعة',
+          few: `${n} مسودات بنود جاهزة للمراجعة`,
+          many: `${n} مسودة بند جاهزة للمراجعة`,
+          other: `${n} مسودة بند جاهزة للمراجعة`,
+        }),
+      added: (n: number) =>
+        count(n, {
+          one: 'أُضيف بند واحد إلى قائمة الانتظار',
+          two: 'أُضيف بندان إلى قائمة الانتظار',
+          few: `أُضيفت ${n} بنود إلى قائمة الانتظار`,
+          many: `أُضيف ${n} بندًا إلى قائمة الانتظار`,
+          other: `أُضيف ${n} بند إلى قائمة الانتظار`,
+        }),
+      viewBacklog: 'عرض قائمة الانتظار',
+    },
+    plan: {
+      title: 'تخطيط السبرنت بالذكاء الاصطناعي',
+      capacity: 'السعة (نقاط القصة)',
+      capacityError: (min: number, max: number) =>
+        `أدخل عددًا صحيحًا من النقاط من ${min} إلى ${max}`,
+      focus: 'التركيز / الهدف (اختياري)',
+      focusPlaceholder: 'مثال: إنهاء الملف الشخصي',
+      suggest: 'اقترح خطة',
+      suggestAgain: 'اقترح مجددًا',
+      planning: 'جارٍ التخطيط…',
+      planningSprint: 'جارٍ تخطيط السبرنت',
+      emptyText: 'أضف بنودًا أو ولّدها أولًا، ثم يخطط Kanbot لسبرنت منها.',
+      failedTitle: 'تعذّر على Kanbot تخطيط السبرنت الآن',
+      failedHint: 'السعة والتركيز محفوظان.',
+      goal: 'هدف السبرنت المقترح',
+      backlogTodos: 'بنود قائمة الانتظار',
+      total: 'الإجمالي',
+      barLabel: 'النقاط مقابل السعة',
+      barValue: (total: number, capacity: number | null) =>
+        `${total} من ${capacity ?? '?'} ${pointsNoun(capacity ?? total)}`,
+      totalValue: (total: number, capacity: number | null) =>
+        `${total} / ${capacity ?? '–'} ${pointsNoun(capacity ?? total)}`,
+      over: (n: number) => `تجاوزت السعة بـ ${n} ${pointsNoun(n)}. ألغِ تحديد بند أو ارفع السعة.`,
+      suggestion: 'اقتراح الذكاء الاصطناعي',
+      fact: (todoCount: number, points: number, capacity: number) =>
+        `${todos(todoCount)} · ${points} / ${capacity} ${pointsNoun(capacity)}`,
+      asSuggested: 'كما اقتُرحت أولًا. تظهر تغييراتك في القائمة وإجماليها.',
+      reasoning: 'لماذا هذه الخطة؟',
+      caveat:
+        'قد لا تطابق ملاحظات الذكاء الاصطناعي الخطة أعلاه — الخطة مُتحقَّق منها مقابل قائمة الانتظار والسعة.',
+      leftOut: 'بعض البنود التي ذكرها الذكاء الاصطناعي ليست في هذه الخطة.',
+      loadingBacklog: 'جارٍ تحميل قائمة الانتظار…',
+      intro: (n: number) =>
+        `يختار Kanbot من قائمة الانتظار البنود التي تتّسع لسعتك، الأعلى أولوية أولًا. ${todos(n)} في قائمة الانتظار.`,
+      create: (name: string, n: number) => `إنشاء ${name} ${withTodos(n)}`,
+      createFailed: (name: string, reason: string) => `تعذّر إنشاء ${name}. ${reason}`,
+      ready: (todoCount: number, points: number, capacity: number) =>
+        `الخطة جاهزة: ${todos(todoCount)}، ${points} من ${capacity} ${pointsNoun(capacity)}`,
+      created: (name: string, n: number) => `${name} أُنشئ ${withTodos(n)}`,
+    },
+    summary: {
+      title: 'ملخص الذكاء الاصطناعي',
+      midSprint: 'ملخص منتصف السبرنت',
+      midSprintDay: (day: number, total: number) => `ملخص منتصف السبرنت · اليوم ${day} من ${total}`,
+      dialogTitle: (name: string) => `${name} · ملخص الذكاء الاصطناعي`,
+      summarize: 'تلخيص',
+      summarizing: 'جارٍ التلخيص…',
+      regenerate: 'إعادة التوليد',
+      regenerating: 'جارٍ إعادة التوليد…',
+      ready: (name: string) => `ملخص ${name} جاهز`,
+      generating: 'جارٍ توليد الملخص',
+      failedTitle: 'تعذّر على Kanbot كتابة الملخص',
+      emptyActive: 'احصل على قراءة سريعة لسير هذا السبرنت: التقدم والمخاطر وما يجب فعله تاليًا.',
+      emptyCompleted: 'لا يوجد ملخص بعد. يستطيع Kanbot كتابة واحد مما أنجزه هذا السبرنت.',
+      soFar: 'حتى الآن: ',
+      liveStats: (doneTodos: number, totalTodos: number, donePoints: number, totalPoints: number) =>
+        `${doneTodos} من ${totalTodos} ${doneTodosNoun(totalTodos)} · ${donePoints} من ${totalPoints} ${pointsNoun(totalPoints)} منجزة`,
+      left: (text: string) => ` · ${text}`,
+      generatedBefore: 'وُلّد في ',
+      generatedAfter: ' · قد يخطئ الذكاء الاصطناعي. راجعه قبل المشاركة.',
+      failedAfterComplete: (name: string, reason: string) =>
+        `اكتمل ${name}، لكن تعذّر توليد ملخصه بالذكاء الاصطناعي. ${reason}`,
+    },
+  },
+
+  notFound: {
+    pageTitle: 'لم نعثر على هذه الصفحة',
+    code: 'خطأ 404',
+    requested: 'العنوان المطلوب: ',
+    goToProjects: 'الذهاب إلى المشاريع',
+    openActiveSprint: 'فتح السبرنت النشط',
+    askAi: 'اطلب من الذكاء الاصطناعي إيجادها',
+    route: {
+      title: 'لم نعثر على هذه الصفحة',
+      body: 'قد يكون الرابط معطّلًا، أو نُقل المشروع أو البند أو حُذف. تحقق من العنوان، أو عُد إلى مكان تعرفه.',
+    },
+    project: {
+      title: 'هذا المشروع غير موجود',
+      body: 'ربما حُذف، أو يتبع حسابًا لم تسجّل الدخول إليه. تحقق من العنوان، أو اختر أحد مشاريعك.',
+    },
+    sprint: {
+      title: 'هذا السبرنت غير موجود',
+      body: 'ربما حُذف، أو يتبع مشروعًا آخر. ابحث في قائمة السبرنتات عن الذي تقصده.',
+    },
+    todo: {
+      title: 'هذا البند غير موجود',
+      body: 'ربما حُذف. ابحث في قائمة الانتظار عن بنود مشابهة.',
+    },
+    findItPrompt: (path: string) =>
+      `حاولت فتح ${path} فظهرت «لم نعثر على هذه الصفحة». هل يمكنك مساعدتي في إيجاد ما كنت أبحث عنه؟`,
+  },
+
+  errorPages: {
+    crashTitle: 'حدث خطأ ما',
+    crashText:
+      'واجه Kanbot خطأً غير متوقع. إعادة التحميل تحلّ المشكلة عادةً، وكل ما حفظته آمن على الخادم.',
+    thisPage: 'هذه الصفحة',
+    updateTitle: 'يتوفر إصدار جديد',
+    updateText:
+      'حُدّث Kanbot أثناء فتح هذا التبويب. أعد التحميل للحصول على أحدث إصدار — كل ما حفظته آمن.',
+    updatePageText:
+      'حُدّث Kanbot أثناء فتح هذا التبويب، لذا تعذّر تحميل هذه الصفحة. أعد التحميل للحصول على أحدث إصدار — كل ما حفظته آمن.',
+    updateTag: 'تحديث',
+    updateDocumentTitle: 'يتوفر تحديث',
+    reload: 'إعادة التحميل',
   },
 
   dnd: {

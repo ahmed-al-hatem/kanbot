@@ -26,10 +26,20 @@ const I18N_MIGRATED = [
   // R3: the backlog, Todo details, the sprint form / start dialogs and the shared DnD hooks.
   'src/features/backlog/**/*.{ts,tsx}',
   'src/features/todos/**/*.{ts,tsx}',
-  'src/features/sprints/SprintFormDialog.tsx',
-  'src/features/sprints/StartSprintDialog.tsx',
-  'src/features/sprints/sprintForm.ts',
   'src/lib/dnd/**/*.{ts,tsx}',
+  // R4: the board, Sprints history (with R3's sprint dialogs), the AI surfaces, 404 and the error
+  // boundaries, the router, and the hooks / lib files behind their toasts and titles.
+  'src/features/board/**/*.{ts,tsx}',
+  'src/features/sprints/**/*.{ts,tsx}',
+  'src/features/ai/**/*.{ts,tsx}',
+  'src/features/errors/**/*.{ts,tsx}',
+  'src/router.tsx',
+  'src/hooks/useAi.ts',
+  'src/hooks/useBoard.ts',
+  'src/hooks/useMoveTodo.ts',
+  'src/hooks/useSprints.ts',
+  'src/lib/documentTitle.ts',
+  'src/lib/routeHandle.ts',
 ];
 
 /**
@@ -40,32 +50,44 @@ const NON_TEXT_LITERALS = [
   // HTML types, roles, ARIA states and live-region politeness.
   ...['button', 'submit', 'text', 'email', 'password', 'search', 'date', 'checkbox'],
   ...['group', 'img', 'alert', 'alertdialog', 'dialog', 'status', 'progressbar', 'true', 'false'],
-  ...['polite', 'assertive'],
+  ...['polite', 'assertive', 'log', 'radio', 'number', 'numeric'],
+  // Link targets and rel tokens (AI Markdown links leave in a new tab without access to the app).
+  ...['_blank', 'noopener noreferrer'],
   // autocomplete / autocapitalize tokens.
   ...['name', 'current-password', 'new-password', 'off', 'characters'],
   // Component variants, sizes, tones, layouts and alignments.
   ...['primary', 'subtle', 'danger', 'warning', 'ai', 'dashed', 'inline', 'sm', 'lg'],
   ...['gray', 'blue', 'xlarge', 'start', 'project', 'complete', 'todo'],
+  ...['success', 'large', 'full', 'generate', 'plan', 'route'],
   // Icon names (components/Icon/icons.ts).
   ...['globe', 'add', 'ai-sparkle', 'arrow-left', 'arrow-right', 'calendar', 'check-mark'],
   ...['chevron-down', 'cross', 'delete', 'lightbulb', 'lock-locked', 'log-out', 'menu'],
   ...['pencil', 'refresh', 'show-more-horizontal', 'spaces', 'status-error', 'theme'],
   ...['warning-outline', 'drag-handle-vertical', 'backlog', 'board', 'sprint', 'bug'],
+  ...['send', 'status-warning', 'check-circle'],
   // Global class names, ids, test ids, routes and shortcut targets.
   ...['visually-hidden', 'kb-page', 'kb-pop', 'page-body', 'meta', 'main', 'project-search'],
   ...['live-polite', 'live-assertive', '#main', '/login', '/projects', 'create'],
   ...['backlog-search', 'backlog-priority', 'backlog-type'],
-  // react-hook-form field names (Controller `name`), and the empty value of an "All …" option.
-  ...['sprintId', 'labels', ''],
-  // SVG: the 16px icon grid and paint keywords.
-  ...['0 0 16 16', 'currentColor', 'none', 'evenodd'],
+  ...['sprint-list-title', 'sprint-detail-title', 'kb-rise kb-stagger'],
+  // Form field names (react-hook-form `name`, radio groups), and the empty value of an "All …" option.
+  ...['sprintId', 'labels', 'move-unfinished', ''],
+  // SVG: the 16px icon grid, paint and text-anchor keywords.
+  ...['0 0 16 16', 'currentColor', 'none', 'evenodd', 'middle'],
   // The shortcut key shown in the profile menu.
   '?',
 ];
 
 export default defineConfig([
   // api.ts is a verbatim copy of the server contract; icons.ts is generated.
-  globalIgnores(['dist', 'coverage', 'playwright-report', 'test-results', 'src/types/api.ts','src/components/Icon/icons.ts']),
+  globalIgnores([
+    'dist',
+    'coverage',
+    'playwright-report',
+    'test-results',
+    'src/types/api.ts',
+    'src/components/Icon/icons.ts',
+  ]),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

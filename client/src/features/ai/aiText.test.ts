@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { formatDateTime, timeAgo } from '@/lib/format';
+import { createFormatter } from '@/i18n/format';
+import { en } from '@/i18n/messages/en';
 import { linkTodoKeys, stripInternalIds, todoKeysIn } from './aiText';
 
 const KEYS = new Map([
@@ -9,26 +10,38 @@ const KEYS = new Map([
 
 describe('AI text clean-up', () => {
   it('removes the internal [id:…] markers a model echoes back', () => {
-    expect(stripInternalIds('KAN-22 [id:b36dbe33-b1e4-4c2a] is late; KAN-7 [id:x] too.')).toBe('KAN-22 is late; KAN-7 too.');
-    expect(stripInternalIds('No ids here [link](https://example.com).')).toBe('No ids here [link](https://example.com).');
+    expect(stripInternalIds('KAN-22 [id:b36dbe33-b1e4-4c2a] is late; KAN-7 [id:x] too.')).toBe(
+      'KAN-22 is late; KAN-7 too.',
+    );
+    expect(stripInternalIds('No ids here [link](https://example.com).')).toBe(
+      'No ids here [link](https://example.com).',
+    );
   });
 
   it('finds the todo keys a text mentions, once each', () => {
-    expect(todoKeysIn('KAN-22, KAN-7 and KAN-22 again; not KAN-, kan-3 or K-1.')).toEqual(['KAN-22', 'KAN-7']);
+    expect(todoKeysIn('KAN-22, KAN-7 and KAN-22 again; not KAN-, kan-3 or K-1.')).toEqual([
+      'KAN-22',
+      'KAN-7',
+    ]);
   });
 
   it('links known keys outside code and existing links', () => {
-    expect(linkTodoKeys('Start with KAN-22, then KAN-99.', KEYS)).toBe('Start with [KAN-22](#todo=uuid-22), then KAN-99.');
+    expect(linkTodoKeys('Start with KAN-22, then KAN-99.', KEYS)).toBe(
+      'Start with [KAN-22](#todo=uuid-22), then KAN-99.',
+    );
     expect(linkTodoKeys('Run `KAN-22` and\n```\nKAN-7\n```\nthen KAN-7', KEYS)).toBe(
       'Run `KAN-22` and\n```\nKAN-7\n```\nthen [KAN-7](#todo=uuid-7)',
     );
-    expect(linkTodoKeys('See [KAN-22](https://example.com).', KEYS)).toBe('See [KAN-22](https://example.com).');
+    expect(linkTodoKeys('See [KAN-22](https://example.com).', KEYS)).toBe(
+      'See [KAN-22](https://example.com).',
+    );
     // KAN-7 inside KAN-77 is not a match.
     expect(linkTodoKeys('KAN-77', KEYS)).toBe('KAN-77');
   });
 });
 
 describe('generated time', () => {
+  const { dateTime: formatDateTime, timeAgo } = createFormatter('en', en);
   const at = '2026-11-04T15:42:00.000Z';
   const now = new Date(at).getTime();
 

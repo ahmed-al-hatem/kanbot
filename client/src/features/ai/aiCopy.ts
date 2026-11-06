@@ -1,12 +1,12 @@
-import { isApiError } from '@/api/errors';
-
-/** AI-5: carried by every AI surface. */
-export const AI_DISCLAIMER = 'AI can make mistakes. Review before saving.';
+import type { Messages } from '@/i18n';
+import { errorMessage } from '@/i18n/errors';
 
 /**
- * The server's own message for 502 AI_ERROR and 429 RATE_LIMITED (AI-5), and the client's for
- * NETWORK_ERROR / TIMEOUT; a non-API error gets a generic line.
+ * An AI request's failure in the UI language (AI-5): 502 AI_ERROR and 429 RATE_LIMITED through
+ * `errors.server` (English shows the server's own message, Arabic the code's meaning), the
+ * client's NETWORK_ERROR / TIMEOUT through `errors.byCode`, and a generic line for anything else.
+ * The copy itself (disclaimer, titles, hints) lives in `t.ai`.
  */
-export function aiErrorMessage(error: unknown): string {
-  return isApiError(error) ? error.message : 'Something went wrong. Please try again.';
+export function aiErrorMessage(error: unknown, t: Messages): string {
+  return errorMessage(error, t);
 }

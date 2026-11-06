@@ -3,10 +3,10 @@ import { Button } from '@/components/Button/Button';
 import { Checkbox } from '@/components/Field/Checkbox';
 import { Icon } from '@/components/Icon/Icon';
 import { useAiStatus } from '@/hooks/useAi';
+import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { formatDateTime, timeAgo } from '@/lib/format';
 import { useNow } from '@/lib/useNow';
-import { AI_DISCLAIMER, aiErrorMessage } from './aiCopy';
+import { aiErrorMessage } from './aiCopy';
 import styles from './ai.module.css';
 
 /** DESIGN §7 AI thinking: three 6px `--ai-icon` dots bouncing (`kbDot` 1.2s, 0.2s apart). */
@@ -22,17 +22,26 @@ export function ThinkingDots() {
 
 /** AI-5: "Mock AI" when the server runs the built-in rule-based assistant (`GET /ai/status`). */
 export function MockBadge() {
+  const t = useT();
   const { data } = useAiStatus();
   if (data?.mode !== 'mock') return null;
   return (
-    <span className={styles.mockBadge} title="No AI key is configured: answers come from a built-in demo assistant.">
-      Mock AI
+    <span className={styles.mockBadge} title={t.ai.mockHint}>
+      {t.ai.mockBadge}
     </span>
   );
 }
 
-export function AiDisclaimer({ children = AI_DISCLAIMER, className }: { children?: ReactNode; className?: string }) {
-  return <p className={cx(styles.disclaimer, className)}>{children}</p>;
+/** AI-5's "AI can make mistakes. Review before saving." unless the surface says it its own way. */
+export function AiDisclaimer({
+  children,
+  className,
+}: {
+  children?: ReactNode;
+  className?: string;
+}) {
+  const t = useT();
+  return <p className={cx(styles.disclaimer, className)}>{children ?? t.ai.disclaimer}</p>;
 }
 
 interface AiErrorPanelProps {
@@ -47,16 +56,29 @@ interface AiErrorPanelProps {
 }
 
 /**
- * DESIGN §9 08 / S07 AI error: a dashed danger panel with the server's message (502 AI_ERROR,
- * 429 RATE_LIMITED — AI-5) and "Try again". `role="alert"`, so it is announced.
+ * DESIGN §9 08 / S07 AI error: a dashed danger panel with the error's message (502 AI_ERROR,
+ * 429 RATE_LIMITED — AI-5) and "Try again". `role="alert"`, so it is announced. The message is
+ * read from the error at render, so a panel on screen changes language with the UI.
  */
-export function AiErrorPanel({ title, error, onRetry, retrying = false, hint, compact = false, className }: AiErrorPanelProps) {
+export function AiErrorPanel({
+  title,
+  error,
+  onRetry,
+  retrying = false,
+  hint,
+  compact = false,
+  className,
+}: AiErrorPanelProps) {
+  const t = useT();
   return (
-    <div role="alert" className={cx(styles.errorPanel, compact && styles.errorCompact, 'kb-pop', className)}>
+    <div
+      role="alert"
+      className={cx(styles.errorPanel, compact && styles.errorCompact, 'kb-pop', className)}
+    >
       <Icon name="status-error" size={compact ? 16 : 24} className={styles.errorIcon} />
       <span className={styles.errorTitle}>{title}</span>
       <span className={styles.errorText}>
-        {aiErrorMessage(error)}
+        {aiErrorMessage(error, t)}
         {hint && <> {hint}</>}
       </span>
       <Button
@@ -64,10 +86,10 @@ export function AiErrorPanel({ title, error, onRetry, retrying = false, hint, co
         size={compact ? 'sm' : 'md'}
         icon="refresh"
         loading={retrying}
-        loadingText="Trying again…"
+        loadingText={t.ai.tryingAgain}
         onClick={onRetry}
       >
-        Try again
+        {t.common.tryAgain}
       </Button>
     </div>
   );
@@ -80,6 +102,7 @@ interface SummaryOptionProps {
 
 /** DESIGN §9 11: Complete sprint's "Generate AI summary" checkbox, AI-styled (SPR-6, AI-4). */
 export function SummaryOption({ checked, onChange }: SummaryOptionProps) {
+  const copy = useT().ai.summaryOption;
   return (
     <Checkbox
       className={styles.option}
@@ -90,10 +113,10 @@ export function SummaryOption({ checked, onChange }: SummaryOptionProps) {
       label={
         <span className={styles.optionLabel}>
           <Icon name="ai-sparkle" size={12} className={styles.optionIcon} />
-          Generate AI summary
+          {copy.label}
         </span>
       }
-      description="Written after the sprint is completed; it opens with the sprint in Sprints history."
+      description={copy.help}
     />
   );
 }
@@ -103,10 +126,12 @@ export function SummaryOption({ checked, onChange }: SummaryOptionProps) {
  * ISO value, so a Regenerate visibly changes it. The relative part refreshes every minute.
  */
 export function GeneratedAt({ iso }: { iso: string }) {
+  const t = useT();
+  const format = useFormat();
   const now = useNow();
   return (
     <time dateTime={iso} title={iso}>
-      {formatDateTime(iso)} · {timeAgo(iso, now)}
+      {t.ai.generatedAt(format.dateTime(iso), format.timeAgo(iso, now))}
     </time>
   );
 }

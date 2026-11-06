@@ -11,8 +11,8 @@ import { SprintSummaryCard } from '@/features/ai/lazy';
 import { NotFoundPage } from '@/features/errors/NotFoundPage';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
+import { getT, useT } from '@/i18n';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
-import { plural } from '@/lib/format';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { toast } from '@/stores/toast';
 import type { Sprint } from '@/types/api';
@@ -29,6 +29,8 @@ import styles from './Sprints.module.css';
  * sprints shows the 404 page (DESIGN §9). Todo details opens from `?todo=`.
  */
 export function SprintsPage() {
+  const t = useT();
+  const copy = t.sprints.history;
   const { projectId = '', sprintId } = useParams();
   const navigate = useNavigate();
   const [, setParams] = useSearchParams();
@@ -38,10 +40,11 @@ export function SprintsPage() {
   const [form, setForm] = useState({ open: false, key: 0 });
 
   const list = sprints.data;
-  const selected = list && (sprintId ? list.find((sprint) => sprint.id === sprintId) : mostRecentSprint(list));
+  const selected =
+    list && (sprintId ? list.find((sprint) => sprint.id === sprintId) : mostRecentSprint(list));
   // The list loaded and the id isn't in it: a deleted sprint or another project's (DESIGN §9).
   const missing = Boolean(list && sprintId && !selected);
-  useDocumentTitle(missing ? null : titleOf(selected?.name, 'Sprints', project?.name));
+  useDocumentTitle(missing ? null : titleOf(selected?.name, copy.title, project?.name));
 
   const openTodo = useCallback(
     (todoId: string) => {
@@ -56,20 +59,21 @@ export function SprintsPage() {
 
   const onCreated = (sprint: Sprint) => {
     setForm((state) => ({ ...state, open: false }));
-    toast.success(`${sprint.name} created · drag todos into it from the backlog`);
+    toast.success(getT().sprints.history.created(sprint.name));
     void navigate(`/projects/${projectId}/sprints/${sprint.id}`);
   };
 
   if (missing) return <NotFoundPage cause="sprint" />;
+  const backlogPath = `/projects/${projectId}/backlog`;
 
   return (
     <div className="kb-page">
       <PageHeader
-        title="Sprints"
+        title={copy.title}
         meta={
           <>
             <ProjectMeta project={project} />
-            {list && <span className={styles.headerCount}>{plural(list.length, 'sprint')}</span>}
+            {list && <span className={styles.headerCount}>{t.count.sprints(list.length)}</span>}
           </>
         }
         actions={
@@ -81,7 +85,7 @@ export function SprintsPage() {
                 setForm((state) => ({ open: true, key: state.key + 1 }));
               }}
             >
-              Create sprint
+              {t.backlog.createSprint}
             </Button>
             <AskAiButton />
           </>
@@ -93,7 +97,7 @@ export function SprintsPage() {
           <SprintsSkeleton />
         ) : sprints.error ? (
           <PageError
-            page="your sprints"
+            page={copy.pageName}
             error={sprints.error}
             onRetry={() => {
               void sprints.refetch();
@@ -103,9 +107,9 @@ export function SprintsPage() {
         ) : !list ? null : list.length === 0 ? (
           <EmptyState
             icon="sprint"
-            title="No sprints yet"
-            description="Plan a sprint from the backlog: create one, drag todos into it, then start it."
-            actions={<ButtonLink to={`/projects/${projectId}/backlog`}>Go to Backlog</ButtonLink>}
+            title={copy.empty.title}
+            description={copy.empty.text}
+            actions={<ButtonLink to={backlogPath}>{t.backlog.goTo}</ButtonLink>}
           />
         ) : (
           <div className={styles.history}>
@@ -149,8 +153,9 @@ export function SprintsPage() {
 
 /** Same layout as the page (DESIGN §11): list items on one side, the detail panel with four tiles. */
 function SprintsSkeleton() {
+  const t = useT();
   return (
-    <SkeletonRegion label="sprints" className={styles.history}>
+    <SkeletonRegion label={t.sprints.history.loadingName} className={styles.history}>
       <div className={styles.list}>
         {[1, 0.8, 0.6, 0.4].map((opacity) => (
           <Skeleton key={opacity} blockSize={76} radius="large" opacity={opacity} />

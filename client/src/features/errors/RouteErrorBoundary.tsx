@@ -1,11 +1,11 @@
 import { lazy, Suspense } from 'react';
 import { useRouteError } from 'react-router';
 import { Logo } from '@/components/Logo/Logo';
+import { useT } from '@/i18n';
+import { cx } from '@/lib/cx';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { isChunkLoadError, reloadPage } from './chunkError';
 import styles from './ErrorPage.module.css';
-
-export const UPDATE_TITLE = 'A new version is available';
 
 /*
  * Any other error loads the page error on demand. If that chunk can't load either, the lazy
@@ -44,21 +44,20 @@ export function RootErrorBoundary() {
   );
 }
 
+/** The English dictionary is in the startup bundle, so this needs no chunk in either language. */
 function UpdateAvailable() {
-  useDocumentTitle(titleOf('Update available'));
+  const copy = useT().errorPages;
+  useDocumentTitle(titleOf(copy.updateDocumentTitle));
   return (
-    <div role="alert" className={`${styles.page} kb-page`}>
-      <span className={styles.tag}>Update</span>
+    <div role="alert" className={cx(styles.page, 'kb-page')}>
+      <span className={styles.tag}>{copy.updateTag}</span>
       <h1 className={styles.title} tabIndex={-1}>
-        {UPDATE_TITLE}
+        {copy.updateTitle}
       </h1>
-      <p className={styles.body}>
-        Kanbot was updated while this tab was open, so this page couldn&apos;t load. Reload to get the latest
-        version — everything you saved is safe.
-      </p>
+      <p className={styles.body}>{copy.updatePageText}</p>
       <div className={styles.actions}>
         <button type="button" className={styles.plainButton} onClick={reloadPage}>
-          Reload
+          {copy.reload}
         </button>
       </div>
     </div>

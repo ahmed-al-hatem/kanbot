@@ -1,9 +1,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useId } from 'react';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { groupDropId, type DropData } from '@/lib/dnd/sensors';
-import { plural } from '@/lib/format';
 import type { Todo, TodoStatus } from '@/types/api';
 import styles from './Board.module.css';
 import { ColumnComposer } from './ColumnComposer';
@@ -44,6 +44,7 @@ export function BoardColumn({
   onKeyMove,
   onMove,
 }: BoardColumnProps) {
+  const t = useT();
   const titleId = useId();
   const { setNodeRef } = useDroppable({
     id: groupDropId(column.id),
@@ -55,7 +56,7 @@ export function BoardColumn({
     // A named <section> is a region landmark (DESIGN §10.2).
     <section
       ref={setNodeRef}
-      aria-label={`${column.name}, ${plural(count, 'todo')}`}
+      aria-label={t.board.column.label(column.name, t.count.todos(count))}
       className={cx(styles.column, isOver && styles.over)}
     >
       <div className={styles.columnHeader}>
@@ -66,11 +67,13 @@ export function BoardColumn({
         <span className={styles.countPill} aria-hidden="true">
           {count}
         </span>
-        <span className={styles.columnPoints}>
-          {column.points} {column.points === 1 ? 'pt' : 'pts'}
-        </span>
+        <span className={styles.columnPoints}>{t.count.points(column.points)}</span>
       </div>
-      <SortableContext id={column.id} items={cards.map((todo) => todo.id)} strategy={verticalListSortingStrategy}>
+      <SortableContext
+        id={column.id}
+        items={cards.map((todo) => todo.id)}
+        strategy={verticalListSortingStrategy}
+      >
         {cards.length > 0 ? (
           <ul className={styles.cards} aria-labelledby={titleId}>
             {cards.map((todo, row) => (
@@ -88,10 +91,15 @@ export function BoardColumn({
             ))}
           </ul>
         ) : (
-          <p className={cx(styles.dropHere, 'kb-rise')}>Drop todos here</p>
+          <p className={cx(styles.dropHere, 'kb-rise')}>{t.board.column.dropHere}</p>
         )}
       </SortableContext>
-      <ColumnComposer projectId={projectId} sprintId={sprintId} status={column.id} columnName={column.name} />
+      <ColumnComposer
+        projectId={projectId}
+        sprintId={sprintId}
+        status={column.id}
+        columnName={column.name}
+      />
     </section>
   );
 }

@@ -7,12 +7,12 @@ import { PointsPill } from '@/components/Chip/PointsPill';
 import { Icon } from '@/components/Icon/Icon';
 import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
 import { PriorityLabel } from '@/features/todos/PriorityLabel';
-import { TYPE_LABELS, STATUS_LABELS } from '@/features/todos/todoMeta';
 import { TypeIcon } from '@/features/todos/TypeIcon';
 import { isTempTodo } from '@/hooks/useTodos';
+import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import type { DropData } from '@/lib/dnd/sensors';
-import { formatDay, overdueDays } from '@/lib/format';
+import { overdueDays } from '@/lib/dates';
 import { useHighlight } from '@/stores/highlight';
 import { TODO_STATUSES, type Todo, type TodoStatus } from '@/types/api';
 import styles from './Board.module.css';
@@ -64,6 +64,9 @@ export const TodoCard = memo(function TodoCard({
   onKeyMove,
   onMove,
 }: TodoCardProps) {
+  const t = useT();
+  const format = useFormat();
+  const row = t.backlog.row;
   const clearTodo = useHighlight((s) => s.clearTodo);
   const saving = isTempTodo(todo.id);
   // Open runs once the menu has handed focus back to ⋯ (see Menu), so the dialog returns focus there.
@@ -101,7 +104,14 @@ export const TodoCard = memo(function TodoCard({
   return (
     <li
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition, '--i': index, '--col': column } as CSSProperties}
+      style={
+        {
+          transform: CSS.Translate.toString(transform),
+          transition,
+          '--i': index,
+          '--col': column,
+        } as CSSProperties
+      }
       className={cx(
         styles.cardItem,
         'kb-rise kb-stagger',
@@ -124,14 +134,16 @@ export const TodoCard = memo(function TodoCard({
       >
         <span className={styles.cardTitle}>{todo.title}</span>
         <span className={styles.chips}>
-          <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>{TYPE_LABELS[todo.type]}</Chip>
+          <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>
+            {t.todos.type[todo.type]}
+          </Chip>
           <Chip>
             <PriorityLabel priority={todo.priority} className={styles.chipPriority} />
           </Chip>
           {overdue > 0 && todo.dueDate && (
             <Chip tone="danger" icon="status-warning">
-              <span className="visually-hidden">Overdue, due </span>
-              {formatDay(todo.dueDate)}
+              <span className="visually-hidden">{t.board.card.overdue}</span>
+              {format.day(todo.dueDate)}
             </Chip>
           )}
           {todo.labels.slice(0, MAX_LABELS).map((label) => (
@@ -141,18 +153,27 @@ export const TodoCard = memo(function TodoCard({
           ))}
           {extraLabels > 0 && (
             <span className={styles.moreLabels}>
-              +{extraLabels}
-              <span className="visually-hidden"> more labels: {todo.labels.slice(MAX_LABELS).join(', ')}</span>
+              {row.moreLabels(extraLabels)}
+              <span className="visually-hidden">
+                {row.moreLabelsSpoken(todo.labels.slice(MAX_LABELS).join(row.labelSeparator))}
+              </span>
             </span>
           )}
         </span>
         <span className={styles.cardFooter}>
           <span className={styles.cardKey}>
-            {done && <Icon name="check-circle" size={12} label="Done" className={styles.doneIcon} />}
+            {done && (
+              <Icon
+                name="check-circle"
+                size={12}
+                label={t.todos.status.done}
+                className={styles.doneIcon}
+              />
+            )}
             {saving ? (
               <>
-                <span aria-hidden="true">…</span>
-                <span className="visually-hidden">Saving</span>
+                <span aria-hidden="true">{row.savingGlyph}</span>
+                <span className="visually-hidden">{row.saving}</span>
               </>
             ) : (
               todo.key
@@ -164,13 +185,19 @@ export const TodoCard = memo(function TodoCard({
       {!saving && (
         <span className={styles.cardMenu} data-no-drag>
           <Menu
-            label={`${todo.key} actions`}
+            label={row.menu(todo.key)}
             onCloseAutoFocus={() => {
               if (!pendingOpen.current) return;
               pendingOpen.current = false;
               onOpen(todo.id);
             }}
-            trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={`Actions for ${todo.key}`} />}
+            trigger={
+              <IconButton
+                size="sm"
+                icon="show-more-horizontal"
+                aria-label={row.actions(todo.key)}
+              />
+            }
           >
             <MenuItem
               icon="arrow-right"
@@ -178,7 +205,7 @@ export const TodoCard = memo(function TodoCard({
                 pendingOpen.current = true;
               }}
             >
-              Open
+              {row.open}
             </MenuItem>
             <MenuSeparator />
             {TODO_STATUSES.filter((status) => status !== todo.status).map((status) => (
@@ -188,7 +215,7 @@ export const TodoCard = memo(function TodoCard({
                   onMove(todo, status);
                 }}
               >
-                Move to {STATUS_LABELS[status]}
+                {row.moveTo(t.todos.status[status])}
               </MenuItem>
             ))}
           </Menu>
@@ -200,11 +227,14 @@ export const TodoCard = memo(function TodoCard({
 
 /** The card under the pointer while dragging (dnd-kit DragOverlay): same content, no controls. */
 export function TodoCardPreview({ todo }: { todo: Todo }) {
+  const t = useT();
   return (
     <div className={cx(styles.card, styles.preview)} aria-hidden="true">
       <span className={styles.cardTitle}>{todo.title}</span>
       <span className={styles.chips}>
-        <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>{TYPE_LABELS[todo.type]}</Chip>
+        <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>
+          {t.todos.type[todo.type]}
+        </Chip>
         <Chip>
           <PriorityLabel priority={todo.priority} className={styles.chipPriority} />
         </Chip>
