@@ -1,6 +1,8 @@
 import { queryOptions, useMutation, useMutationState, useQuery } from '@tanstack/react-query';
 import { chat, generateTodos, getAiStatus, planSprint, summarizeSprint } from '@/api/ai';
 import { queryClient } from '@/app/queryClient';
+import { getT } from '@/i18n';
+import { errorMessage } from '@/i18n/errors';
 import { toast } from '@/stores/toast';
 import type {
   ChatMessage,
@@ -87,7 +89,9 @@ export function useSummarizeSprint() {
       void queryClient.invalidateQueries({ queryKey: qk.sprints(sprint.projectId) });
     },
     onError: (error, { sprint, notify }) => {
-      if (notify) toast.error(`${sprint.name} is completed, but its AI summary failed. ${error.message}`);
+      if (!notify) return;
+      const t = getT();
+      toast.error(t.ai.summary.failedAfterComplete(sprint.name, errorMessage(error, t)));
     },
   });
 }
@@ -109,7 +113,11 @@ export function useSprintSummaryRequest(sprintId: string): SummaryRequestState |
       // `variables` is `unknown` in the cache; every mutation under this key is a useSummarizeSprint.
       predicate: (m) => (m.state.variables as SummaryVariables | undefined)?.sprint.id === sprintId,
     },
-    select: (m): SummaryRequestState => ({ status: m.state.status, error: m.state.error, submittedAt: m.state.submittedAt }),
+    select: (m): SummaryRequestState => ({
+      status: m.state.status,
+      error: m.state.error,
+      submittedAt: m.state.submittedAt,
+    }),
   });
   return states.reduce<SummaryRequestState | undefined>(
     (last, item) => (!last || item.submittedAt >= last.submittedAt ? item : last),

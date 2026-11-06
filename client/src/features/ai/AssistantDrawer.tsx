@@ -7,14 +7,14 @@ import { useReturnFocus } from '@/components/Dialog/useReturnFocus';
 import { Icon } from '@/components/Icon/Icon';
 import { useChat, useSummarizeSprint } from '@/hooks/useAi';
 import { useProject } from '@/hooks/useProjects';
-import { omitKey } from '@/lib/records';
 import { useSprints } from '@/hooks/useSprints';
+import { getT, useT, type Messages } from '@/i18n';
+import { omitKey } from '@/lib/records';
 import { announce } from '@/stores/announcer';
 import { useNotFound } from '@/stores/notFound';
 import { CHAT_MAX_CONTENT, toChatRequest, useAssistant, type ChatEntry } from '@/stores/assistant';
 import { toast } from '@/stores/toast';
 import type { ChatMessage, Sprint } from '@/types/api';
-import { AI_DISCLAIMER } from './aiCopy';
 import { AiDisclaimer, AiErrorPanel, MockBadge, ThinkingDots } from './AiParts';
 import { stripInternalIds } from './aiText';
 import { LazyMarkdown } from './LazyMarkdown';
@@ -32,16 +32,10 @@ interface Failure {
   error: unknown;
 }
 
-/** Page-aware example prompts (Requirements §9 "Suggested prompts … backlog vs board"). */
-const EXAMPLES: Record<string, readonly string[]> = {
-  backlog: [
-    'Which backlog todos should go into the next sprint?',
-    'Which todos are missing story points?',
-    'Suggest a goal for the next sprint',
-  ],
-  board: ["What's blocking the active sprint?", 'What should I work on next?', 'Are we on track to finish this sprint?'],
-  sprints: ['How did the last sprint go?', 'What should we improve next sprint?', 'Compare our last two sprints'],
-};
+type ExampleSection = keyof Messages['ai']['drawer']['examples'];
+
+const isExampleSection = (section: string): section is ExampleSection =>
+  section === 'backlog' || section === 'board' || section === 'sprints';
 
 /**
  * DESIGN §7 AI drawer (AI-1, AI-5): a 440px side dialog with the Mock AI badge, New chat,
@@ -61,7 +55,9 @@ export function AssistantDrawer() {
   // The project in the URL. On the 404 page without a usable one (unknown route, missing
   // project), the project "Ask AI to find it" chose.
   const projectId =
-    notFound === 'project' || (notFound && !routeProjectId) ? (target ?? undefined) : routeProjectId;
+    notFound === 'project' || (notFound && !routeProjectId)
+      ? (target ?? undefined)
+      : routeProjectId;
   const section = useMatch('/projects/:projectId/:section/*')?.params.section ?? 'backlog';
   const returnFocus = useReturnFocus();
   const chat = useChat();
@@ -77,7 +73,11 @@ export function AssistantDrawer() {
     if (!projectId && useAssistant.getState().open) setOpen(false);
   }, [projectId, setOpen]);
 
-  const setFor = <T,>(set: (fn: (state: Record<string, T>) => Record<string, T>) => void, id: string, value: T | null) => {
+  const setFor = <T,>(
+    set: (fn: (state: Record<string, T>) => Record<string, T>) => void,
+    id: string,
+    value: T | null,
+  ) => {
     set((state) => (value === null ? omitKey(state, id) : { ...state, [id]: value }));
   };
 
@@ -91,14 +91,19 @@ export function AssistantDrawer() {
     // projects can each be waiting for an answer.
     const answer =
       request.kind === 'chat'
-        ? chat.mutateAsync({ projectId: id, messages: request.messages }).then((response) => response.message.content)
-        : summarize.mutateAsync({ sprint: request.sprint }).then((response) => response.summary.content);
+        ? chat
+            .mutateAsync({ projectId: id, messages: request.messages })
+            .then((response) => response.message.content)
+        : summarize
+            .mutateAsync({ sprint: request.sprint })
+            .then((response) => response.summary.content);
     answer.then(
       (content) => {
         setPending((state) => (state[id] === request ? omitKey(state, id) : state));
         if (!current()) return;
+        // The server's reply is data: stored and shown as it came.
         append(id, { role: 'assistant', content });
-        announce('Kanbot answered');
+        announce(getT().ai.drawer.answered);
       },
       (error: unknown) => {
         setPending((state) => (state[id] === request ? omitKey(state, id) : state));
@@ -118,7 +123,10 @@ export function AssistantDrawer() {
   };
 
   const summarizeSprint = (projectIdToUse: string, sprint: SprintRef) => {
-    append(projectIdToUse, { role: 'user', content: `Summarize ${sprint.name}` });
+    append(projectIdToUse, {
+      role: 'user',
+      content: getT().ai.drawer.summarizePrompt(sprint.name),
+    });
     run({ kind: 'summary', projectId: projectIdToUse, sprint });
   };
 
@@ -127,7 +135,7 @@ export function AssistantDrawer() {
     useAssistant.getState().newChat(projectIdToUse);
     setFor(setFailures, projectIdToUse, null);
     setFor(setPending, projectIdToUse, null);
-    announce('New chat started');
+    announce(getT().ai.drawer.newChatStarted);
   };
 
   return (
@@ -179,6 +187,7 @@ export function AssistantDrawer() {
 }
 
 const COMPOSER_ID = 'kanbot-composer';
+const COMPOSER_HELP_ID = `${COMPOSER_ID}-help`;
 
 function focusComposer() {
   const composer = document.getElementById(COMPOSER_ID);
@@ -201,7 +210,18 @@ interface DrawerBodyProps {
 
 const EMPTY: ChatEntry[] = [];
 
-function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, onRetry, onNewChat }: DrawerBodyProps) {
+function DrawerBody({
+  projectId,
+  section,
+  busy,
+  failure,
+  onSend,
+  onSummarize,
+  onRetry,
+  onNewChat,
+}: DrawerBodyProps) {
+  const t = useT();
+  const msg = t.ai.drawer;
   const messages = useAssistant((s) => s.chats[projectId] ?? EMPTY);
   const text = useAssistant((s) => s.composer[projectId] ?? '');
   const setComposer = useAssistant((s) => s.setComposer);
@@ -221,7 +241,7 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
   const target: SprintRef | undefined = active
     ? { id: active.id, name: active.name, projectId }
     : lastCompleted && { id: lastCompleted.id, name: lastCompleted.name, projectId };
-  const examples = EXAMPLES[section] ?? EXAMPLES.backlog ?? [];
+  const examples = msg.examples[isExampleSection(section) ? section : 'backlog'];
   const canSend = text.trim().length > 0 && !busy;
 
   const submit = () => {
@@ -245,12 +265,12 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
       if (bubble) shown = bubble.innerText ? bubble.innerText : bubble.textContent;
       await navigator.clipboard.writeText(shown.trim() || stripInternalIds(entry.content));
       setCopiedId(entry.id);
-      announce('Copied');
+      announce(getT().ai.drawer.copied);
       window.setTimeout(() => {
         setCopiedId((id) => (id === entry.id ? null : id));
       }, 2000);
     } catch {
-      toast.error("Couldn't copy. Select the text and copy it instead.");
+      toast.error(getT().ai.drawer.copyFailed);
     }
   };
 
@@ -260,54 +280,61 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
         <Icon name="ai-sparkle" className={styles.sparkle} />
         <div className={styles.heading}>
           <span className={styles.titleRow}>
-            <RadixDialog.Title className={styles.title}>Kanbot Assistant</RadixDialog.Title>
+            <RadixDialog.Title className={styles.title}>{msg.title}</RadixDialog.Title>
             <MockBadge />
           </span>
-          <RadixDialog.Description className={styles.subtitle}>AI can make mistakes</RadixDialog.Description>
+          <RadixDialog.Description className={styles.subtitle}>
+            {msg.subtitle}
+          </RadixDialog.Description>
         </div>
-        <Button variant="subtle" size="sm" onClick={onNewChat} disabled={messages.length === 0 && !failure}>
-          New chat
+        <Button
+          variant="subtle"
+          size="sm"
+          onClick={onNewChat}
+          disabled={messages.length === 0 && !failure}
+        >
+          {msg.newChat}
         </Button>
         <RadixDialog.Close asChild>
-          <IconButton icon="cross" aria-label="Close assistant" />
+          <IconButton icon="cross" aria-label={msg.close} />
         </RadixDialog.Close>
       </header>
 
-      <div className={styles.quick} role="group" aria-label="Quick actions">
+      <div className={styles.quick} role="group" aria-label={msg.quickActions}>
         <ChipButton
           onClick={() => {
             openDialog({ kind: 'generate', projectId });
           }}
         >
-          Create todos
+          {msg.createTodos}
         </ChipButton>
         <ChipButton
           onClick={() => {
             openDialog({ kind: 'plan', projectId });
           }}
         >
-          Plan sprint
+          {msg.planSprint}
         </ChipButton>
         <ChipButton
           disabled={busy || !target}
-          title={target ? undefined : 'Start a sprint first: there is nothing to summarize yet.'}
+          title={target ? undefined : msg.nothingToSummarize}
           onClick={() => {
             if (target) onSummarize(target);
           }}
         >
-          Summarize sprint
+          {msg.summarizeSprint}
         </ChipButton>
       </div>
 
       <div className={styles.scroller}>
-        <div role="log" aria-live="polite" aria-label="Conversation" className={styles.log}>
+        <div role="log" aria-live="polite" aria-label={msg.log} className={styles.log}>
           {messages.length === 0 && !busy && (
             <div className={styles.empty}>
               <span className={styles.emptyArt} aria-hidden="true">
                 <Icon name="ai-sparkle" size={24} />
               </span>
-              <h3 className={styles.emptyTitle}>How can I help with your sprint?</h3>
-              <p className={styles.emptyText}>Ask about this project, or try one of these:</p>
+              <h3 className={styles.emptyTitle}>{msg.emptyTitle}</h3>
+              <p className={styles.emptyText}>{msg.emptyText}</p>
               <div className={styles.examples}>
                 {examples.map((example) => (
                   <ChipButton
@@ -326,7 +353,7 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
           {messages.map((entry) =>
             entry.role === 'user' ? (
               <div key={entry.id} className={styles.userRow}>
-                <span className="visually-hidden">You said:</span>
+                <span className="visually-hidden">{msg.youSaid}</span>
                 <p className={styles.userBubble}>{entry.content}</p>
               </div>
             ) : (
@@ -335,7 +362,7 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
                   <Icon name="ai-sparkle" size={12} />
                 </span>
                 <div className={styles.aiBody}>
-                  <span className="visually-hidden">Kanbot said:</span>
+                  <span className="visually-hidden">{msg.kanbotSaid}</span>
                   <div className={styles.aiBubble} data-message-id={entry.id}>
                     <LazyMarkdown projectId={projectId} onOpenTodo={closeDrawer}>
                       {entry.content}
@@ -350,7 +377,7 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
                       void copy(entry);
                     }}
                   >
-                    {copiedId === entry.id ? 'Copied' : 'Copy'}
+                    {copiedId === entry.id ? msg.copied : msg.copy}
                   </Button>
                 </div>
               </div>
@@ -363,7 +390,7 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
                 <Icon name="ai-sparkle" size={12} />
               </span>
               <span role="status" className={styles.thinking}>
-                Thinking
+                {msg.thinking}
                 <ThinkingDots />
               </span>
             </div>
@@ -372,10 +399,10 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
           {failure && (
             <AiErrorPanel
               compact
-              title="Kanbot couldn't answer"
+              title={msg.failedTitle}
               error={failure.error}
               onRetry={onRetry}
-              hint="Your message is kept."
+              hint={msg.failedHint}
             />
           )}
         </div>
@@ -390,29 +417,35 @@ function DrawerBody({ projectId, section, busy, failure, onSend, onSummarize, on
       >
         <div className={styles.composerRow}>
           <label htmlFor={COMPOSER_ID} className="visually-hidden">
-            Message Kanbot
+            {msg.composerLabel}
           </label>
           <textarea
             id={COMPOSER_ID}
             className={styles.input}
             rows={2}
             maxLength={CHAT_MAX_CONTENT}
-            placeholder="Ask Kanbot…"
-            aria-describedby={`${COMPOSER_ID}-help`}
+            placeholder={msg.placeholder}
+            aria-describedby={COMPOSER_HELP_ID}
             value={text}
             onChange={(event) => {
               setComposer(projectId, event.target.value);
             }}
             onKeyDown={onKeyDown}
           />
-          <Button type="submit" variant="primary" icon="send" disabled={!canSend} className={styles.send}>
-            Send
+          <Button
+            type="submit"
+            variant="primary"
+            icon="send"
+            disabled={!canSend}
+            className={styles.send}
+          >
+            {msg.send}
           </Button>
         </div>
-        <span id={`${COMPOSER_ID}-help`} className="visually-hidden">
-          Enter sends, Shift+Enter adds a new line.
+        <span id={COMPOSER_HELP_ID} className="visually-hidden">
+          {msg.composerHelp}
         </span>
-        <AiDisclaimer className={styles.disclaimer}>{AI_DISCLAIMER}</AiDisclaimer>
+        <AiDisclaimer className={styles.disclaimer} />
       </form>
     </>
   );

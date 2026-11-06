@@ -2,13 +2,24 @@ import { Button } from '@/components/Button/Button';
 import { Icon } from '@/components/Icon/Icon';
 import { Skeleton } from '@/components/Skeleton/Skeleton';
 import { useSprintSummaryRequest, useSummarizeSprint } from '@/hooks/useAi';
+import { getT, useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { daysRemaining, sprintDay } from '@/lib/format';
+import { sprintDay } from '@/lib/dates';
 import { announce } from '@/stores/announcer';
 import type { Sprint } from '@/types/api';
 import { AiErrorPanel, GeneratedAt } from './AiParts';
 import { LazyMarkdown } from './LazyMarkdown';
 import styles from './SprintSummaryCard.module.css';
+
+/** The writing skeleton: heading, two lines, heading, two lines (widths in %, heights in px). */
+const SKELETON_LINES = [
+  { inlineSize: '30%', blockSize: 14, gap: false },
+  { inlineSize: '85%', blockSize: 12, gap: false },
+  { inlineSize: '70%', blockSize: 12, gap: false },
+  { inlineSize: '25%', blockSize: 14, gap: true },
+  { inlineSize: '78%', blockSize: 12, gap: false },
+  { inlineSize: '60%', blockSize: 12, gap: false },
+] as const;
 
 interface SprintSummaryCardProps {
   /** An active or completed sprint (the server answers 409 for a planned one). */
@@ -26,6 +37,8 @@ interface SprintSummaryCardProps {
  * summary" lands on the sprint's page while the request is still running.
  */
 export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSummaryCardProps) {
+  const t = useT();
+  const copy = t.ai.summary;
   const summarize = useSummarizeSprint();
   const request = useSprintSummaryRequest(sprint.id);
   const pending = request?.status === 'pending';
@@ -34,21 +47,29 @@ export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSumma
   const headingId = `summary-${sprint.id}`;
   const active = sprint.status === 'active';
   const day = active ? sprintDay(sprint.startDate, sprint.endDate) : null;
-  const title = active ? `Mid-sprint summary${day ? ` · Day ${day.day} of ${day.total}` : ''}` : 'AI summary';
+  const title = active
+    ? day
+      ? copy.midSprintDay(day.day, day.total)
+      : copy.midSprint
+    : copy.title;
 
   const run = () => {
     summarize.mutate(
       { sprint },
       {
         onSuccess: () => {
-          announce(`${sprint.name} summary ready`);
+          announce(getT().ai.summary.ready(sprint.name));
         },
       },
     );
   };
 
   return (
-    <section className={cx(styles.card, className)} aria-labelledby={headingId} aria-busy={pending || undefined}>
+    <section
+      className={cx(styles.card, className)}
+      aria-labelledby={headingId}
+      aria-busy={pending || undefined}
+    >
       <header className={styles.header}>
         <h3 id={headingId} className={styles.title}>
           <Icon name="ai-sparkle" className={styles.sparkle} />
@@ -60,14 +81,14 @@ export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSumma
             icon="refresh"
             className={styles.action}
             loading={pending}
-            loadingText="Regenerating…"
+            loadingText={copy.regenerating}
             onClick={run}
           >
-            Regenerate
+            {copy.regenerate}
           </Button>
         ) : (
-          <Button variant="ai" loading={pending} loadingText="Summarizing…" onClick={run}>
-            Summarize
+          <Button variant="ai" loading={pending} loadingText={copy.summarizing} onClick={run}>
+            {copy.summarize}
           </Button>
         )}
       </header>
@@ -81,17 +102,19 @@ export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSumma
 
       {pending ? (
         <div role="status" className={styles.skeleton}>
-          <span className="visually-hidden">Generating summary</span>
-          <Skeleton inlineSize="30%" blockSize={14} />
-          <Skeleton inlineSize="85%" blockSize={12} />
-          <Skeleton inlineSize="70%" blockSize={12} />
-          <Skeleton inlineSize="25%" blockSize={14} className={styles.skeletonGap} />
-          <Skeleton inlineSize="78%" blockSize={12} />
-          <Skeleton inlineSize="60%" blockSize={12} />
+          <span className="visually-hidden">{copy.generating}</span>
+          {SKELETON_LINES.map((line, index) => (
+            <Skeleton
+              key={index}
+              inlineSize={line.inlineSize}
+              blockSize={line.blockSize}
+              className={line.gap ? styles.skeletonGap : undefined}
+            />
+          ))}
         </div>
       ) : error ? (
         <div className={styles.body}>
-          <AiErrorPanel compact title="Kanbot couldn't write the summary" error={error} onRetry={run} />
+          <AiErrorPanel compact title={copy.failedTitle} error={error} onRetry={run} />
           {summary && (
             <SavedSummary
               content={summary.content}
@@ -112,9 +135,7 @@ export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSumma
         </div>
       ) : (
         <p className={styles.empty}>
-          {sprint.status === 'active'
-            ? 'Get a quick read on how this sprint is going: progress, risks and what to do next.'
-            : 'No summary yet. Kanbot can write one from what this sprint delivered.'}
+          {sprint.status === 'active' ? copy.emptyActive : copy.emptyCompleted}
         </p>
       )}
     </section>
@@ -122,13 +143,16 @@ export function SprintSummaryCard({ sprint, onOpenTodo, className }: SprintSumma
 }
 
 function LiveStats({ sprint }: { sprint: Sprint }) {
+  const t = useT();
+  const format = useFormat();
+  const copy = t.ai.summary;
   const { doneTodos, totalTodos, donePoints, totalPoints } = sprint.stats;
-  const left = daysRemaining(sprint.endDate);
+  const left = format.daysRemaining(sprint.endDate);
   return (
     <p className={styles.stats}>
-      <span className="visually-hidden">So far: </span>
-      {doneTodos} of {totalTodos} todos done · {donePoints} of {totalPoints} pts done
-      {left && <> · {left}</>}
+      <span className="visually-hidden">{copy.soFar}</span>
+      {copy.liveStats(doneTodos, totalTodos, donePoints, totalPoints)}
+      {left && copy.left(left)}
     </p>
   );
 }
@@ -141,13 +165,16 @@ interface SavedSummaryProps {
 }
 
 function SavedSummary({ content, generatedAt, projectId, onOpenTodo }: SavedSummaryProps) {
+  const copy = useT().ai.summary;
   return (
     <>
       <LazyMarkdown projectId={projectId} onOpenTodo={onOpenTodo}>
         {content}
       </LazyMarkdown>
       <p className={styles.meta}>
-        Generated <GeneratedAt iso={generatedAt} />. AI can make mistakes. Review before sharing.
+        {copy.generatedBefore}
+        <GeneratedAt iso={generatedAt} />
+        {copy.generatedAfter}
       </p>
     </>
   );

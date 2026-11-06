@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { plural } from '@/lib/format';
+import { getT } from '@/i18n';
 import { useAssistant, type AiDialog } from '@/stores/assistant';
 import { toast } from '@/stores/toast';
 import type { Sprint, Todo } from '@/types/api';
@@ -38,25 +38,27 @@ export function AiDialogsHost({ projectId }: { projectId: string }) {
   const open = dialog?.key === shown.key;
   const backlogPath = `/projects/${projectId}/backlog`;
   const onBacklog = pathname.startsWith(backlogPath);
-  const viewBacklog = onBacklog
-    ? undefined
-    : {
-        label: 'View backlog',
-        onClick: () => {
-          void navigate(backlogPath);
-        },
-      };
+  // Toast actions are built when the toast is shown, in the language of that moment.
+  const viewBacklog = () =>
+    onBacklog
+      ? undefined
+      : {
+          label: getT().ai.generate.viewBacklog,
+          onClick: () => {
+            void navigate(backlogPath);
+          },
+        };
   const onOpenChange = (next: boolean) => {
     if (!next) closeDialog();
   };
 
   const onAdded = (todos: Todo[]) => {
     closeDialog();
-    toast.success(`${plural(todos.length, 'todo')} added to the backlog`, { action: viewBacklog });
+    toast.success(getT().ai.generate.added(todos.length), { action: viewBacklog() });
   };
   const onCreated = (sprint: Sprint, count: number) => {
     closeDialog();
-    toast.success(`${sprint.name} created with ${plural(count, 'todo')}`, { action: viewBacklog });
+    toast.success(getT().ai.plan.created(sprint.name, count), { action: viewBacklog() });
   };
 
   return (
