@@ -17,12 +17,41 @@ const HEX_COLOR = '^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$';
  */
 const I18N_MIGRATED = [
   'src/i18n/**/*.{ts,tsx}',
-  'src/components/LanguageSwitcher/**/*.tsx',
-  'src/features/shell/LanguageNavItem.tsx',
+  // R2: auth, the shell, projects, and the shared pieces they render.
+  'src/features/auth/**/*.{ts,tsx}',
+  'src/features/shell/**/*.{ts,tsx}',
+  'src/features/projects/**/*.{ts,tsx}',
+  'src/components/**/*.{ts,tsx}',
+  'src/app/**/*.{ts,tsx}',
 ];
 
-/** Attribute values that are tokens, not text: `type="button"`, `role="group"`, `<Icon name="globe">`. */
-const NON_TEXT_LITERALS = ['button', 'group', 'globe'];
+/**
+ * Attribute values (and the odd glyph) that are tokens, not text: the rule checks every string
+ * attribute, so these are allowed by value. Never add words a user reads or hears here.
+ */
+const NON_TEXT_LITERALS = [
+  // HTML types, roles, ARIA states and live-region politeness.
+  ...['button', 'submit', 'text', 'email', 'password', 'search', 'date', 'checkbox'],
+  ...['group', 'img', 'alert', 'alertdialog', 'status', 'progressbar', 'true', 'false'],
+  ...['polite', 'assertive'],
+  // autocomplete / autocapitalize tokens.
+  ...['name', 'current-password', 'new-password', 'off', 'characters'],
+  // Component variants, sizes, tones, layouts and alignments.
+  ...['primary', 'subtle', 'danger', 'warning', 'ai', 'dashed', 'inline', 'sm', 'lg'],
+  ...['gray', 'blue', 'xlarge', 'start', 'project', 'complete', 'todo'],
+  // Icon names (components/Icon/icons.ts).
+  ...['globe', 'add', 'ai-sparkle', 'arrow-left', 'arrow-right', 'calendar', 'check-mark'],
+  ...['chevron-down', 'cross', 'delete', 'lightbulb', 'lock-locked', 'log-out', 'menu'],
+  ...['pencil', 'refresh', 'show-more-horizontal', 'spaces', 'status-error', 'theme'],
+  ...['warning-outline'],
+  // Global class names, ids, test ids, routes and shortcut targets.
+  ...['visually-hidden', 'kb-page', 'kb-pop', 'page-body', 'meta', 'main', 'project-search'],
+  ...['live-polite', 'live-assertive', '#main', '/login', '/projects', 'create'],
+  // SVG: the 16px icon grid and paint keywords.
+  ...['0 0 16 16', 'currentColor', 'none'],
+  // The shortcut key shown in the profile menu.
+  '?',
+];
 
 export default defineConfig([
   // api.ts is a verbatim copy of the server contract; icons.ts is generated.
