@@ -52,8 +52,12 @@ jobs:
         working-directory: client
       - run: npx playwright install --with-deps chromium
         working-directory: client
+      # English and Arabic projects (playwright.config.ts); the preview build has Arabic on, as
+      # in production (the config passes it to the build too).
       - run: npm run e2e
         working-directory: client
+        env:
+          VITE_FEATURE_AR: "true"
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
