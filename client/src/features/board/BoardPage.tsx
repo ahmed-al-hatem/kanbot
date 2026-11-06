@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
 import { Button, ButtonLink } from '@/components/Button/Button';
 import { EmptyState } from '@/components/EmptyState/EmptyState';
+import { KeyHint } from '@/components/KeyHint/KeyHint';
 import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { ProjectMeta } from '@/components/PageHeader/ProjectMeta';
@@ -16,10 +17,10 @@ import { useSprintSummaryRequest, useSummarizeSprint } from '@/hooks/useAi';
 import { useBoard } from '@/hooks/useBoard';
 import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
+import { getT, useT } from '@/i18n';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useDragSensors } from '@/lib/dnd/sensors';
 import { useListsDnd } from '@/lib/dnd/useListsDnd';
-import { plural } from '@/lib/format';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useReducedMotion } from '@/lib/useReducedMotion';
 import { useHighlight } from '@/stores/highlight';
@@ -35,11 +36,6 @@ import { useBoardMoves } from './useBoardMoves';
 
 // dnd-kit re-measures while dragging, so a column that grows as a card joins it still takes drops.
 const MEASURING = { droppable: { strategy: MeasuringStrategy.Always } };
-// The board has no keyboard drag sensor (the arrows on a focused card move it), so this is
-// only what dnd-kit would say about a draggable; the cards describe their own keys.
-const DRAG_INSTRUCTIONS = {
-  draggable: 'Focus a card and use the arrow keys to move it between columns or reorder it.',
-};
 
 /**
  * `/projects/:projectId/board` (DESIGN §9 05; SPR-4…6). The active sprint's id comes from
@@ -49,11 +45,13 @@ const DRAG_INSTRUCTIONS = {
  * sprint, and the "No active sprint" empty state. Todo details opens from `?todo=` (layout).
  */
 export function BoardPage() {
+  const t = useT();
+  const copy = t.board;
   const { projectId = '' } = useParams();
   const navigate = useNavigate();
   const [, setParams] = useSearchParams();
   const project = useCurrentProject();
-  useDocumentTitle(titleOf('Active Sprint', project.data?.name));
+  useDocumentTitle(titleOf(copy.title, project.data?.name));
   const activeId = project.data?.stats.activeSprint?.id;
   const board = useBoard(activeId);
   const { data: sprints } = useSprints(projectId);
@@ -65,18 +63,34 @@ export function BoardPage() {
   // Mounted on first open and kept, so the dialog can play its exit animation.
   const [summary, setSummary] = useState({ open: false, mounted: false });
   const summaryRequest = useSprintSummaryRequest(activeId ?? '');
-  const [toStart, setToStart] = useState<{ open: boolean; sprint: Sprint | null }>({ open: false, sprint: null });
+  const [toStart, setToStart] = useState<{ open: boolean; sprint: Sprint | null }>({
+    open: false,
+    sprint: null,
+  });
 
   const loading = project.data ? Boolean(activeId) && board.isPending : project.isPending;
   const showSkeleton = useDelayedLoading(loading);
-  const columns = useMemo(() => (board.data ? columnsOf(board.data) : undefined), [board.data]);
+  const statusNames = t.todos.status;
+  const columns = useMemo(
+    () => (board.data ? columnsOf(board.data, statusNames) : undefined),
+    [board.data, statusNames],
+  );
   const sprint = board.data?.sprint;
-  const planned = useMemo(() => sprints?.filter((item) => item.status === 'planned') ?? [], [sprints]);
+  const planned = useMemo(
+    () => sprints?.filter((item) => item.status === 'planned') ?? [],
+    [sprints],
+  );
   const nextPlanned = planned[0];
 
   const { moveTo, onKeyMove, onMenuMove } = useBoardMoves(projectId, activeId, columns);
   const sensors = useDragSensors({ keyboard: false });
-  const dnd = useListsDnd(columns, moveTo, { sensors, instructions: DRAG_INSTRUCTIONS });
+  // The board has no keyboard drag sensor (the arrows on a focused card move it), so this is
+  // only what dnd-kit would say about a draggable; the cards describe their own keys.
+  const instructions = useMemo(
+    () => ({ draggable: copy.dragInstructions }),
+    [copy.dragInstructions],
+  );
+  const dnd = useListsDnd(columns, moveTo, { sensors, instructions });
 
   const openTodo = useCallback(
     (todoId: string) => {
@@ -98,7 +112,12 @@ export function BoardPage() {
    */
   const onCompleted = ({ sprint: done, destination, moved }: Completed) => {
     setComplete((state) => ({ ...state, open: false }));
-    toast.success(moved > 0 ? `${done.name} completed · ${plural(moved, 'todo')} moved to ${destination}` : `${done.name} completed`);
+    const { complete: texts } = getT().board;
+    toast.success(
+      moved > 0
+        ? texts.completedMoved(done.name, moved, destination ?? texts.toBacklog)
+        : texts.completed(done.name),
+    );
     if (complete.withSummary) summarize.mutate({ sprint: done, notify: true });
     void navigate(`/projects/${projectId}/sprints/${done.id}`);
   };
@@ -106,9 +125,10 @@ export function BoardPage() {
   /** DESIGN §9 05 "Start <next planned sprint>", with the backlog's rule that an empty sprint can't start. */
   const askStart = (next: Sprint) => {
     if (next.stats.totalTodos === 0) {
-      toast.error(`Add todos to ${next.name} before starting it.`, {
+      const { backlog } = getT();
+      toast.error(backlog.toast.startEmpty(next.name), {
         action: {
-          label: 'Go to Backlog',
+          label: backlog.goTo,
           onClick: () => {
             void navigate(`/projects/${projectId}/backlog`);
           },
@@ -120,15 +140,16 @@ export function BoardPage() {
   };
   const onStarted = (started: Sprint) => {
     setToStart((state) => ({ ...state, open: false }));
-    toast.success(`${started.name} started`);
+    toast.success(getT().backlog.toast.started(started.name));
   };
 
   const noActive = project.data !== undefined && !activeId;
+  const backlogPath = `/projects/${projectId}/backlog`;
 
   return (
     <div className="kb-page">
       <PageHeader
-        title="Active Sprint"
+        title={copy.title}
         meta={<ProjectMeta project={project.data} />}
         actions={
           <>
@@ -140,10 +161,11 @@ export function BoardPage() {
                 onClick={() => {
                   setSummary({ open: true, mounted: true });
                   // No saved summary: one click opens the dialog and starts writing it (AI-4).
-                  if (!sprint.summary && summaryRequest?.status !== 'pending') summarize.mutate({ sprint });
+                  if (!sprint.summary && summaryRequest?.status !== 'pending')
+                    summarize.mutate({ sprint });
                 }}
               >
-                {sprint.summary ? 'View summary' : 'Summarize'}
+                {sprint.summary ? copy.viewSummary : t.ai.summary.summarize}
               </Button>
             )}
             {sprint && (
@@ -153,7 +175,7 @@ export function BoardPage() {
                   setComplete((state) => ({ open: true, key: state.key + 1, withSummary: false }));
                 }}
               >
-                Complete sprint
+                {copy.complete.confirm}
               </Button>
             )}
           </>
@@ -166,11 +188,11 @@ export function BoardPage() {
         ) : noActive ? (
           <EmptyState
             icon="sprint"
-            title="No active sprint"
-            description="Start a planned sprint from the backlog to see its board here."
+            title={copy.noActive.title}
+            description={copy.noActive.text}
             actions={
               <>
-                <ButtonLink to={`/projects/${projectId}/backlog`}>Go to Backlog</ButtonLink>
+                <ButtonLink to={backlogPath}>{t.backlog.goTo}</ButtonLink>
                 {nextPlanned && (
                   <Button
                     variant="primary"
@@ -178,7 +200,7 @@ export function BoardPage() {
                       askStart(nextPlanned);
                     }}
                   >
-                    Start {nextPlanned.name}
+                    {copy.noActive.start(nextPlanned.name)}
                   </Button>
                 )}
               </>
@@ -186,7 +208,7 @@ export function BoardPage() {
           />
         ) : board.error ? (
           <PageError
-            page="the active sprint"
+            page={copy.pageName}
             error={board.error}
             onRetry={() => {
               void board.refetch();
@@ -197,8 +219,7 @@ export function BoardPage() {
           <>
             <SprintHeader sprint={sprint} />
             <p className={styles.moveHelp}>
-              Drag cards between columns, or focus a card and use <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> to
-              move it.
+              <KeyHint text={copy.moveHelp} />
             </p>
             <div className={styles.boardScroll}>
               <DndContext {...dnd.contextProps} measuring={MEASURING}>
@@ -229,8 +250,7 @@ export function BoardPage() {
               </DndContext>
             </div>
             <span id={CARD_HELP_ID} className="visually-hidden">
-              Press Enter to open its details. Press the left and right arrow keys to move it to another column, and the up
-              and down arrow keys to reorder it.
+              {copy.cardHelp}
             </span>
           </>
         )}
@@ -291,8 +311,9 @@ export function BoardPage() {
 
 /** Same layout as the page (DESIGN §11, artboard S03): the sprint header, then four columns of cards. */
 function BoardSkeleton() {
+  const t = useT();
   return (
-    <SkeletonRegion label="active sprint">
+    <SkeletonRegion label={t.board.loadingName}>
       <div className={styles.sprintHeader}>
         <Skeleton inlineSize={220} blockSize={24} />
         <Skeleton inlineSize={360} blockSize={16} />

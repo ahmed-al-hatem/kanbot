@@ -1,7 +1,9 @@
 import { useId, useRef, useState } from 'react';
-import { isApiError } from '@/api/errors';
 import { Button } from '@/components/Button/Button';
+import { KeyHint } from '@/components/KeyHint/KeyHint';
 import { useCreateTodo } from '@/hooks/useTodos';
+import { getT, useT } from '@/i18n';
+import { failureReason } from '@/i18n/errors';
 import { cx } from '@/lib/cx';
 import { announce } from '@/stores/announcer';
 import { useHighlight } from '@/stores/highlight';
@@ -16,7 +18,7 @@ interface ColumnComposerProps {
   projectId: string;
   sprintId: string;
   status: TodoStatus;
-  /** Column name, for the labels: "New todo in In Progress". */
+  /** Column name in the UI language, for the labels: "New todo in In Progress". */
   columnName: string;
 }
 
@@ -27,6 +29,8 @@ interface ColumnComposerProps {
  * "Create todo"). The card shows at once (optimistic) and plays `kbDrop` when the server has it.
  */
 export function ColumnComposer({ projectId, sprintId, status, columnName }: ColumnComposerProps) {
+  const t = useT();
+  const copy = t.board.composer;
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const textareaId = useId();
@@ -35,10 +39,12 @@ export function ColumnComposer({ projectId, sprintId, status, columnName }: Colu
   const { create } = useCreateTodo(projectId, {
     onCreated: (todo) => {
       markTodo(todo.id);
-      announce(`${todo.key} created in ${columnName}`);
+      // The text of the moment the server answers (the language may have changed meanwhile).
+      announce(getT().board.composer.created(todo.key, columnName));
     },
     onFailed: (error, failedTitle) => {
-      toast.error(`Couldn't create “${failedTitle}”. ${isApiError(error) ? error.message : 'Please try again.'}`);
+      const now = getT();
+      toast.error(now.backlog.quickCreate.failed(failedTitle, failureReason(error, now)));
       setTitle((current) => current || failedTitle);
     },
   });
@@ -67,14 +73,14 @@ export function ColumnComposer({ projectId, sprintId, status, columnName }: Colu
         variant="subtle"
         icon="add"
         className={styles.composeButton}
-        aria-label={`Create todo in ${columnName}`}
+        aria-label={copy.open(columnName)}
         // The `c` shortcut opens the first column's composer.
         data-shortcut={status === 'todo' ? 'create' : undefined}
         onClick={() => {
           setOpen(true);
         }}
       >
-        Create todo
+        {t.backlog.createTodo}
       </Button>
     );
   }
@@ -82,14 +88,14 @@ export function ColumnComposer({ projectId, sprintId, status, columnName }: Colu
   return (
     <div className={cx(styles.composer, 'kb-pop')}>
       <label htmlFor={textareaId} className="visually-hidden">
-        New todo in {columnName}
+        {copy.label(columnName)}
       </label>
       <textarea
         id={textareaId}
         className={styles.composerInput}
         rows={2}
         maxLength={TITLE_MAX}
-        placeholder="What needs to be done?"
+        placeholder={copy.placeholder}
         // The composer was opened on purpose; focus belongs in it.
         // eslint-disable-next-line jsx-a11y/no-autofocus
         autoFocus
@@ -109,13 +115,13 @@ export function ColumnComposer({ projectId, sprintId, status, columnName }: Colu
       />
       <span className={styles.composerActions}>
         <span className={styles.composerHint} aria-hidden="true">
-          <kbd>Enter</kbd> add · <kbd>Esc</kbd> cancel
+          <KeyHint text={copy.hint} />
         </span>
         <Button size="sm" variant="subtle" onClick={cancel}>
-          Cancel
+          {t.common.cancel}
         </Button>
         <Button size="sm" variant="primary" disabled={!title.trim()} onClick={add}>
-          Add
+          {copy.add}
         </Button>
       </span>
     </div>
