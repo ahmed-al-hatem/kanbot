@@ -157,3 +157,36 @@ term is added here first. Plan: [FRONTEND-PLAN.en.md §11](FRONTEND-PLAN.en.md#1
 | A todo needs a title · Give the sprint a name | يحتاج البند إلى عنوان · امنح السبرنت اسمًا | Validation (canvas) |
 | End date must be after start date | يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء | Validation (canvas) |
 | Key caps (Enter, Esc, Backspace, ↑ ↓) | stay Latin | Inside sentences through `{enter}` tokens (`components/KeyHint`) |
+| Go to Backlog | الذهاب إلى قائمة الانتظار | Board, Sprints, toasts (R4) |
+| Drop todos here (empty column) | أفلت البنود هنا | Canvas |
+| New todo in {column} · What needs to be done? | بند جديد في {column} · ما الذي يجب إنجازه؟ | Column composer (canvas) |
+| {key} created in {column} | {key} أُنشئ في {column} | Composer announcement (canvas) |
+| {done} / {total} pts done | {done} / {total} نقطة منجزة (نقاط for 3–10) | Board header; the noun follows the total |
+| Goal: | الهدف: | Board header, sprint detail (canvas) |
+| View summary · Summarize (board) | عرض الملخص · تلخيص | |
+| Complete {sprint} · Not finished · Every todo is done | إكمال {sprint} · غير منجز · كل البنود منجزة | Complete sprint |
+| Move N unfinished todos to | انقل البند غير المنجز · البندين غير المنجزين · 3 بنود غير منجزة إلى | All plural forms |
+| planned, starts {date} | مخطط، يبدأ {date} | Destination hint (canvas) |
+| {sprint} completed · N todos moved to {dest} | {sprint} اكتمل · نُقل بند واحد / بندان · نُقلت 3 بنود إلى {dest} | Toast (canvas) |
+| Sprints history | سجل السبرنتات | |
+| All sprints · No dates | كل السبرنتات · بلا تواريخ | Sprint list (canvas) |
+| Completed (tile) · Points done · Completion · Carried over | البنود المكتملة · النقاط المنجزة · نسبة الإنجاز · المُرحَّل | Stat tiles (canvas) |
+| {n} sprints | سبرنت واحد · سبرنتان · 3 سبرنتات · 11 سبرنتًا · 100 سبرنت | `count.sprints` |
+| Mock AI | Mock AI | The API's name for its mode; not translated |
+| Quick actions · Conversation · Thinking | إجراءات سريعة · المحادثة · يفكّر | Drawer (canvas: المحادثة، يفكّر) |
+| Copy · Copied | نسخ · نُسخ | Canvas |
+| You said: · Kanbot said: | قلت: · قال Kanbot: | Screen-reader prefixes |
+| Kanbot couldn't answer · Your message is kept. | تعذّر على Kanbot الرد · رسالتك محفوظة. | AI error panel |
+| AI can make mistakes. Review before saving. | قد يخطئ الذكاء الاصطناعي. راجع قبل الحفظ. | Canvas; «راجعه قبل المشاركة» for summaries |
+| Draft (AI) · Include {title} · Select all | مسودة · تضمين {title} · تحديد الكل | Generate todos (canvas) |
+| Suggested todos · Describe the feature | البنود المقترحة · صف الميزة | Canvas |
+| Add N todos to Backlog | إضافة بند واحد · بندين · 3 بنود إلى قائمة الانتظار | The verb takes the dual's genitive (بندين) |
+| Create {sprint} with N todos | إنشاء {sprint} ببند واحد · ببندين · بـ 3 بنود | Preposition + genitive; same in the toast «… أُنشئ ببندين» |
+| Suggested sprint goal · AI's suggestion · AI's reasoning | هدف السبرنت المقترح · اقتراح الذكاء الاصطناعي · لماذا هذه الخطة؟ | Plan sprint (canvas for the goal and reasoning) |
+| Over capacity by N pts | تجاوزت السعة بـ N نقطة / نقاط | Canvas |
+| Mid-sprint summary · Day N of M | ملخص منتصف السبرنت · اليوم N من M | Summary card |
+| Generated {time} | وُلّد في {time} | Canvas |
+| Error 404 · Ask AI to find it · Open Active Sprint | خطأ 404 · اطلب من الذكاء الاصطناعي إيجادها · فتح السبرنت النشط | 404 (canvas) |
+| This project / sprint / todo doesn't exist | هذا المشروع / السبرنت / البند غير موجود | 404 causes |
+| Something went wrong · A new version is available | حدث خطأ ما · يتوفر إصدار جديد | Error boundaries |
+| Reload · Update · Update available | إعادة التحميل · تحديث · يتوفر تحديث | Not «إعادة المحاولة», which is Try again |
