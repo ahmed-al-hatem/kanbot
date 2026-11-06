@@ -3,6 +3,7 @@ import { IconButton } from '@/components/Button/Button';
 import { Icon } from '@/components/Icon/Icon';
 import { Menu, MenuItem, MenuLabel } from '@/components/Menu/Menu';
 import { useCurrentUser, useLogout } from '@/hooks/useAuth';
+import { useT } from '@/i18n';
 import { useShortcuts } from '@/stores/shortcuts';
 import { useTheme } from '@/stores/theme';
 import styles from './AppShell.module.css';
@@ -13,19 +14,20 @@ import styles from './AppShell.module.css';
  * same help as `?`, so the shortcuts can be found without knowing one.
  */
 export function ProfileMenu() {
+  const t = useT();
   const { data: user } = useCurrentUser();
   const logout = useLogout();
   const theme = useTheme((s) => s.theme);
   const toggleTheme = useTheme((s) => s.toggle);
-  const themeLabel = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme';
+  const themeLabel = theme === 'dark' ? t.common.themeToLight : t.common.themeToDark;
 
   return (
     <div className={styles.profile}>
       <Menu
-        label="Account"
+        label={t.shell.profile.menu}
         align="start"
         trigger={
-          <button type="button" className={styles.profileButton} data-tip={user?.name ?? 'Account'}>
+          <button type="button" className={styles.profileButton} data-tip={user?.name ?? t.shell.profile.menu}>
             <Avatar name={user?.name ?? ''} size={32} decorative />
             <span className={styles.profileText}>
               <span className={styles.profileName}>{user?.name}</span>
@@ -35,20 +37,20 @@ export function ProfileMenu() {
           </button>
         }
       >
-        <MenuLabel>Signed in as {user?.email}</MenuLabel>
+        <MenuLabel>{t.shell.profile.signedInAs(user?.email ?? '')}</MenuLabel>
         <MenuItem
           icon="lightbulb"
           onSelect={() => {
             useShortcuts.getState().setHelpOpen(true);
           }}
         >
-          Keyboard shortcuts
+          {t.shell.profile.shortcuts}
           <kbd className={styles.menuKbd} aria-hidden="true">
             ?
           </kbd>
         </MenuItem>
         <MenuItem icon="log-out" onSelect={logout}>
-          Log out
+          {t.shell.profile.logOut}
         </MenuItem>
       </Menu>
       <IconButton

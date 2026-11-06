@@ -166,15 +166,30 @@ describe('format — English output is unchanged', () => {
 });
 
 describe('errors', () => {
-  it('client-side codes use the locale; server codes keep the server message', () => {
+  it('client-side codes use the locale; English keeps the server message, Arabic never shows it', () => {
     const network = new ApiError({ status: 0, code: 'NETWORK_ERROR', message: 'x' });
     expect(errorMessage(network, en)).toBe('Cannot reach the server. Is it running?');
     expect(errorMessage(network, ar)).toBe(ar.errors.byCode.NETWORK_ERROR);
 
     const conflict = new ApiError({ status: 409, code: 'CONFLICT', message: 'This key is already used' });
-    expect(errorMessage(conflict, ar)).toBe('This key is already used');
+    expect(errorMessage(conflict, en)).toBe('This key is already used');
+    expect(errorMessage(conflict, ar)).toBe(ar.errors.server.CONFLICT(''));
     expect(errorMessage(new Error('boom'), en)).toBe(en.errors.generic);
+    expect(errorMessage(new Error('boom'), ar)).toBe(ar.errors.generic);
   });
+
+  it.each(['VALIDATION_ERROR', 'UNAUTHORIZED', 'NOT_FOUND', 'CONFLICT', 'RATE_LIMITED', 'AI_ERROR', 'INTERNAL_ERROR'] as const)(
+    '%s in Arabic is Arabic text, not the server message',
+    (code) => {
+      const error = new ApiError({ status: 400, code, message: 'Too many attempts. Try again in a few minutes.' });
+      const text = errorMessage(error, ar);
+      expect(text).not.toContain('Too many');
+      expect(text).toMatch(/[\u0600-\u06FF]/);
+      // English shows the server's text as it came (empty → the generic message).
+      expect(errorMessage(error, en)).toBe('Too many attempts. Try again in a few minutes.');
+      expect(errorMessage(new ApiError({ status: 400, code, message: '' }), en)).toBe(en.errors.generic);
+    },
+  );
 
   it('maps details[] to fields by top-level path, first issue wins', () => {
     const error = new ApiError({
@@ -188,5 +203,15 @@ describe('errors', () => {
       ],
     });
     expect(fieldErrorMessages(error, en)).toEqual({ labels: 'Too long', title: 'Required' });
+    // Arabic: a message for the field, never the server's English.
+    expect(fieldErrorMessages(error, ar)).toEqual({ labels: ar.errors.field(''), title: ar.errors.field('') });
+    const email = new ApiError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Invalid',
+      details: [{ path: 'email', message: 'Invalid email' }],
+    });
+    expect(fieldErrorMessages(email, en)).toEqual({ email: 'Invalid email' });
+    expect(fieldErrorMessages(email, ar)).toEqual({ email: 'أدخل بريدًا صالحًا، مثل name@example.com' });
   });
 });

@@ -1,11 +1,12 @@
 import { isApiError } from '@/api/errors';
 import { Button, ButtonLink } from '@/components/Button/Button';
 import { Icon } from '@/components/Icon/Icon';
+import { useT, type Messages } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './PageError.module.css';
 
 interface PageErrorProps {
-  /** Lower-case page name: "We couldn't load <page>". */
+  /** Lower-case page name in the UI language: "We couldn't load <page>" (`pageError.title`). */
   page: string;
   /** The query error; shown as a small code under the actions. */
   error?: unknown;
@@ -17,18 +18,20 @@ interface PageErrorProps {
   className?: string;
 }
 
-const STATUS_TEXT: Record<number, string> = {
-  500: 'Internal server error',
-  502: 'Bad gateway',
-  503: 'Service unavailable',
-  504: 'Gateway timeout',
-};
+function statusText(status: number, t: Messages): string | undefined {
+  if (status === 500) return t.pageError.status500;
+  if (status === 502) return t.pageError.status502;
+  if (status === 503) return t.pageError.status503;
+  if (status === 504) return t.pageError.status504;
+  return undefined;
+}
 
-function errorCode(error: unknown): string | null {
+function errorCode(error: unknown, t: Messages): string | null {
   if (!isApiError(error)) return null;
-  if (error.code === 'NETWORK_ERROR') return 'Network error · server unreachable';
-  if (error.code === 'TIMEOUT') return 'Timeout · no response in time';
-  return `Error ${error.status} · ${STATUS_TEXT[error.status] ?? error.code}`;
+  if (error.code === 'NETWORK_ERROR') return t.pageError.network;
+  if (error.code === 'TIMEOUT') return t.pageError.timeout;
+  // An unlisted status shows the API's code (CONFLICT…): an identifier, the same in every language.
+  return t.pageError.status(error.status, statusText(error.status, t) ?? error.code);
 }
 
 /**
@@ -36,24 +39,22 @@ function errorCode(error: unknown): string | null {
  * reassurance, Try again (primary), Back to Projects and a small error code. `role="alert"`.
  */
 export function PageError({ page, error, onRetry, retrying = false, backTo = '/projects', className }: PageErrorProps) {
-  const code = errorCode(error);
+  const t = useT();
+  const code = errorCode(error, t);
   return (
     <div role="alert" className={cx(styles.error, 'kb-rise', className)}>
       <span className={styles.badge}>
         <Icon name="status-error" size={20} />
       </span>
-      <h2 className={styles.title}>We couldn&apos;t load {page}</h2>
-      <p className={styles.text}>
-        The server didn&apos;t respond or your connection dropped. Nothing you saved was lost — try again in a
-        moment.
-      </p>
+      <h2 className={styles.title}>{t.pageError.title(page)}</h2>
+      <p className={styles.text}>{t.pageError.text}</p>
       <div className={styles.actions}>
-        <Button variant="primary" icon="refresh" loading={retrying} loadingText="Retrying…" onClick={onRetry}>
-          Try again
+        <Button variant="primary" icon="refresh" loading={retrying} loadingText={t.common.retrying} onClick={onRetry}>
+          {t.common.tryAgain}
         </Button>
         {backTo !== false && (
           <ButtonLink to={backTo} variant="subtle">
-            Back to Projects
+            {t.common.backToProjects}
           </ButtonLink>
         )}
       </div>

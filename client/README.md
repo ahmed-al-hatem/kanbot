@@ -130,8 +130,8 @@ an authenticated request (not `/auth/login`) expires the session (AUTH-6). `fiel
 ### Arabic and RTL (i18n)
 
 Behind `VITE_FEATURE_AR` (set to `true` on Vercel Preview only; production is English until R5),
-delivered in five PRs — R1 foundation (done) · R2 auth + shell + projects · R3 backlog + todo +
-sprints · R4 board + history + AI + 404 + errors · R5 RTL pass + enable (plan §11). Terms:
+delivered in five PRs — R1 foundation (done) · R2 auth + shell + projects (done) · R3 backlog +
+todo + sprints · R4 board + history + AI + 404 + errors · R5 RTL pass + enable (plan §11). Terms:
 [`docs/I18N-GLOSSARY.md`](../docs/I18N-GLOSSARY.md); design: the [Arabic canvas](https://claude.ai/code/artifact/75890d4c-d82e-4f3b-bb09-8d085c7a6877).
 
 - **API:** `const t = useT()` → `t.count.todos(3)`; `useFormat()` → `format.range(start, end)`;
@@ -144,9 +144,21 @@ sprints · R4 board + history + AI + 404 + errors · R5 RTL pass + enable (plan 
 - **Direction:** `<html lang dir>` from the locale store and, before paint, from `index.html`;
   Radix `DirectionProvider`; `var(--dir)` and `.flip` for the RTL pass in R5.
 - **Switchers:** ع / EN on the auth pages, "English · اللغة" in the sidebar — only with the flag.
-- **Screens:** none migrated yet; `lib/format.ts` re-exports the English formatter so their output
-  is unchanged. Migrated folders get `react/jsx-no-literals` as an error (`I18N_MIGRATED` in
+- **Screens (R2):** auth (log in, sign up, forgot password, session expired), the shell (sidebar,
+  project switcher, profile menu, mobile bar, skip link, offline banner, shortcuts), projects (page,
+  tiles, form dialog, delete) and every shared component in `src/components` and `src/app` read
+  their text from the dictionaries; page titles too. Backlog, todo, sprints (R3) and board,
+  history, AI, 404 (R4) are still English (they use `lib/format.ts`, which re-exports the English
+  formatter). Migrated folders get `react/jsx-no-literals` as an error (`I18N_MIGRATED` in
   `eslint.config.js`).
+- **Forms:** zod schemas are factories of the messages (`loginSchema(t)`, `projectFormSchema(mode, t)`),
+  so validation speaks the UI language. `useLocalizedErrors` (`lib/formErrors.ts`) keeps visible
+  errors in step with a switch: client errors are validated again, server errors set through it
+  are written again; values and focus stay.
+- **Server errors:** `i18n/errors.ts` — `errorMessage(error, t)` and `fieldIssueMessage(issue, t)`.
+  English shows the API's text as it came; Arabic says the code's meaning (`errors.server`) or the
+  field's rule (`errors.fields`), never the English text. Screens with a sharper message for a
+  status check it first: login 401, sign-up 409 (under Email), project 409 (under Key).
 
 ## 6. Design implementation
 
@@ -231,7 +243,8 @@ what the Playwright specs add on top (results in [§10](#10-testing--ci)).
 | NFR-7 | ✅ | Only the JWT is persisted as a credential; `no-console`; AI Markdown without raw HTML, `javascript:` URLs dropped, links `rel="noopener noreferrer"` |
 | NFR-8 | ✅ | Plan §4 structure; API layer typed from `types/api.ts`; `fetch` only in `src/api/`; Conventional Commits, one PR per phase |
 | NFR-9 | ✅ | English UI; dates "Oct 20 – Nov 2", "Nov 2", "Nov 2, 2026" from one formatter |
-| i18n R1 (foundation) | ⚠️ | Behind `VITE_FEATURE_AR`: dictionaries, Intl formatting, locale store, switchers, direction plumbing, Arabic font; English output unchanged. No screen translated yet (R2–R4), RTL visual pass in R5 |
+| i18n R1 (foundation) | ✅ | Behind `VITE_FEATURE_AR`: dictionaries, Intl formatting, locale store, switchers, direction plumbing, Arabic font; English output unchanged |
+| i18n R2 (auth, shell, projects) | ⚠️ | Behind the flag: every string of these screens and of `src/components` / `src/app` comes from the dictionaries (canvas Arabic, glossary for the rest); zod messages per locale and visible errors re-read on a switch; server errors by code / field, never English in Arabic; plurals (0, 1, 2, 3, 11, 100) on project and backlog counts. Unit tests in Arabic with axe (login validation + 401, sign-up 409, projects counts + empty + dialog + delete, shell nav, menus, shortcuts, offline) and a switch-with-visible-error test. Backlog, todo, sprints, board, AI, 404 stay English until R3–R4; visual RTL in R5 |
 | Not found (§5) | ✅ | Friendly 404 with Go to Projects, inside the shell or centered when signed out. E2E: unknown route, missing project, signed out |
 
 ## 8. Decisions
@@ -279,6 +292,13 @@ The design deviations are in [§6](#deviations-from-the-design-and-why); the res
 | i18n | Relative times ("3 hours ago") come from messages with plurals, not `Intl.RelativeTimeFormat` | It says "3 hr. ago" / "in 0 days", not the design's wording |
 | i18n | The language names (English, العربية, EN, ع) live in `messages/languages.ts`, outside both dictionaries | An English page can name Arabic in Arabic without loading the Arabic chunk |
 | i18n | `react/jsx-no-literals` (text and attributes) as an error through a growing override list, global in R5 | Lint runs with `--max-warnings 0`, so "warn" isn't an option; unmigrated screens would fail it today |
+| i18n | zod schemas are factories of the messages (`schema(t)`, memoised per locale); `useLocalizedErrors` re-validates fields showing a client error and rewrites server errors after a switch | Validation and visible errors follow the language without resetting the form; react-hook-form reads the latest resolver every render |
+| i18n | `errors.server[code](serverMessage)` and `errors.fields[field](serverMessage)` are functions: English returns the server's text, Arabic its own | English output stays exactly the API's; Arabic never shows English. Replaces R1's skeleton, where server codes kept the server text in every language |
+| i18n | Banners keep the failed request, not its text, and read the message at render | A banner already on screen changes language with the UI |
+| i18n | `NON_TEXT_LITERALS` (the rule's `allowedStrings`) lists attribute tokens by kind (types, roles, variants, icon names, routes…); SVG geometry (Logo, empty-projects drawing) moved into data | The rule checks every string attribute and `elementOverrides` only matches capitalised components; numbers aren't text, so no geometry in the allow list |
+| i18n | Generic components take a dictionary default (Close, Cancel, Dismiss, Try again, "Loading …"); callers still pass their own text | One place per word; R3–R4 screens keep working and get the Arabic defaults |
+| i18n | `SHORTCUTS` and the sidebar sections hold `(t) => string`; the password meter returns a key; `TagInput` lost `itemName` (only labels use it) | Module-level lists can't call `useT()`; Arabic needs whole sentences, not a noun glued into English |
+| i18n | The toast's × is «إغلاق الإشعار», not «تجاهل» | «تجاهل» is the glossary's Discard (unsaved changes) |
 
 ## 9. Enhancements
 
@@ -290,7 +310,7 @@ Beyond the base requirements (Requirements §9):
 
 ## 10. Testing & CI
 
-**Unit and component tests** — Vitest + Testing Library + MSW (27 files; `src/test/setup.ts` fails any unhandled request; a fake API in `src/test/todos.ts` mirrors the server's move, sprint and bulk rules). They cover the API client, stores, guards, every page against the real routes, DnD keyboard / menu / optimistic / rollback / ordering paths, the AI flows and `vitest-axe` on components and dialogs (`color-contrast` off: jsdom has no layout).
+**Unit and component tests** — Vitest + Testing Library + MSW (33 files, three of them Arabic renders; `src/test/setup.ts` fails any unhandled request; a fake API in `src/test/todos.ts` mirrors the server's move, sprint and bulk rules). They cover the API client, stores, guards, every page against the real routes, DnD keyboard / menu / optimistic / rollback / ordering paths, the AI flows and `vitest-axe` on components and dialogs (`color-contrast` off: jsdom has no layout).
 
 **End-to-end** — Playwright (Chromium, 1440×900), `client/e2e/`:
 
@@ -349,8 +369,9 @@ every PR and on `main`; `e2e` after it (server `npm ci` + `.env` from the exampl
 - The rail tooltip's empty alt text needs Firefox 128+; older browsers may read the label twice.
 - Shortcuts typed with Alt Gr are ignored like other modifier combinations.
 - In `/__ui`, dialogs and menus portal to `<body>` and follow the global theme, not their pane.
-- **Arabic (R1, behind the flag):** no screen strings are translated yet — with Arabic chosen, the screens stay English inside an RTL, Plex-Arabic page until R2–R4; the visual RTL pass (sidebar side, drawer and toast keyframes, arrows, dnd-kit keyboard directions, Arabic 15px / 12px sizes) is R5.
-- **Arabic — server text stays English:** server error messages (shown as they come, per the API contract), AI replies in mock mode (the server's canned English text) and the seed data (demo projects and todos) are not translated; the server can't change.
+- **Arabic (R2, behind the flag):** auth, the shell, projects and the shared components are translated; backlog, todo details, sprints (R3) and board, history, AI, 404, error boundaries (R4) are still English inside the RTL page. Their callers still pass English page names to shared pieces, so a few mixed lines remain in Arabic until then (e.g. «جارٍ تحميل backlog»). The visual RTL pass (sidebar side, drawer and toast keyframes, arrows, dnd-kit keyboard directions, Arabic 15px / 12px sizes, `dir="ltr"` on email / password inputs, `<bdi>` / `dir="auto"` on user text) is R5.
+- **Arabic — mixed direction in sentences:** project names and keys inside Arabic sentences («سيُحذف Kanbot App (KAN) …») aren't isolated with `<bdi>` yet (R5).
+- **Arabic — server text:** on migrated screens Arabic shows its own message per error code and field (R2); unmigrated screens (R3–R4) still show the server's English message. AI replies in mock mode (the server's canned English text) and the seed data (demo projects and todos) are not translated; the server can't change.
 - **Deployment — data resets:** the live API stores its data in a JSON file on Render's free tier, which has no persistent disk, so every server deploy or restart resets it to the seed (the demo account always exists). See [§12](#12-deployment).
 - **Deployment — shared auth rate limit:** the server doesn't set `trust proxy`, so behind Render's proxy every visitor shares one IP for the auth limiter (50 requests / 15 min). A busy demo can get 429 on log in / sign up for everyone until the window passes.
 - **Deployment — real AI limits:** the live API uses a real model on a free plan; once its daily limit is reached the AI returns 429 / 502, and the UI shows the server's message with Try again.

@@ -1,7 +1,9 @@
+import { useT } from '@/i18n';
 import styles from './AppShell.module.css';
 
 /** DESIGN §6 / §10.1: the first Tab stop, hidden above the viewport until focused. */
 export function SkipLink() {
+  const t = useT();
   return (
     <a
       href="#main"
@@ -12,7 +14,7 @@ export function SkipLink() {
         document.getElementById('main')?.focus();
       }}
     >
-      Skip to main content
+      {t.shell.skipLink}
     </a>
   );
 }

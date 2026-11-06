@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router';
 import { Button } from '@/components/Button/Button';
 import { Field } from '@/components/Field/Field';
 import { Input } from '@/components/Field/Input';
 import { Icon } from '@/components/Icon/Icon';
-import { onInvalidSubmit } from '@/lib/formErrors';
+import { getT, useT } from '@/i18n';
+import { onInvalidSubmit, useLocalizedErrors } from '@/lib/formErrors';
 import { announce } from '@/stores/announcer';
 import { AuthHeading, AuthLayout } from './AuthLayout';
 import { withRedirect } from './redirect';
@@ -43,6 +44,7 @@ function useCooldown() {
  * of scope (plan §2 #5, §10 decision 1). Nothing is sent; the page says so in a "Demo only" note.
  */
 export function ForgotPasswordPage() {
+  const t = useT();
   const [search] = useSearchParams();
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -62,15 +64,19 @@ export function ForgotPasswordPage() {
     if (sentTo) sentHeading.current?.focus();
   }, [sentTo]);
 
+  const schema = useMemo(() => forgotSchema(t), [t]);
   const {
     register,
     handleSubmit,
+    setError,
+    trigger,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(forgotSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: { email: '' },
   });
+  useLocalizedErrors({ errors, setError, trigger });
 
   const send = (email: string) => {
     setSending(true);
@@ -78,7 +84,7 @@ export function ForgotPasswordPage() {
       setSending(false);
       setSentTo(email);
       cooldown.start();
-      announce('Reset link sent');
+      announce(getT().auth.forgot.sent);
     }, SEND_MS);
   };
 
@@ -86,36 +92,38 @@ export function ForgotPasswordPage() {
     <p className={styles.switch}>
       <Link to={withRedirect('/login', search)} className={forgot.back}>
         <Icon name="arrow-left" size={12} />
-        Back to log in
+        {t.auth.forgot.backToLogin}
       </Link>
     </p>
   );
 
-  const demoNote = <p className={forgot.demo}>Demo only — password reset isn&apos;t available in this version.</p>;
+  const demoNote = <p className={forgot.demo}>{t.auth.forgot.demoNote}</p>;
 
   if (sentTo) {
     const waiting = cooldown.left > 0;
     return (
-      <AuthLayout title="Check your email">
+      <AuthLayout title={t.auth.forgot.checkEmail}>
         <div className={forgot.sent}>
           <span className={forgot.badge}>
             <Icon name="email" size={20} />
           </span>
           <h1 ref={sentHeading} tabIndex={-1} className={styles.title}>
-            Check your email
+            {t.auth.forgot.checkEmail}
           </h1>
           <p className={forgot.text}>
-            If an account exists for <b className={forgot.address}>{sentTo}</b>, a reset link is on its way.
+            {t.auth.forgot.sentBefore}
+            <b className={forgot.address}>{sentTo}</b>
+            {t.auth.forgot.sentAfter}
           </p>
           <Button
             loading={sending}
-            loadingText="Sending…"
+            loadingText={t.auth.forgot.sending}
             aria-disabled={sending || waiting || undefined}
             onClick={() => {
               if (!waiting) send(sentTo);
             }}
           >
-            {waiting ? `Resend link in ${cooldown.left}s` : 'Resend link'}
+            {waiting ? t.auth.forgot.resendIn(cooldown.left) : t.auth.forgot.resend}
           </Button>
         </div>
         {backToLogin}
@@ -125,8 +133,8 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <AuthLayout title="Reset password">
-      <AuthHeading title="Reset your password" subtitle="Enter your account email and we'll send you a reset link." />
+    <AuthLayout title={t.auth.forgot.pageTitle}>
+      <AuthHeading title={t.auth.forgot.title} subtitle={t.auth.forgot.subtitle} />
 
       <form
         className={styles.form}
@@ -138,8 +146,8 @@ export function ForgotPasswordPage() {
           }, onInvalidSubmit)(event);
         }}
       >
-        <Field label="Email" error={errors.email?.message}>
-          <Input type="email" autoComplete="email" placeholder="you@example.com" {...register('email')} />
+        <Field label={t.auth.email} error={errors.email?.message}>
+          <Input type="email" autoComplete="email" placeholder={t.auth.emailPlaceholder} {...register('email')} />
         </Field>
         <Button
           type="submit"
@@ -147,9 +155,9 @@ export function ForgotPasswordPage() {
           size="lg"
           className={styles.submit}
           loading={sending}
-          loadingText="Sending…"
+          loadingText={t.auth.forgot.sending}
         >
-          Send reset link
+          {t.auth.forgot.submit}
         </Button>
       </form>
 

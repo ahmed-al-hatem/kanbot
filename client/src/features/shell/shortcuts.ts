@@ -1,13 +1,17 @@
+import type { Messages } from '@/i18n';
 import type { ProjectSection } from '@/routeChunks';
 
-/** Requirements §9 "Keyboard shortcuts": what the help dialog lists, in its order. */
-export const SHORTCUTS: readonly { keys: readonly string[]; label: string }[] = [
-  { keys: ['c'], label: 'Create a todo (on Projects: a new project)' },
-  { keys: ['/'], label: 'Search the backlog or your projects' },
-  { keys: ['g', 'b'], label: 'Go to the Active Sprint board' },
-  { keys: ['g', 'k'], label: 'Go to the Backlog' },
-  { keys: ['g', 's'], label: 'Go to Sprints' },
-  { keys: ['?'], label: 'Show these shortcuts' },
+/**
+ * Requirements §9 "Keyboard shortcuts": what the help dialog lists, in its order. The keys are
+ * the same in every language; `describe` reads the description from the messages.
+ */
+export const SHORTCUTS: readonly { keys: readonly string[]; describe: (t: Messages) => string }[] = [
+  { keys: ['c'], describe: (t) => t.shell.shortcuts.create },
+  { keys: ['/'], describe: (t) => t.shell.shortcuts.search },
+  { keys: ['g', 'b'], describe: (t) => t.shell.shortcuts.goBoard },
+  { keys: ['g', 'k'], describe: (t) => t.shell.shortcuts.goBacklog },
+  { keys: ['g', 's'], describe: (t) => t.shell.shortcuts.goSprints },
+  { keys: ['?'], describe: (t) => t.shell.shortcuts.help },
 ];
 
 /** The second key after `g`. */

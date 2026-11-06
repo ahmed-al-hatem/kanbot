@@ -1,3 +1,4 @@
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './Avatar.module.css';
 
@@ -27,7 +28,8 @@ function hash(text: string): number {
 
 /** DESIGN §7 Avatar: round, initials at 700 in `--av-fg` on `--av-N`, spring scale on hover. */
 export function Avatar({ name, size = 24, colorIndex, decorative = false, className }: AvatarProps) {
-  const a11y = decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name ?? 'Unassigned' };
+  const t = useT();
+  const a11y = decorative ? { 'aria-hidden': true } : { role: 'img', 'aria-label': name ?? t.common.unassigned };
 
   if (!name) {
     return <span className={cx(styles.avatar, styles[`s${size}`], styles.unassigned, className)} {...a11y} />;

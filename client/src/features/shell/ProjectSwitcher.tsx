@@ -4,6 +4,7 @@ import { Menu, MenuItem, MenuLabel, MenuSeparator } from '@/components/Menu/Menu
 import { ProjectAvatar } from '@/components/ProjectAvatar/ProjectAvatar';
 import { Skeleton } from '@/components/Skeleton/Skeleton';
 import { usePrefetchProject, useProject, useProjects } from '@/hooks/useProjects';
+import { useT } from '@/i18n';
 import type { ProjectSection } from '@/routeChunks';
 import styles from './AppShell.module.css';
 
@@ -19,6 +20,7 @@ interface ProjectSwitcherProps {
  * lists every project, then "View all projects". Items prefetch on hover/focus.
  */
 export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
+  const t = useT();
   const navigate = useNavigate();
   const projects = useProjects();
   const current = useProject(projectId);
@@ -31,9 +33,9 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
       className={styles.switcher}
       // The label contains all the visible text, name and key (WCAG 2.5.3 Label in Name): without
       // the key it failed axe's label-content-name-mismatch.
-      aria-label={project ? `Switch project, current: ${project.name} ${project.key}` : 'Choose a project'}
+      aria-label={project ? t.shell.switcher.label(project.name, project.key) : t.shell.switcher.choose}
       // The tablet rail's tooltip (AppShell.module.css).
-      data-tip={project ? project.name : 'Choose a project'}
+      data-tip={project ? project.name : t.shell.switcher.choose}
     >
       {project ? (
         <>
@@ -58,7 +60,7 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
             <Icon name="spaces" />
           </span>
           <span className={styles.switcherText}>
-            <span className={styles.switcherName}>Choose a project</span>
+            <span className={styles.switcherName}>{t.shell.switcher.choose}</span>
           </span>
         </>
       )}
@@ -67,11 +69,11 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
   );
 
   return (
-    <Menu trigger={trigger} label="Projects" align="start" className={styles.switcherMenu}>
-      <MenuLabel>Your projects</MenuLabel>
-      {projects.isPending && <MenuItem disabled>Loading projects…</MenuItem>}
-      {projects.isError && !projects.data && <MenuItem disabled>Couldn&apos;t load projects</MenuItem>}
-      {projects.data?.length === 0 && <MenuItem disabled>No projects yet</MenuItem>}
+    <Menu trigger={trigger} label={t.shell.switcher.menu} align="start" className={styles.switcherMenu}>
+      <MenuLabel>{t.shell.switcher.heading}</MenuLabel>
+      {projects.isPending && <MenuItem disabled>{t.shell.switcher.loading}</MenuItem>}
+      {projects.isError && !projects.data && <MenuItem disabled>{t.shell.switcher.loadFailed}</MenuItem>}
+      {projects.data?.length === 0 && <MenuItem disabled>{t.shell.switcher.empty}</MenuItem>}
       {projects.data?.map((item) => (
         <MenuItem
           key={item.id}
@@ -85,7 +87,7 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
           <span className={styles.menuProject}>
             <ProjectAvatar id={item.id} name={item.name} size={22} />
             <span className={styles.menuProjectName}>{item.name}</span>
-            {item.id === projectId && <Icon name="check-mark" label="Current" className={styles.menuCurrent} />}
+            {item.id === projectId && <Icon name="check-mark" label={t.shell.switcher.current} className={styles.menuCurrent} />}
           </span>
         </MenuItem>
       ))}
@@ -96,7 +98,7 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
           void navigate('/projects');
         }}
       >
-        View all projects
+        {t.shell.switcher.viewAll}
       </MenuItem>
     </Menu>
   );

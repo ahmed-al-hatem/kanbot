@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { useToast, type Toast, type ToastKind } from '@/stores/toast';
 import type { ToastIconName } from './toastIconPaths';
@@ -30,6 +31,7 @@ export function Toaster() {
 }
 
 function Flag({ toast }: { toast: Toast }) {
+  const t = useT();
   const dismiss = useToast((s) => s.dismiss);
   const [leaving, setLeaving] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -95,7 +97,7 @@ function Flag({ toast }: { toast: Toast }) {
           {action.label}
         </button>
       )}
-      <button type="button" className={styles.close} aria-label="Dismiss" onClick={close}>
+      <button type="button" className={styles.close} aria-label={t.common.dismiss} onClick={close}>
         <ToastIcon name="cross" size={12} />
       </button>
     </div>

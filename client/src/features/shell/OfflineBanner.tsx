@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Banner } from '@/components/Banner/Banner';
 import { Button } from '@/components/Button/Button';
 import { useOnline, useRetryConnection } from '@/hooks/useConnection';
+import { getT, useT } from '@/i18n';
 import { toast } from '@/stores/toast';
 
 /**
@@ -10,12 +11,13 @@ import { toast } from '@/stores/toast';
  * don't wait for the network (`networkMode: 'always'`), so the copy doesn't promise a sync.
  */
 export function OfflineBanner() {
+  const t = useT();
   const online = useOnline();
   const retry = useRetryConnection();
   const wasOnline = useRef(online);
 
   useEffect(() => {
-    if (online && !wasOnline.current) toast.success('Back online');
+    if (online && !wasOnline.current) toast.success(getT().shell.offline.backOnline);
     wasOnline.current = online;
   }, [online]);
 
@@ -28,18 +30,18 @@ export function OfflineBanner() {
           variant="subtle"
           size="sm"
           loading={retry.isPending}
-          loadingText="Reconnecting…"
+          loadingText={t.shell.offline.reconnecting}
           onClick={() => {
             retry.mutate(undefined, {
-              onError: () => toast.error("Still offline. We'll reconnect as soon as the network is back."),
+              onError: () => toast.error(getT().shell.offline.stillOffline),
             });
           }}
         >
-          Retry now
+          {t.shell.offline.retry}
         </Button>
       }
     >
-      You&apos;re offline. Changes can&apos;t be saved until you reconnect.
+      {t.shell.offline.message}
     </Banner>
   );
 }

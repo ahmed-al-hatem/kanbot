@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import styles from './Skeleton.module.css';
 
@@ -20,7 +21,7 @@ export function Skeleton({ inlineSize, blockSize = 16, radius = 'medium', opacit
 }
 
 interface SkeletonRegionProps {
-  /** Spoken as "Loading <label>", e.g. "Loading backlog". */
+  /** Spoken as "Loading <label>" (`common.loading`), e.g. "Loading backlog". */
   label: string;
   children: ReactNode;
   className?: string;
@@ -31,9 +32,10 @@ interface SkeletonRegionProps {
  * `role="status"`, `aria-busy`, and a visually hidden "Loading <page>".
  */
 export function SkeletonRegion({ label, children, className }: SkeletonRegionProps) {
+  const t = useT();
   return (
     <div role="status" aria-busy="true" className={cx(styles.region, className)}>
-      <span className="visually-hidden">Loading {label}</span>
+      <span className="visually-hidden">{t.common.loading(label)}</span>
       {children}
     </div>
   );

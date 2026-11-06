@@ -1,3 +1,4 @@
+import { useT } from '@/i18n';
 import { passwordStrength } from './passwordStrength';
 import styles from './PasswordStrengthMeter.module.css';
 
@@ -11,7 +12,9 @@ interface PasswordStrengthMeterProps {
  * readers through the input's `aria-describedby` (`id`); the bar itself is decorative.
  */
 export function PasswordStrengthMeter({ id, password }: PasswordStrengthMeterProps) {
-  const { level, label } = passwordStrength(password);
+  const t = useT();
+  const { level, key } = passwordStrength(password);
+  const label = t.auth.register.strength[key];
   const empty = password.length === 0;
 
   return (
@@ -23,7 +26,7 @@ export function PasswordStrengthMeter({ id, password }: PasswordStrengthMeterPro
         {/* One text node for screen readers: split spans lose the space ("strength:Too short"). */}
         {!empty && (
           <>
-            <span className="visually-hidden">{`Password strength: ${label}`}</span>
+            <span className="visually-hidden">{t.auth.register.strength.spoken(label)}</span>
             <span aria-hidden="true">{label}</span>
           </>
         )}

@@ -5,6 +5,7 @@ import { Button } from '@/components/Button/Button';
 // The shared blanket/panel styles, so this dialog animates and sizes like every other one.
 import dialogStyles from '@/components/Dialog/Dialog.module.css';
 import { Icon } from '@/components/Icon/Icon';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { loginPath } from './redirect';
 import styles from './SessionExpiredDialog.module.css';
@@ -20,6 +21,7 @@ interface SessionExpiredDialogProps {
  * stays mounted (and hidden from assistive tech by Radix) until then.
  */
 export function SessionExpiredDialog({ redirectTo }: SessionExpiredDialogProps) {
+  const t = useT();
   const navigate = useNavigate();
   const action = useRef<HTMLButtonElement>(null);
 
@@ -42,9 +44,9 @@ export function SessionExpiredDialog({ redirectTo }: SessionExpiredDialogProps) 
             <span className={styles.badge}>
               <Icon name="lock-locked" size={20} />
             </span>
-            <AlertDialog.Title className={styles.title}>Your session has expired</AlertDialog.Title>
+            <AlertDialog.Title className={styles.title}>{t.auth.sessionExpired.title}</AlertDialog.Title>
             <AlertDialog.Description className={styles.text}>
-              Log in again to continue. You&apos;ll come back to this page.
+              {t.auth.sessionExpired.text}
             </AlertDialog.Description>
             <Button
               ref={action}
@@ -55,7 +57,7 @@ export function SessionExpiredDialog({ redirectTo }: SessionExpiredDialogProps) 
                 void navigate(loginPath(redirectTo));
               }}
             >
-              Log in again
+              {t.auth.sessionExpired.action}
             </Button>
           </AlertDialog.Content>
         </AlertDialog.Overlay>

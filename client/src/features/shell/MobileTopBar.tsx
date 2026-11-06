@@ -2,6 +2,7 @@ import type { Ref } from 'react';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
 import { IconButton } from '@/components/Button/Button';
 import { Logo } from '@/components/Logo/Logo';
+import { useT } from '@/i18n';
 import { NAV_ID } from './Sidebar';
 import styles from './AppShell.module.css';
 
@@ -15,12 +16,13 @@ interface MobileTopBarProps {
 
 /** DESIGN §13 mobile (≤ 760px): 56px bar with the hamburger, the logo and Ask AI. Hidden above. */
 export function MobileTopBar({ navOpen, onToggleNav, inProject, hamburgerRef }: MobileTopBarProps) {
+  const t = useT();
   return (
     <div className={styles.topBar}>
       <IconButton
         ref={hamburgerRef}
         icon="menu"
-        aria-label="Navigation"
+        aria-label={t.shell.navigation}
         aria-expanded={navOpen}
         aria-controls={NAV_ID}
         onClick={onToggleNav}

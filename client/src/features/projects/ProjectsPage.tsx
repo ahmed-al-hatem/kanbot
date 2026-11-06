@@ -10,6 +10,8 @@ import { PageError } from '@/components/PageError/PageError';
 import { PageHeader } from '@/components/PageHeader/PageHeader';
 import { Skeleton, SkeletonRegion } from '@/components/Skeleton/Skeleton';
 import { useDeleteProject, usePrefetchProject, useProjects } from '@/hooks/useProjects';
+import { getT, useT, type Messages } from '@/i18n';
+import { errorMessage } from '@/i18n/errors';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { neighbourFocus, refocusAfterRemoval } from '@/lib/refocus';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
@@ -56,9 +58,10 @@ function matches(project: ProjectWithStats, needle: string) {
  * create, edit and delete dialogs.
  */
 export function ProjectsPage() {
+  const t = useT();
   const navigate = useNavigate();
   const projects = useProjects();
-  useDocumentTitle(titleOf('Projects'));
+  useDocumentTitle(titleOf(t.projects.title));
   const removeProject = useDeleteProject();
   const prefetch = usePrefetchProject();
   const showSkeleton = useDelayedLoading(projects.isPending);
@@ -111,14 +114,14 @@ export function ProjectsPage() {
   const onSaved = (saved: ProjectWithStats, { starter }: { starter: boolean }) => {
     setForm((state) => ({ ...state, open: false }));
     if (form.project) {
-      toast.success(`${saved.name} updated`);
+      toast.success(getT().projects.toast.updated(saved.name));
       return;
     }
-    toast.success(`${saved.name} created`);
+    toast.success(getT().projects.toast.created(saved.name));
     markHighlight(saved.id);
     // Plan §9.4: the starter backlog is Generate todos on the new backlog, pre-filled from the
     // description — the user reviews the drafts; nothing is added until they click Add.
-    if (starter) useAssistant.getState().openDialog({ kind: 'generate', projectId: saved.id, prompt: starterPrompt(saved) });
+    if (starter) useAssistant.getState().openDialog({ kind: 'generate', projectId: saved.id, prompt: starterPrompt(saved, getT()) });
     // PRJ-2: a new project opens on its backlog.
     void navigate(`/projects/${saved.id}/backlog`);
   };
@@ -131,12 +134,14 @@ export function ProjectsPage() {
     if (toDelete.focus) refocusAfterRemoval(toDelete.focus);
     removeProject.mutate(project, {
       onSuccess: () => {
-        toast.success(`${project.name} deleted`);
+        toast.success(getT().projects.toast.deleted(project.name));
         // PRJ-4: back to the projects list (already here when deleting from a tile).
         void navigate({ pathname: '/projects', search: search.toString() }, { replace: true });
       },
       onError: (error) => {
-        toast.error(`Couldn't delete ${project.name}. ${isApiError(error) ? error.message : 'Please try again.'}`);
+        const messages = getT();
+        const reason = isApiError(error) ? errorMessage(error, messages) : messages.common.pleaseTryAgain;
+        toast.error(messages.projects.toast.deleteFailed(project.name, reason));
       },
     });
   };
@@ -148,18 +153,18 @@ export function ProjectsPage() {
   return (
     <div className="kb-page">
       <PageHeader
-        title="Projects"
-        meta={count === undefined ? undefined : count === 1 ? '1 project' : `${count} projects`}
+        title={t.projects.title}
+        meta={count === undefined ? undefined : t.count.projects(count)}
         actions={
           <Button variant="primary" icon="add" onClick={openCreate} data-new-project data-shortcut="create">
-            New project
+            {t.projects.newProject}
           </Button>
         }
       />
 
       <div className="page-body">
         {showSkeleton ? (
-          <SkeletonRegion label="projects" className={styles.skeleton}>
+          <SkeletonRegion label={t.projects.loadingName} className={styles.skeleton}>
             <Skeleton inlineSize={320} blockSize={36} className={styles.skeletonSearch} />
             <div className={styles.grid}>
               {Array.from({ length: 6 }, (_, i) => (
@@ -169,7 +174,7 @@ export function ProjectsPage() {
           </SkeletonRegion>
         ) : projects.isError && !list ? (
           <PageError
-            page="your projects"
+            page={t.projects.pageName}
             error={projects.error}
             onRetry={() => {
               void projects.refetch();
@@ -180,11 +185,11 @@ export function ProjectsPage() {
         ) : !list || !shown ? null : list.length === 0 ? (
           <EmptyState
             illustration={<EmptyIllustration />}
-            title="No projects yet"
-            description="Create your first project to start planning sprints."
+            title={t.projects.empty.title}
+            description={t.projects.empty.text}
             actions={
               <Button variant="primary" icon="add" onClick={openCreate}>
-                Create your first project
+                {t.projects.empty.action}
               </Button>
             }
           />
@@ -192,7 +197,7 @@ export function ProjectsPage() {
           <>
             <div className={styles.search}>
               <label htmlFor="project-search" className="visually-hidden">
-                Search projects
+                {t.projects.search.label}
               </label>
               <Icon name="search" className={styles.searchIcon} />
               <Input
@@ -200,7 +205,7 @@ export function ProjectsPage() {
                 type="search"
                 data-shortcut="search"
                 className={styles.searchInput}
-                placeholder="Search by name or key"
+                placeholder={t.projects.search.placeholder}
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
@@ -212,7 +217,7 @@ export function ProjectsPage() {
               <EmptyState
                 variant="dashed"
                 icon="search"
-                title={`No projects match “${query.trim()}”`}
+                title={t.projects.search.noMatch(query.trim())}
                 actions={
                   <Button
                     variant="subtle"
@@ -220,7 +225,7 @@ export function ProjectsPage() {
                       setQuery('');
                     }}
                   >
-                    Clear search
+                    {t.common.clearSearch}
                   </Button>
                 }
               />
@@ -246,7 +251,7 @@ export function ProjectsPage() {
                   <span className={styles.newTileIcon}>
                     <Icon name="add" />
                   </span>
-                  New project
+                  {t.projects.newProject}
                 </button>
               </div>
             )}
@@ -270,15 +275,15 @@ export function ProjectsPage() {
         onOpenChange={(open) => {
           setToDelete((state) => ({ ...state, open }));
         }}
-        title={`Delete ${deleting?.name ?? 'project'}?`}
+        title={t.projects.delete.title(deleting?.name ?? t.projects.delete.fallbackName)}
         description={
           <>
-            This permanently deletes <b>{deleting?.name}</b> ({deleting?.key}) with all of its sprints
-            {todoCount > 0 ? ` and its ${todoCount === 1 ? '1 todo' : `${todoCount} todos`}` : ' and todos'}. This
-            can&apos;t be undone.
+            {t.projects.delete.before}
+            <b>{deleting?.name}</b>
+            {t.projects.delete.after(deleting?.key ?? '', todoCount)}
           </>
         }
-        confirmLabel="Delete project"
+        confirmLabel={t.projects.delete.confirm}
         onConfirm={confirmDelete}
         fallbackFocus={toDelete.focus}
       />
@@ -287,21 +292,32 @@ export function ProjectsPage() {
 }
 
 /** The canvas "No projects yet" drawing: three columns and the AI dot. Colors are tokens. */
+const ILLUSTRATION = {
+  viewBox: '0 0 120 88',
+  rects: [
+    { x: 4, y: 8, width: 32, height: 76, rx: 6, fill: 'var(--neutral-hover)' },
+    { x: 44, y: 8, width: 32, height: 52, rx: 6, fill: 'var(--neutral-hover)' },
+    { x: 84, y: 8, width: 32, height: 32, rx: 6, fill: 'var(--lz-green-bg)' },
+    { x: 10, y: 16, width: 20, height: 14, rx: 3, fill: 'var(--surface-raised)' },
+    { x: 50, y: 16, width: 20, height: 14, rx: 3, fill: 'var(--surface-raised)' },
+  ],
+  dot: { cx: 100, cy: 24, r: 6, fill: 'var(--ai-icon)' },
+} as const;
+
 function EmptyIllustration() {
+  const { viewBox, rects, dot } = ILLUSTRATION;
   return (
-    <svg width="120" height="88" viewBox="0 0 120 88" fill="none" aria-hidden="true" focusable="false">
-      <rect x="4" y="8" width="32" height="76" rx="6" fill="var(--neutral-hover)" />
-      <rect x="44" y="8" width="32" height="52" rx="6" fill="var(--neutral-hover)" />
-      <rect x="84" y="8" width="32" height="32" rx="6" fill="var(--lz-green-bg)" />
-      <rect x="10" y="16" width="20" height="14" rx="3" fill="var(--surface-raised)" />
-      <rect x="50" y="16" width="20" height="14" rx="3" fill="var(--surface-raised)" />
-      <circle cx="100" cy="24" r="6" fill="var(--ai-icon)" />
+    <svg width={120} height={88} viewBox={viewBox} fill="none" aria-hidden focusable={false}>
+      {rects.map((rect, index) => (
+        <rect key={index} {...rect} />
+      ))}
+      <circle {...dot} />
     </svg>
   );
 }
 
 /** The Generate todos description for a new project: its description, or a line from its name. */
-function starterPrompt(project: ProjectWithStats): string {
+function starterPrompt(project: ProjectWithStats, t: Messages): string {
   const description = project.description.trim();
-  return description.length >= 3 ? description : `First todos for a new project called "${project.name}"`;
+  return description.length >= 3 ? description : t.projects.form.starterPrompt(project.name);
 }

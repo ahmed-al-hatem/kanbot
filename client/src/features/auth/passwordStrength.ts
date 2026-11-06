@@ -1,11 +1,14 @@
 export type StrengthLevel = 0 | 1 | 2 | 3;
 
+/** The meter's label, a key of `auth.register.strength` in the messages. */
+export type StrengthKey = 'tooShort' | 'fair' | 'good' | 'strong';
+
 export interface PasswordStrength {
   level: StrengthLevel;
-  label: 'Too short' | 'Fair' | 'Good' | 'Strong';
+  key: StrengthKey;
 }
 
-const LABELS: PasswordStrength['label'][] = ['Too short', 'Fair', 'Good', 'Strong'];
+const KEYS: readonly StrengthKey[] = ['tooShort', 'fair', 'good', 'strong'];
 
 /**
  * The register meter, with the canvas rules: under 8 characters is too short (the server
@@ -16,5 +19,5 @@ export function passwordStrength(password: string): PasswordStrength {
   if (password.length < 8) level = 0;
   else if (password.length >= 12 && /\d/.test(password) && /[^A-Za-z0-9]/.test(password)) level = 3;
   else if (/\d/.test(password)) level = 2;
-  return { level, label: LABELS[level] ?? 'Too short' };
+  return { level, key: KEYS[level] ?? 'tooShort' };
 }
