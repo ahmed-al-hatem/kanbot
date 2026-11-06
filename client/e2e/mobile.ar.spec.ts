@@ -20,6 +20,27 @@ test('390px in Arabic: mobile nav and 85vw board columns from the right (NFR-4)'
     () => document.documentElement.scrollWidth - window.innerWidth,
   );
   expect(pageOverflow).toBeLessThanOrEqual(0);
+  // Stricter than scrollWidth (which rounds, and differs between platforms): nothing outside a
+  // horizontal scroller reaches past either edge — e.g. a 1px hidden box pushed out by a
+  // negative margin in RTL.
+  const outside = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('body *'))
+      .filter((el) => {
+        // Inside a horizontal scroller is fine (the board strip) — unless the box is fixed,
+        // which escapes it (dnd-kit's live region sat at x = −1px).
+        if (getComputedStyle(el).position !== 'fixed') {
+          for (let n = el.parentElement; n; n = n.parentElement) {
+            if (/auto|scroll|hidden|clip/.test(getComputedStyle(n).overflowX)) return false;
+          }
+        }
+        const r = el.getBoundingClientRect();
+        return (
+          (r.width > 0 || r.height > 0) && (r.left < -0.5 || r.right > window.innerWidth + 0.5)
+        );
+      })
+      .map((el) => `${el.tagName}.${String(el.className)}`),
+  );
+  expect(outside, 'elements past the viewport edges').toEqual([]);
 
   // The first column (To Do) is 85vw and sits against the right edge; Done is off to the left.
   const todo = arColumn(page, AR_STATUS.todo);

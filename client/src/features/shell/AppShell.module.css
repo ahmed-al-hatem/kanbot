@@ -388,7 +388,7 @@
     position: absolute;
     inline-size: 1px;
     block-size: 1px;
-    margin: -1px;
+    margin: 0; /* not -1px: it would push the box past the right edge in RTL */
     overflow: hidden;
     clip-path: inset(50%);
     white-space: nowrap;
