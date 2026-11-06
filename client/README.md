@@ -79,7 +79,8 @@ Playwright included (plan §9.1). `strictPort: true` makes Vite fail instead of 
 | Drag and drop | dnd-kit | Pointer, touch and keyboard sensors, screen-reader announcements |
 | Markdown | react-markdown, lazy | No `rehype-raw`, so AI HTML is shown as text (NFR-7); loaded only with the AI UI |
 | Icons | Own `<Icon>` + a generated path map | `@atlaskit/icon` pulls in emotion and tokens; we ship only the paths |
-| Fonts | `@fontsource-variable/inter` (self-hosted) | No Google Fonts round-trip |
+| Fonts | `@fontsource-variable/inter`; `@fontsource/ibm-plex-sans-arabic` 400–700 in the lazy Arabic chunk | No Google Fonts round-trip; English visitors never download the Arabic font |
+| i18n | Typed TS dictionaries + native `Intl` (no library) | Two locales: missing keys are type errors, 0 KB runtime, plurals and Levantine months from the platform |
 | Quality | ESLint 9 (typescript-eslint strict type-checked, react-hooks, react-refresh, jsx-a11y), Prettier, Vitest + Testing Library + MSW + vitest-axe, Playwright + axe-core | NFR-1, NFR-8, Requirements §9 |
 
 ## 5. Architecture
@@ -91,10 +92,11 @@ src/
 ├── app/                    # Providers, queryClient, global hosts (Toaster, LiveRegion)
 ├── api/                    # client.ts (request<T>), errors.ts (ApiError), one module per resource — the only fetch
 ├── hooks/                  # queryKeys.ts + every query and mutation (useProjects, useTodos, useMoveTodo, useBoard, useAi…)
-├── stores/                 # Zustand UI state only: session, theme, toast, announcer, assistant, highlight, notFound, shortcuts
+├── i18n/                   # useT / useLocale / setLocale / useFormat, en + lazy ar dictionaries, Intl formatting
+├── stores/                 # Zustand UI state only: session, theme, locale, toast, announcer, assistant, highlight, notFound, shortcuts
 ├── components/             # design system (Button, Field, Dialog, Menu, Lozenge, ProgressBar, Skeleton, PageError…)
 ├── features/               # auth, shell, projects, backlog, sprints, board, todos, ai, errors — each exports its pages
-├── lib/                    # format, moveInLists (the DnD model), board helpers, dnd/ (shared sensors + preview), storage…
+├── lib/                    # dates, format (English bridge until R5), moveInLists (the DnD model), board helpers, dnd/ (shared sensors + preview), storage…
 ├── styles/                 # tokens.css, base.css, motion.css
 ├── test/                   # setup, MSW server and a fake API, renderApp (real routes on a memory router)
 └── types/api.ts            # verbatim copy of server/src/types/api.ts — never edited by hand
@@ -124,6 +126,27 @@ an authenticated request (not `/auth/login`) expires the session (AUTH-6). `fiel
 | Reload with a token | `GET /auth/me` behind a full-page loader; 401 → login (AUTH-3) |
 | 401 mid-session | non-dismissable "Your session has expired" dialog → `/login?redirect=<page>` with the message (AUTH-6) |
 | Log out | clears token, stores and cache → `/login` (AUTH-4); other tabs follow through the `storage` event |
+
+### Arabic and RTL (i18n)
+
+Behind `VITE_FEATURE_AR` (set to `true` on Vercel Preview only; production is English until R5),
+delivered in five PRs — R1 foundation (done) · R2 auth + shell + projects · R3 backlog + todo +
+sprints · R4 board + history + AI + 404 + errors · R5 RTL pass + enable (plan §11). Terms:
+[`docs/I18N-GLOSSARY.md`](../docs/I18N-GLOSSARY.md); design: the [Arabic canvas](https://claude.ai/code/artifact/75890d4c-d82e-4f3b-bb09-8d085c7a6877).
+
+- **API:** `const t = useT()` → `t.count.todos(3)`; `useFormat()` → `format.range(start, end)`;
+  `useLocale()`, `useDirection()`, `setLocale('ar')`; `getT()` / `getFormat()` outside React.
+- **Dictionaries:** `i18n/messages/en.ts` is the source of truth (`Messages` is derived from it);
+  `ar.ts` `satisfies Messages` and is a separate chunk (with the font), loaded only when Arabic is
+  chosen. A dev-time and a unit-test check compare their shapes.
+- **Formats:** `en-US` and `ar-SY-u-nu-latn` (Levantine months, Latin digits), plurals with
+  `Intl.PluralRules` (Arabic's six forms).
+- **Direction:** `<html lang dir>` from the locale store and, before paint, from `index.html`;
+  Radix `DirectionProvider`; `var(--dir)` and `.flip` for the RTL pass in R5.
+- **Switchers:** ع / EN on the auth pages, "English · اللغة" in the sidebar — only with the flag.
+- **Screens:** none migrated yet; `lib/format.ts` re-exports the English formatter so their output
+  is unchanged. Migrated folders get `react/jsx-no-literals` as an error (`I18N_MIGRATED` in
+  `eslint.config.js`).
 
 ## 6. Design implementation
 
@@ -208,6 +231,7 @@ what the Playwright specs add on top (results in [§10](#10-testing--ci)).
 | NFR-7 | ✅ | Only the JWT is persisted as a credential; `no-console`; AI Markdown without raw HTML, `javascript:` URLs dropped, links `rel="noopener noreferrer"` |
 | NFR-8 | ✅ | Plan §4 structure; API layer typed from `types/api.ts`; `fetch` only in `src/api/`; Conventional Commits, one PR per phase |
 | NFR-9 | ✅ | English UI; dates "Oct 20 – Nov 2", "Nov 2", "Nov 2, 2026" from one formatter |
+| i18n R1 (foundation) | ⚠️ | Behind `VITE_FEATURE_AR`: dictionaries, Intl formatting, locale store, switchers, direction plumbing, Arabic font; English output unchanged. No screen translated yet (R2–R4), RTL visual pass in R5 |
 | Not found (§5) | ✅ | Friendly 404 with Go to Projects, inside the shell or centered when signed out. E2E: unknown route, missing project, signed out |
 
 ## 8. Decisions
@@ -246,6 +270,15 @@ The design deviations are in [§6](#deviations-from-the-design-and-why); the res
 | Titles | `useDocumentTitle()` stack instead of React 19 `<title>` | Todo details' title wins while open and the page's comes back on close |
 | E2E | Each test registers its own user over the API; the API runs with `NODE_ENV=test` and `DATA_FILE=./data/e2e-db.json` when Playwright starts it; mock AI unless `E2E_REAL_AI=1` | No seed, no wiped local data, no auth/AI rate limits (the server skips them in test mode); known mock answers make exact assertions possible, real-AI runs stay structural |
 | E2E | axe runs as a soft assertion with reduced motion | One run reports every page's violations; axe never measures text mid-fade |
+| i18n | Typed dictionaries + native `Intl`, no i18n library; `t.section.fn(n)` access, never string keys | Two locales; a missing key or wrong parameter is a type error; nothing to download |
+| i18n | A new visitor always starts in English; the choice is saved in `kanbot.locale`; the URL doesn't change | No surprise on shared links or for the reviewer; no locale segment in every route |
+| i18n | Arabic uses IBM Plex Sans Arabic only (Arabic and Latin), self-hosted, 400/500/600/700, loaded with the Arabic chunk; English keeps Inter | One x-height on mixed lines; English visitors never download it |
+| i18n | Five PRs behind `VITE_FEATURE_AR` (Vercel Preview only); with the flag off the app runs in English whatever is stored | Small reviewable PRs; production never shows a half-translated app |
+| i18n | A saved Arabic choice is loaded before the first render, and `index.html` sets `lang` / `dir` before paint | No English flash, no LTR flash |
+| i18n | Date ranges join two formatted days with the locale's message, not `Intl.DateTimeFormat#formatRange` | ICU's formatRange prints "Oct 20 – 25", adds years across New Year and uses thin spaces — the English output would change |
+| i18n | Relative times ("3 hours ago") come from messages with plurals, not `Intl.RelativeTimeFormat` | It says "3 hr. ago" / "in 0 days", not the design's wording |
+| i18n | The language names (English, العربية, EN, ع) live in `messages/languages.ts`, outside both dictionaries | An English page can name Arabic in Arabic without loading the Arabic chunk |
+| i18n | `react/jsx-no-literals` (text and attributes) as an error through a growing override list, global in R5 | Lint runs with `--max-warnings 0`, so "warn" isn't an option; unmigrated screens would fail it today |
 
 ## 9. Enhancements
 
@@ -316,6 +349,8 @@ every PR and on `main`; `e2e` after it (server `npm ci` + `.env` from the exampl
 - The rail tooltip's empty alt text needs Firefox 128+; older browsers may read the label twice.
 - Shortcuts typed with Alt Gr are ignored like other modifier combinations.
 - In `/__ui`, dialogs and menus portal to `<body>` and follow the global theme, not their pane.
+- **Arabic (R1, behind the flag):** no screen strings are translated yet — with Arabic chosen, the screens stay English inside an RTL, Plex-Arabic page until R2–R4; the visual RTL pass (sidebar side, drawer and toast keyframes, arrows, dnd-kit keyboard directions, Arabic 15px / 12px sizes) is R5.
+- **Arabic — server text stays English:** server error messages (shown as they come, per the API contract), AI replies in mock mode (the server's canned English text) and the seed data (demo projects and todos) are not translated; the server can't change.
 - **Deployment — data resets:** the live API stores its data in a JSON file on Render's free tier, which has no persistent disk, so every server deploy or restart resets it to the seed (the demo account always exists). See [§12](#12-deployment).
 - **Deployment — shared auth rate limit:** the server doesn't set `trust proxy`, so behind Render's proxy every visitor shares one IP for the auth limiter (50 requests / 15 min). A busy demo can get 429 on log in / sign up for everyone until the window passes.
 - **Deployment — real AI limits:** the live API uses a real model on a free plan; once its daily limit is reached the AI returns 429 / 502, and the UI shows the server's message with Try again.
@@ -352,6 +387,7 @@ the build needs `tsc` and the seed needs `tsx`.
 | Render | `CLIENT_ORIGIN` | `https://kanbot-ai.vercel.app` |
 | Render | `AI_API_KEY`, `AI_BASE_URL`, `AI_MODEL` | a real model (no "Mock AI" badge) |
 | Vercel | `VITE_API_URL` | `/api` |
+| Vercel (Preview only) | `VITE_FEATURE_AR` | `true` — Arabic / RTL while R1–R5 land; unset in Production |
 
 **Same origin through Vercel.** [`vercel.json`](vercel.json) rewrites `/api/*` to
 `https://kanbot-api.onrender.com/api/*`, so the browser only ever talks to `kanbot-ai.vercel.app` —

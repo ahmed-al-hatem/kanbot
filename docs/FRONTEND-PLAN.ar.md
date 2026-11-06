@@ -102,7 +102,7 @@
 | Markdown | `react-markdown` — **lazy** | بدون `rehype-raw` (NFR-7)، ويُحمَّل فقط عند فتح الـ AI |
 | Dates | `Intl.DateTimeFormat` | لا حاجة لـ date-fns |
 | Animation | CSS keyframes من DESIGN §8.3 فقط | لا Framer Motion (~40KB). exit animations عبر Radix `data-state=closed` |
-| Fonts | `@fontsource-variable/inter` self-hosted + preload | يلغي اتصال Google Fonts (أسرع LCP، لا FOIT). IBM Plex Arabic نتركه عبر Google Fonts بـ `unicode-range` (لا يُحمّل إلا عند وجود عربي) أو نحذفه لأن المشروع English only |
+| Fonts | `@fontsource-variable/inter` self-hosted + preload؛ و `@fontsource/ibm-plex-sans-arabic` (400/500/600/700) للعربية داخل الـ chunk العربي الكسول (§11) | يلغي اتصال Google Fonts (أسرع LCP، لا FOIT). زائر الإنجليزية لا يحمّل الخط العربي أبداً |
 | Lint/Format | ESLint 9 flat: `typescript-eslint` (type-checked) + `react-hooks` + `react-refresh` + `jsx-a11y` · Prettier | NFR-1 |
 | Tests | Vitest + Testing Library + `@testing-library/user-event` + **MSW** · Playwright للـ e2e | من قائمة التحسينات، ويرفع تقييم الكود |
 | اختياري | `babel-plugin-react-compiler` | memoization تلقائي بدل `useMemo/useCallback` يدوي |
@@ -135,7 +135,8 @@ client/src/
 │   ├── ai/                   # AssistantDrawer, ChatLog, Composer, GenerateTodosDialog, PlanSprintDialog,
 │   │                         # SprintSummaryCard, AiButton, MockBadge, Markdown (lazy)
 │   └── errors/               # NotFoundPage, RouteErrorBoundary, AppErrorBoundary
-├── lib/                      # format.ts, cx, constants, useDebouncedValue, useDelayedLoading
+├── i18n/                     # القواميس وتنسيق Intl وتبديل اللغة (§11)
+├── lib/                      # dates.ts, cx, constants, useDebouncedValue, useDelayedLoading
 ├── styles/                   # tokens.css, base.css (reset + typography + focus), motion.css (keyframes)
 └── test/                     # setup.ts, msw handlers, render helpers
 ```
@@ -364,3 +365,63 @@ SprintHeader (dates، days left، progress)، 4 أعمدة (`role=region` + coun
 | 4 | الاختبارات و CI | **نعم، الثلاثة**: (أ) Vitest + Testing Library + MSW لطبقة الـ API والـ guards والـ stores والدوال النقية (`moveInLists`) والمكوّنات الأساسية، تُكتب مع كل مرحلة. (ب) Playwright: سيناريو e2e واحد للمسار الكامل في الـ demo + فحص `@axe-core/playwright` على الصفحات الرئيسية في الثيمين، في المرحلة 8. (ج) GitHub Actions: `lint` ← `typecheck` ← `test` ← `build`، و job e2e منفصل يشغّل السيرفر في mock mode بعد `npm run seed`، في المرحلة 9 | مذكورة في تحسينات الـ Requirements §9، وترفع تقييم Code quality. أنت تشغّلها وترفعها بنفسك |
 
 **مرجع القرار 1:** الـ Requirements تمنع تعديل الـ backend في الجدول الأول ("Do not change it; treat it as the contract")، و §7 Out of scope ("password reset" و "any backend change")، و §9 ("fine to fake on the frontend… as long as you explain it").
+
+---
+
+## 11. RTL والعربية (i18n)
+
+التصميم العربي: [الـ canvas العربي](https://claude.ai/code/artifact/75890d4c-d82e-4f3b-bb09-8d085c7a6877) — الملف `project/MainAr.dc.html` (تعرضه artboards الـ `AR-*`). المصطلحات: [I18N-GLOSSARY.md](I18N-GLOSSARY.md).
+
+### 11.1 القرارات (2026-11-06)
+
+| # | الموضوع | القرار | لماذا |
+|---|---|---|---|
+| 1 | المكتبة | **قواميس TypeScript مُنمَّطة + `Intl` الأصلي** (`DateTimeFormat` و `NumberFormat` و `PluralRules`). بلا مكتبة i18n | لغتان فقط؛ الخطأ في مفتاح أو ترجمة ناقصة يصبح خطأ type؛ 0 KB؛ الجمع والتواريخ من المنصة نفسها |
+| 2 | اللغة الافتراضية والحفظ | الزائر الجديد **يبدأ دائماً بالإنجليزية**. الاختيار يُحفظ (`kanbot.locale`) ولا يتغيّر الـ URL | لا مفاجأة للمقيّم أو للروابط المشاركة؛ لا بادئة لغة في كل route |
+| 3 | الخط | العربية تستخدم **IBM Plex Sans Arabic وحده** للنص العربي واللاتيني معاً؛ الإنجليزية تبقى على Inter | ارتفاع حرف واحد في الأسطر المختلطة (المفاتيح والأسماء والأرقام داخل الجمل العربية) |
+| 4 | التسليم | **خمسة PRs خلف `VITE_FEATURE_AR`**: R1 الأساس · R2 الدخول + الإطار + المشاريع · R3 الـ backlog + تفاصيل البند + السبرنتات · R4 اللوحة + السجل + الذكاء الاصطناعي + 404 + الأخطاء · R5 مراجعة RTL البصرية + التفعيل. الـ flag مفعّل على Vercel Preview فقط؛ الإنتاج يبقى إنجليزياً حتى R5 | كل PR صغير وقابل للمراجعة؛ الإنتاج لا يعرض تطبيقاً نصف مترجَم |
+
+### 11.2 الهيكل
+
+```
+src/
+├── features.ts               # isArabicEnabled() — القارئ الوحيد لـ VITE_FEATURE_AR
+├── i18n/
+│   ├── index.ts              # الواجهة العامة: useT و useLocale و setLocale و useFormat و useDirection و getT و initLocale
+│   ├── config.ts             # LOCALES، الاتجاه لكل لغة، وسوم Intl (en → en-US، ar → ar-SY-u-nu-latn)، مفتاح التخزين
+│   ├── plural.ts             # Intl.PluralRules؛ العربية zero/one/two/few/many/other
+│   ├── format.ts             # التواريخ والفترات والوقت النسبي والأرقام — Formatter لكل لغة
+│   ├── errors.ts             # كود ApiError و details[].path → رسالة (هيكل أولي في R1)
+│   ├── parity.ts             # فحص تطابق شكل en/ar وقت التشغيل (الاختبارات + dev)
+│   ├── useSwitchLocale.ts    # مشترك بين مبدّلَي اللغة (حالة التحميل، toast الخطأ)
+│   └── messages/
+│       ├── en.ts             # المصدر؛ النوع `Messages` مشتق منه
+│       ├── ar.ts             # `satisfies Messages`؛ chunk كسول مع IBM Plex Sans Arabic
+│       └── languages.ts      # أسماء اللغات بلغاتها (English، العربية، EN، ع) — دائماً في الحزمة
+├── stores/locale.ts          # Zustand + persist: اللغة؛ يُبقي <html lang dir> متزامناً
+└── lib/dates.ts              # حساب التواريخ (نُقل من lib/format.ts، بلا لغة)
+```
+
+- الوصول `t.section.key` / `t.section.fn(n)`، لا مفاتيح نصية أبداً. صيغ الجمع دوال تستخدم `plural()`.
+- `ar.ts` يُحمَّل بـ `import()` ديناميكي: زائر الإنجليزية لا يحمّله ولا يحمّل الخط. الاختيار العربي المحفوظ يُحمَّل **قبل أول render** (`initLocale()` في `main.tsx`)، وسكربت `index.html` يضبط `lang`/`dir` من التخزين قبل الرسم، فلا وميض LTR.
+- مع إطفاء الـ flag يعمل التطبيق بالإنجليزية دائماً أياً كان المحفوظ، ولا يظهر أي مبدّل.
+- تمديدات الاتجاه: `DirectionProvider` من Radix، والمتغيّر `--dir` (1 / −1) للـ transforms، والصنف `.flip` للأيقونات الاتجاهية (`kb-flip` في الـ canvas)، و `useDirection()`. التخطيط يستخدم الخصائص المنطقية أصلاً (§7).
+- الفترات يومان منسّقان تجمعهما رسالة اللغة ("Oct 20 – Nov 2")، لا `Intl.DateTimeFormat#formatRange`: ICU يختصر فترات الشهر الواحد ("Oct 20 – 25") ويضيف السنة عند رأس السنة ويستخدم مسافات رفيعة، فيتغيّر الناتج الإنجليزي.
+- المبدّلان (حسب الـ canvas العربي): **ع / EN** مقسّم بجانب زر الثيم في صفحات الدخول، وعنصر **English · اللغة** أسفل الشريط الجانبي. التبديل يُبقي الشاشة الحالية.
+
+### 11.3 القواعد (CLAUDE.md، للمناطق المنقولة)
+
+- لا نص يراه المستخدم (ومنه `aria-label` و `title` و `placeholder` والـ toasts وإعلانات الـ live region و `document.title`) خارج `i18n/messages`.
+- كل تاريخ ورقم عبر `i18n/format` (`useFormat()`)؛ لا `toLocaleString` ولا تواريخ مركّبة يدوياً.
+- لا فحص `locale === 'ar'` داخل المكوّنات: الفروق في القواميس و `format.ts` والـ CSS (`[dir='rtl']` و `[lang='ar']`).
+- قاعدة ESLint `react/jsx-no-literals` (النصوص والخصائص) **error** في المجلدات المنقولة، المدرجة في `eslint.config.js` (`I18N_MIGRATED`)، وتكبر القائمة مع كل PR؛ R5 يجعلها عامة.
+
+### 11.4 الـ PRs الخمسة
+
+| PR | النطاق | يكتمل عندما |
+|---|---|---|
+| R1 | الأساس: `i18n/` و store اللغة والـ flag والمبدّلان وتمديدات الاتجاه والخط العربي والطباعة والمسرد وقاعدة lint | الناتج الإنجليزي مطابق؛ مع الـ flag يعمل التبديل ويُحفظ؛ اختبارات التطابق والجمع والأشهر والتنسيقات والـ store والمبدّلَين |
+| R2 | الدخول (login و register و forgot و session expired)، الإطار (الشريط الجانبي والمبدّل والملف الشخصي وشريط الجوال وشريط عدم الاتصال والاختصارات)، المشاريع | تلك المجلدات في `I18N_MIGRATED` واختباراتها تنجح باللغتين |
+| R3 | الـ backlog وتفاصيل البند ونماذج السبرنت (إنشاء / بدء / حذف) وإعلانات السحب والإفلات | كذلك |
+| R4 | اللوحة وإكمال السبرنت وسجل السبرنتات ودرج الذكاء الاصطناعي ونوافذه و404 وحدود الأخطاء والـ toasts و `document.title` في كل مكان | كذلك؛ و `lib/format.ts` لم يعد مستخدماً |
+| R5 | مراجعة RTL البصرية مقابل artboards الـ `AR-*` (الشريط الجانبي يميناً، الدرج يساراً، الـ toast أسفل اليمين، عكس الـ keyframes والأسهم، اتجاهات لوحة المفاتيح في dnd-kit، مقاسات العربية 15px و 11 → 12px)، e2e و axe بالعربية، `jsx-no-literals` عامة، حذف `lib/format.ts`، تفعيل الـ flag في الإنتاج | التطبيق كله يجتاز مراجعة الـ canvas العربي في الثيمين وعلى 390px |

@@ -102,7 +102,7 @@ The new API layer must cover from day one:
 | Markdown | `react-markdown`, **lazy** | No `rehype-raw` (NFR-7); loaded only when AI UI opens |
 | Dates | `Intl.DateTimeFormat` | No need for date-fns |
 | Animation | CSS keyframes from DESIGN §8.3 only | No Framer Motion (~40 KB). Exit animations via Radix `data-state=closed` |
-| Fonts | `@fontsource-variable/inter`, self-hosted + preload | Removes the Google Fonts round-trip (faster LCP, no FOIT). IBM Plex Sans Arabic stays on Google Fonts with `unicode-range` (downloaded only when Arabic appears) or is dropped, since the app is English only |
+| Fonts | `@fontsource-variable/inter`, self-hosted + preload; `@fontsource/ibm-plex-sans-arabic` (400/500/600/700) for Arabic, in the lazy Arabic chunk (§11) | Removes the Google Fonts round-trip (faster LCP, no FOIT). English visitors never download the Arabic font |
 | Lint / format | ESLint 9 flat config: `typescript-eslint` (type-checked) + `react-hooks` + `react-refresh` + `jsx-a11y` · Prettier | NFR-1 |
 | Tests | Vitest + Testing Library + `@testing-library/user-event` + **MSW** · Playwright for e2e | Listed as an enhancement; raises the code-quality score |
 | Optional | `babel-plugin-react-compiler` | Automatic memoization instead of manual `useMemo`/`useCallback` |
@@ -135,7 +135,8 @@ client/src/
 │   ├── ai/                   # AssistantDrawer, ChatLog, Composer, GenerateTodosDialog, PlanSprintDialog,
 │   │                         # SprintSummaryCard, AiButton, MockBadge, Markdown (lazy)
 │   └── errors/               # NotFoundPage, RouteErrorBoundary, AppErrorBoundary
-├── lib/                      # format.ts, cx, constants, moveInLists, useDebouncedValue, useDelayedLoading
+├── i18n/                     # dictionaries, Intl formatting, locale switching (§11)
+├── lib/                      # dates.ts, cx, constants, moveInLists, useDebouncedValue, useDelayedLoading
 ├── styles/                   # tokens.css, base.css (reset + typography + focus), motion.css (keyframes)
 └── test/                     # setup.ts, MSW handlers, render helpers
 ```
@@ -363,3 +364,63 @@ Add the `e2e` job to `.github/workflows/client.yml` (the `verify` job exists sin
 | 4 | Tests and CI | **All three:** (a) Vitest + Testing Library + MSW for the API layer, guards, stores, pure functions (`moveInLists`) and key components, written in every phase. (b) Playwright: one e2e scenario for the full demo flow + `@axe-core/playwright` checks on main pages in both themes, in phase 8. (c) GitHub Actions: `lint` → `typecheck` → `test` → `build`, plus a separate e2e job running the server in mock mode after `npm run seed`, in phase 9 | Listed in Requirements §9 enhancements and raises the code-quality score. You run and push them yourself |
 
 **Basis for decision 1:** the Requirements forbid backend changes in the first table ("Do not change it; treat it as the contract"), §7 Out of scope ("password reset", "any backend change") and §9 ("fine to fake on the frontend… as long as you explain it").
+
+---
+
+## 11. RTL & Arabic (i18n)
+
+Arabic design: the [Arabic canvas](https://claude.ai/code/artifact/75890d4c-d82e-4f3b-bb09-8d085c7a6877) — `project/MainAr.dc.html` (the `AR-*` artboards render it). Terms: [I18N-GLOSSARY.md](I18N-GLOSSARY.md).
+
+### 11.1 Decisions (2026-11-06)
+
+| # | Topic | Decision | Why |
+|---|---|---|---|
+| 1 | Library | **Typed TypeScript dictionaries + native `Intl`** (`DateTimeFormat`, `NumberFormat`, `PluralRules`). No i18n library | Two locales; typos in keys and missing translations become type errors; 0 KB of runtime; plurals and dates come from the platform |
+| 2 | Default and persistence | A new visitor **always starts in English**. The choice is saved (`kanbot.locale`); the URL doesn't change | No surprise for the reviewer or shared links; no locale prefix to thread through every route |
+| 3 | Font | Arabic uses **IBM Plex Sans Arabic only**, for Arabic *and* Latin text; English keeps Inter | One x-height on mixed lines (keys, names, numbers inside Arabic sentences) |
+| 4 | Delivery | **Five PRs behind `VITE_FEATURE_AR`**: R1 foundation · R2 auth + shell + projects · R3 backlog + todo + sprints · R4 board + history + AI + 404 + errors · R5 RTL pass + enable. The flag is `true` on Vercel Preview only; production stays English until R5 | Each PR is small and reviewable; production never shows a half-translated app |
+
+### 11.2 Structure
+
+```
+src/
+├── features.ts               # isArabicEnabled() — the only reader of VITE_FEATURE_AR
+├── i18n/
+│   ├── index.ts              # public API: useT, useLocale, setLocale, useFormat, useDirection, getT, initLocale
+│   ├── config.ts             # LOCALES, dir per locale, Intl tags (en → en-US, ar → ar-SY-u-nu-latn), storage key
+│   ├── plural.ts             # Intl.PluralRules; Arabic zero/one/two/few/many/other
+│   ├── format.ts             # dates, ranges, relative time, numbers — one Formatter per locale
+│   ├── errors.ts             # ApiError code + details[].path → message (skeleton in R1)
+│   ├── parity.ts             # runtime en/ar shape check (tests + dev)
+│   ├── useSwitchLocale.ts    # shared by both switchers (pending state, error toast)
+│   └── messages/
+│       ├── en.ts             # source of truth; `Messages` type derived from it
+│       ├── ar.ts             # `satisfies Messages`; lazy chunk with IBM Plex Sans Arabic
+│       └── languages.ts      # endonyms (English, العربية, EN, ع) — always bundled
+├── stores/locale.ts          # Zustand + persist: locale; keeps <html lang dir> in sync
+└── lib/dates.ts              # date arithmetic (moved from lib/format.ts, no locale)
+```
+
+- Access is `t.section.key` / `t.section.fn(n)`, never string keys. Plurals are functions using `plural()`.
+- `ar.ts` is loaded with a dynamic `import()`: English visitors never download it or the font. A saved Arabic choice is loaded **before the first render** (`initLocale()` in `main.tsx`), and the `index.html` pre-paint script sets `lang`/`dir` from storage, so there is no LTR flash.
+- With the flag off the app always runs in English, whatever is stored, and no switcher is shown.
+- Direction plumbing: Radix `DirectionProvider`, `--dir` (1 / −1) for transforms, `.flip` for directional icons (the canvas's `kb-flip`), `useDirection()`. Layout uses logical properties already (§7).
+- Ranges are two formatted days joined by the locale's message ("Oct 20 – Nov 2"), not `Intl.DateTimeFormat#formatRange`: ICU collapses same-month ranges ("Oct 20 – 25"), adds years across New Year and uses thin spaces, which would change the English output.
+- Switchers (Arabic canvas): a segmented **ع / EN** next to the theme toggle on the auth pages, and an **English · اللغة** item at the bottom of the sidebar. Switching keeps the current screen.
+
+### 11.3 Rules (CLAUDE.md, for migrated areas)
+
+- No user-visible text (incl. `aria-label`, `title`, `placeholder`, toasts, live-region announcements, `document.title`) outside `i18n/messages`.
+- Every date and number through `i18n/format` (`useFormat()`); no `toLocaleString`, no hand-built dates.
+- No `locale === 'ar'` checks in components: differences live in the dictionaries, `format.ts` and CSS (`[dir='rtl']`, `[lang='ar']`).
+- ESLint `react/jsx-no-literals` (strings and attributes) is an **error** in the migrated folders, listed in `eslint.config.js` (`I18N_MIGRATED`), which grows each PR; R5 makes it global.
+
+### 11.4 The five PRs
+
+| PR | Scope | Done when |
+|---|---|---|
+| R1 | Foundation: `i18n/`, locale store, flag, switchers, direction plumbing, Arabic font and typography, glossary, lint override | English output identical; flag on → switching works and saves; tests for parity, plurals, months, formats, store, switchers |
+| R2 | Auth (login, register, forgot, session expired), shell (sidebar, switcher, profile, mobile bar, offline banner, shortcuts), projects (page, tiles, dialog, delete) | Those folders in `I18N_MIGRATED`; their tests pass in both locales |
+| R3 | Backlog, todo details, sprint form / start / delete, the planning DnD announcements | Same |
+| R4 | Board, complete sprint, sprints history, AI drawer and dialogs, 404, error boundaries, toasts and `document.title` everywhere | Same; `lib/format.ts` shim unused |
+| R5 | Visual RTL pass against the `AR-*` artboards (sidebar right, drawer left, toast bottom-right, mirrored keyframes and arrows, dnd-kit keyboard directions, Arabic 15px / 11 → 12px sizes), e2e + axe in Arabic, `jsx-no-literals` global, delete `lib/format.ts`, enable the flag in production | The whole app passes the Arabic canvas review in both themes and at 390px |

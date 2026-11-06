@@ -7,6 +7,7 @@ Kanbot is a sprint board with an AI assistant. `server/` is a finished Express A
 - `docs/REQUIREMENTS.en.md` — acceptance criteria by ID (AUTH-1, BL-3…). The reviewer tests these.
 - `design/DESIGN.md` — tokens, components, motion, keyboard, states.
 - Design canvas: https://claude.ai/code/artifact/efe99d87-baac-4bb7-96e1-235363299397 — every artboard renders `project/Main.dc.html` with `screen`, `mode` and `variant` props. Read it with the Artifact tool for the screens of the current phase.
+- Arabic / RTL work: `docs/FRONTEND-PLAN.en.md` §11, `docs/I18N-GLOSSARY.md`, and the Arabic canvas https://claude.ai/code/artifact/75890d4c-d82e-4f3b-bb09-8d085c7a6877 (`project/MainAr.dc.html`).
 - `server/src/types/api.ts` — the API contract. `client/src/types/api.ts` is a copy; never edit it by hand.
 
 Priority on conflict: API contract → Requirements AC → design.
@@ -20,6 +21,13 @@ Priority on conflict: API contract → Requirements AC → design.
 - No hex colors outside `client/src/styles/tokens.css`; use `var(--token)`. Logical CSS properties only.
 - No `any` without a comment explaining why. Every icon-only button has an `aria-label`.
 - Every view has loading, empty and error states; every mutation gives feedback.
+
+## i18n rules (in areas listed in `I18N_MIGRATED` in `client/eslint.config.js`; all of `src/` from R5)
+- No user-visible text outside `client/src/i18n/messages/` — including `aria-label`, `title`, `placeholder`, toasts, live-region announcements and `document.title`. Read it as `t.section.key` / `t.section.fn(n)` from `useT()` (or `getT()` outside React); never string keys.
+- Arabic terms come from `docs/I18N-GLOSSARY.md`; add a new term there first. Plurals use `plural()` (all six Arabic forms), never `n === 1`.
+- All dates and numbers go through `client/src/i18n/format.ts` (`useFormat()`); no `toLocaleString`, no hand-built date strings.
+- No `locale === 'ar'` (or `dir === 'rtl'`) checks in components: put the difference in the dictionaries, `format.ts` or CSS (`[dir='rtl']`, `[lang='ar']`, `var(--dir)`, `.flip`).
+- `VITE_FEATURE_AR` is read only through `isArabicEnabled()` in `client/src/features.ts`.
 
 ## End of every phase
 1. Update `client/README.md`: the "Progress" table (requirement IDs → ✅ / ⚠️ with a note), "Decisions" for anything new, "Known issues".
