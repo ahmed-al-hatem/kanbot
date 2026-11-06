@@ -9,9 +9,9 @@ import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
 import { PriorityLabel } from '@/features/todos/PriorityLabel';
 import { TypeIcon } from '@/features/todos/TypeIcon';
 import { isTempTodo } from '@/hooks/useTodos';
-import { useFormat, useT } from '@/i18n';
+import { useDirection, useFormat, useT, type Direction } from '@/i18n';
 import { cx } from '@/lib/cx';
-import type { DropData } from '@/lib/dnd/sensors';
+import { inlineStep, type DropData } from '@/lib/dnd/sensors';
 import { overdueDays } from '@/lib/dates';
 import { useHighlight } from '@/stores/highlight';
 import { TODO_STATUSES, type Todo, type TodoStatus } from '@/types/api';
@@ -25,12 +25,13 @@ const MAX_LABELS = 2;
 
 export const CARD_HELP_ID = 'board-card-help';
 
-const KEY_DIRECTIONS: Partial<Record<string, KeyDirection>> = {
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-};
+/** The move an arrow key asks for: ← / → step through the columns as drawn (mirrored in RTL). */
+function keyDirection(key: string, dir: Direction): KeyDirection | undefined {
+  if (key === 'ArrowUp') return 'up';
+  if (key === 'ArrowDown') return 'down';
+  const step = inlineStep(key, dir);
+  return step === 1 ? 'next' : step === -1 ? 'previous' : undefined;
+}
 
 interface TodoCardProps {
   todo: Todo;
@@ -66,6 +67,7 @@ export const TodoCard = memo(function TodoCard({
 }: TodoCardProps) {
   const t = useT();
   const format = useFormat();
+  const dir = useDirection();
   const row = t.backlog.row;
   const clearTodo = useHighlight((s) => s.clearTodo);
   const saving = isTempTodo(todo.id);
@@ -94,7 +96,7 @@ export const TodoCard = memo(function TodoCard({
   }, [highlighted, todo.id, clearTodo]);
 
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    const direction = KEY_DIRECTIONS[event.key];
+    const direction = keyDirection(event.key, dir);
     if (!direction || saving) return;
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
     event.preventDefault();
@@ -132,7 +134,9 @@ export const TodoCard = memo(function TodoCard({
         }}
         onKeyDown={onKeyDown}
       >
-        <span className={styles.cardTitle}>{todo.title}</span>
+        <span className={styles.cardTitle}>
+          <bdi>{todo.title}</bdi>
+        </span>
         <span className={styles.chips}>
           <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>
             {t.todos.type[todo.type]}
@@ -230,7 +234,9 @@ export function TodoCardPreview({ todo }: { todo: Todo }) {
   const t = useT();
   return (
     <div className={cx(styles.card, styles.preview)} aria-hidden="true">
-      <span className={styles.cardTitle}>{todo.title}</span>
+      <span className={styles.cardTitle}>
+        <bdi>{todo.title}</bdi>
+      </span>
       <span className={styles.chips}>
         <Chip leading={<TypeIcon type={todo.type} size={12} decorative />}>
           {t.todos.type[todo.type]}
@@ -240,7 +246,9 @@ export function TodoCardPreview({ todo }: { todo: Todo }) {
         </Chip>
       </span>
       <span className={styles.cardFooter}>
-        <span className={styles.cardKey}>{todo.key}</span>
+        <span className={styles.cardKey}>
+          <bdi>{todo.key}</bdi>
+        </span>
         <PointsPill points={todo.storyPoints} />
       </span>
     </div>

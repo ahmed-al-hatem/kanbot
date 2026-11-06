@@ -1,5 +1,5 @@
 import { DndContext, DragOverlay, MeasuringStrategy } from '@dnd-kit/core';
-import { Suspense, useCallback, useMemo, useState } from 'react';
+import { Suspense, useCallback, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
 import { AskAiButton } from '@/components/AskAiButton/AskAiButton';
@@ -19,7 +19,8 @@ import { useCurrentProject } from '@/hooks/useProjects';
 import { useSprints } from '@/hooks/useSprints';
 import { getT, useT } from '@/i18n';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
-import { useDragSensors } from '@/lib/dnd/sensors';
+import { HorizontalEdgeScroll } from '@/lib/dnd/HorizontalEdgeScroll';
+import { useDragAutoScroll, useDragSensors } from '@/lib/dnd/sensors';
 import { useListsDnd } from '@/lib/dnd/useListsDnd';
 import { useDelayedLoading } from '@/lib/useDelayedLoading';
 import { useReducedMotion } from '@/lib/useReducedMotion';
@@ -84,6 +85,9 @@ export function BoardPage() {
 
   const { moveTo, onKeyMove, onMenuMove } = useBoardMoves(projectId, activeId, columns);
   const sensors = useDragSensors({ keyboard: false });
+  // RTL: dnd-kit can't auto-scroll the column strip leftward; HorizontalEdgeScroll does it.
+  const autoScroll = useDragAutoScroll();
+  const boardScroll = useRef<HTMLDivElement>(null);
   // The board has no keyboard drag sensor (the arrows on a focused card move it), so this is
   // only what dnd-kit would say about a draggable; the cards describe their own keys.
   const instructions = useMemo(
@@ -221,8 +225,9 @@ export function BoardPage() {
             <p className={styles.moveHelp}>
               <KeyHint text={copy.moveHelp} />
             </p>
-            <div className={styles.boardScroll}>
-              <DndContext {...dnd.contextProps} measuring={MEASURING}>
+            <div ref={boardScroll} className={styles.boardScroll}>
+              <DndContext {...dnd.contextProps} measuring={MEASURING} autoScroll={autoScroll}>
+                <HorizontalEdgeScroll scroller={boardScroll} />
                 <div className={styles.boardGrid}>
                   {columns.map((column, index) => (
                     <BoardColumn
