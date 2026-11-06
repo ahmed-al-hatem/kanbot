@@ -10,6 +10,7 @@ import { PriorityLabel } from '@/features/todos/PriorityLabel';
 import { TypeIcon } from '@/features/todos/TypeIcon';
 import type { BacklogGroupKind } from '@/hooks/useBacklog';
 import { isTempTodo } from '@/hooks/useTodos';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { useHighlight } from '@/stores/highlight';
 import type { Todo } from '@/types/api';
@@ -80,6 +81,8 @@ export const TodoRow = memo(function TodoRow({
   onMove,
   onKeyMove,
 }: TodoRowProps) {
+  const t = useT();
+  const copy = t.backlog.row;
   const clearTodo = useHighlight((s) => s.clearTodo);
   // Open and Delete run once the menu has handed focus back to ⋯ (see Menu), so the dialog
   // they open returns focus there.
@@ -147,7 +150,7 @@ export const TodoRow = memo(function TodoRow({
         {...attributes}
         // dnd-kit's role="button" is redundant on a real button.
         role={undefined}
-        aria-label={`Drag ${todo.key || 'todo'}`}
+        aria-label={copy.drag(todo.key)}
         aria-describedby={dragDisabled ? DRAG_OFF_ID : attributes['aria-describedby']}
         disabled={dragDisabled || saving}
         onKeyDown={handleKeyDown}
@@ -160,8 +163,8 @@ export const TodoRow = memo(function TodoRow({
       <span className={styles.key}>
         {saving ? (
           <>
-            <span aria-hidden="true">…</span>
-            <span className="visually-hidden">Saving</span>
+            <span aria-hidden="true">{copy.savingGlyph}</span>
+            <span className="visually-hidden">{copy.saving}</span>
           </>
         ) : (
           todo.key
@@ -193,8 +196,8 @@ export const TodoRow = memo(function TodoRow({
             ))}
             {extraLabels > 0 && (
               <span className={styles.moreLabels}>
-                +{extraLabels}
-                <span className="visually-hidden"> more labels: {todo.labels.slice(MAX_LABELS).join(', ')}</span>
+                {copy.moreLabels(extraLabels)}
+                <span className="visually-hidden">{copy.moreLabelsSpoken(todo.labels.slice(MAX_LABELS).join(copy.labelSeparator))}</span>
               </span>
             )}
           </span>
@@ -205,14 +208,14 @@ export const TodoRow = memo(function TodoRow({
       <span className={styles.menuCell} data-no-drag>
         {!saving && (
           <Menu
-            label={`${todo.key} actions`}
+            label={copy.menu(todo.key)}
             onCloseAutoFocus={() => {
               const action = pendingAction.current;
               pendingAction.current = null;
               if (action === 'open') onOpen(todo.id);
               if (action === 'delete') onDelete(todo);
             }}
-            trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={`Actions for ${todo.key}`} />}
+            trigger={<IconButton size="sm" icon="show-more-horizontal" aria-label={copy.actions(todo.key)} />}
           >
             <MenuItem
               icon="arrow-right"
@@ -220,7 +223,7 @@ export const TodoRow = memo(function TodoRow({
                 pendingAction.current = 'open';
               }}
             >
-              Open
+              {copy.open}
             </MenuItem>
             <MenuSeparator />
             {reorderable && (
@@ -230,14 +233,14 @@ export const TodoRow = memo(function TodoRow({
                     onMove(todo, { kind: 'top' });
                   }}
                 >
-                  Move to top
+                  {copy.moveToTop}
                 </MenuItem>
                 <MenuItem
                   onSelect={() => {
                     onMove(todo, { kind: 'bottom' });
                   }}
                 >
-                  Move to bottom
+                  {copy.moveToBottom}
                 </MenuItem>
               </>
             )}
@@ -249,7 +252,7 @@ export const TodoRow = memo(function TodoRow({
                   onMove(todo, { kind: 'group', groupId: target.id });
                 }}
               >
-                Move to {target.name}
+                {copy.moveTo(target.name)}
               </MenuItem>
             ))}
             <MenuSeparator />
@@ -260,7 +263,7 @@ export const TodoRow = memo(function TodoRow({
                 pendingAction.current = 'delete';
               }}
             >
-              Delete
+              {t.common.delete}
             </MenuItem>
           </Menu>
         )}
