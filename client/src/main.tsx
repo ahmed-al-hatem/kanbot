@@ -5,6 +5,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/motion.css';
 import { Providers } from './app/Providers';
+import { initLocale } from './i18n';
 import { listenForSessionChanges } from './stores/session';
 import { followSystemTheme } from './stores/theme';
 
@@ -16,8 +17,12 @@ listenForSessionChanges();
 // The OS light/dark setting is followed live until the user picks a theme with the toggle.
 followSystemTheme();
 
-createRoot(root).render(
-  <StrictMode>
-    <Providers />
-  </StrictMode>,
-);
+// A saved Arabic choice loads its messages (and font) before the first render: no English flash.
+// English resolves at once; initLocale never rejects (a failed chunk falls back to English).
+void initLocale().then(() => {
+  createRoot(root).render(
+    <StrictMode>
+      <Providers />
+    </StrictMode>,
+  );
+});
