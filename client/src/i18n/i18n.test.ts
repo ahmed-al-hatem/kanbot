@@ -203,8 +203,19 @@ describe('errors', () => {
       ],
     });
     expect(fieldErrorMessages(error, en)).toEqual({ labels: 'Too long', title: 'Required' });
-    // Arabic: a message for the field, never the server's English.
-    expect(fieldErrorMessages(error, ar)).toEqual({ labels: ar.errors.field(''), title: ar.errors.field('') });
+    // Arabic: a message for the field, never the server's English (R3 lists the todo fields).
+    expect(fieldErrorMessages(error, ar)).toEqual({
+      labels: 'استخدم 10 وسوم أو أقل، لا يزيد كل منها على 30 حرفًا',
+      title: 'أدخل عنوانًا من 200 حرف أو أقل',
+    });
+    // A field with no rule of its own gets the generic field message.
+    const other = new ApiError({
+      status: 400,
+      code: 'VALIDATION_ERROR',
+      message: 'Invalid',
+      details: [{ path: 'moveUnfinishedTo', message: 'Choose the backlog or a planned sprint' }],
+    });
+    expect(fieldErrorMessages(other, ar)).toEqual({ moveUnfinishedTo: ar.errors.field('') });
     const email = new ApiError({
       status: 400,
       code: 'VALIDATION_ERROR',

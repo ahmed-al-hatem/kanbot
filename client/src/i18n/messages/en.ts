@@ -10,8 +10,9 @@ import { plural } from '../plural';
  * `n === 1 ? … : …`, so Arabic can use all six forms.
  *
  * R1: the i18n foundation (formatting, the language switcher, error fallbacks). R2: auth, the
- * shell, projects and the shared components they render. Backlog, todo, sprints (R3) and board,
- * history, AI, 404 (R4) move later. Every English output stays exactly as it was.
+ * shell, projects and the shared components they render. R3: the backlog, Todo details, the
+ * sprint form / start / delete and the drag-and-drop announcements. Board, history, AI, 404 (R4)
+ * move later. Every English output stays exactly as it was.
  */
 const count = (n: number, one: string, other: string) => plural('en', n, { one, other });
 
@@ -36,6 +37,8 @@ export const en = {
     /** Story points, short: "1 pt", "13 pts". */
     points: (n: number) => count(n, `${n} pt`, `${n} pts`),
     days: (n: number) => count(n, `${n} day`, `${n} days`),
+    /** A sprint's length when it is whole weeks (the sprint form's hint). */
+    weeks: (n: number) => count(n, `${n} week`, `${n} weeks`),
     /** Story points, spoken in full (the points pill's screen-reader text). */
     storyPoints: (n: number) => count(n, `${n} story point`, `${n} story points`),
     /** The Projects header meta. */
@@ -78,9 +81,13 @@ export const en = {
     saving: 'Saving…',
     creating: 'Creating…',
     saveChanges: 'Save changes',
+    deleting: 'Deleting…',
     clearSearch: 'Clear search',
     tryAgain: 'Try again',
+    /** The save-error bar's button (Todo details). */
+    retry: 'Retry',
     retrying: 'Retrying…',
+    undo: 'Undo',
     /** After "Couldn't …." when there is nothing more specific to say. */
     pleaseTryAgain: 'Please try again.',
     backToProjects: 'Back to Projects',
@@ -333,6 +340,264 @@ export const en = {
     },
   },
 
+  /** The todo enums and Todo details (BL-3, BL-4). */
+  todos: {
+    type: { story: 'Story', task: 'Task', bug: 'Bug' },
+    priority: { urgent: 'Urgent', high: 'High', medium: 'Medium', low: 'Low' },
+    status: { todo: 'To Do', in_progress: 'In Progress', in_review: 'In Review', done: 'Done' },
+    /** A sprint in the Sprint select: "Sprint 4 (planned)". */
+    sprintOption: {
+      active: (name: string) => `${name} (active)`,
+      planned: (name: string) => `${name} (planned)`,
+      completed: (name: string) => `${name} (completed)`,
+    },
+    toast: {
+      saved: (key: string) => `${key} saved`,
+      deleted: (key: string) => `${key} deleted`,
+      deleteFailed: (key: string, reason: string) => `Couldn't delete ${key}. ${reason}`,
+    },
+    /** 404 on a todo request (deleted meanwhile, e.g. in another tab), given the server's text. */
+    notFound: asSent,
+    delete: {
+      title: (key: string) => `Delete ${key}?`,
+      /** The title while the dialog animates out with no todo. */
+      fallbackKey: 'todo',
+      /** "This permanently deletes <b>KAN-12</b> “Title”. This can't be undone." */
+      before: 'This permanently deletes ',
+      after: (title: string) => ` “${title}”. This can't be undone.`,
+      confirm: 'Delete todo',
+    },
+    details: {
+      /** Dialog title and `document.title` while the todo loads. */
+      dialogTitle: 'Todo details',
+      /** Skeleton: "Loading todo"; page error: "We couldn't load this todo". */
+      loadingName: 'todo',
+      pageName: 'this todo',
+      /** "Task · created Nov 2, 2026". */
+      meta: (type: string, date: string) => `${type} · created ${date}`,
+      title: 'Title',
+      description: 'Description',
+      descriptionPlaceholder: 'Add more detail…',
+      improve: 'Improve this todo',
+      improveHint: 'Ask Kanbot for a clearer title, description and acceptance criteria.',
+      sprint: 'Sprint',
+      /** The Sprint select's fallback while the sprints load. */
+      currentSprint: 'Current sprint',
+      completedHelp: "Todos of a completed sprint can't be moved or change status",
+      status: 'Status',
+      statusHelp: 'Move it into the active sprint to set a status',
+      priority: 'Priority',
+      type: 'Type',
+      storyPoints: 'Story points',
+      noPoints: 'None',
+      labels: 'Labels',
+      /** `{enter}`-style tokens become <kbd> keys (components/KeyHint). */
+      labelsHelp: '{enter} or {comma} adds a label, {backspace} removes the last one',
+      labelPlaceholder: 'Add a label',
+      dueDate: 'Due date',
+      overdueBy: (n: number) => `Overdue by ${count(n, `${n} day`, `${n} days`)}`,
+      unsaved: 'Unsaved changes',
+      /** Spoken when closing with unsaved edits. */
+      unsavedAnnounce: 'You have unsaved changes',
+      discardQuestion: 'Discard your unsaved changes?',
+      keepEditing: 'Keep editing',
+      discard: 'Discard',
+      escToClose: '{esc} to close',
+      /** Save failed with the API's reason (409, 404, 400…). */
+      saveFailed: (key: string, reason: string) => `Couldn't save ${key}. ${reason} Your edits are still here.`,
+      /** Save failed without a response (network, timeout, 5xx). */
+      saveFailedOffline: (key: string) =>
+        `Couldn't save ${key}. Check your connection and try again — your edits are still here.`,
+    },
+    validation: {
+      titleRequired: 'A todo needs a title',
+      labelMax: (n: number) => `Labels can be ${n} characters at most`,
+      labelsMax: (n: number) => `Use ${n} labels or fewer`,
+      dateInvalid: 'Enter a valid date',
+    },
+    /** "Improve this todo": the prompt prefilled in the assistant's composer (plan §9.4). */
+    improvePrompt: (p: {
+      key: string;
+      title: string;
+      type: string;
+      priority: string;
+      points: number | null;
+      description: string;
+    }) =>
+      [
+        `Improve ${p.key || 'this todo'}: suggest a clearer title, a better description and acceptance criteria. I'll review your suggestions and edit the todo myself.`,
+        '',
+        `Title: ${p.title}`,
+        `Type: ${p.type} · Priority: ${p.priority} · ${p.points === null ? 'not estimated' : `${p.points} points`}`,
+        `Description: ${p.description || '(none)'}`,
+      ].join('\n'),
+  },
+
+  /** The Backlog page (BL-1…7) and its sprint actions (SPR-1…3). */
+  backlog: {
+    title: 'Backlog',
+    /** Skeleton: "Loading backlog"; page error: "We couldn't load the backlog". */
+    loadingName: 'backlog',
+    pageName: 'the backlog',
+    /** The Backlog group's heading (todos with no sprint). */
+    groupName: 'Backlog',
+    /** A move's target when its sprint isn't in the list any more. */
+    fallbackSprint: 'the sprint',
+    generateTodos: 'Generate todos',
+    planSprint: 'Plan sprint',
+    createSprint: 'Create sprint',
+    createTodo: 'Create todo',
+    empty: {
+      title: 'Your backlog is empty',
+      text: 'Capture the work ahead: type a title below, or let AI draft todos from a feature description.',
+    },
+    group: {
+      toggle: (name: string) => `Toggle ${name}`,
+      rows: (name: string) => `${name} todos`,
+      active: 'Active',
+      planned: 'Planned',
+      /** "Nov 2 – Nov 15 · 1 todo · 5 pts". */
+      meta: (dates: string, summary: string) => `${dates} · ${summary}`,
+      noMatch: (name: string) => `No todos in ${name} match your filters`,
+      empty: (name: string) => `No todos in ${name} yet`,
+      dropHint: (name: string) => `Drag todos here to plan ${name}`,
+    },
+    filters: {
+      label: 'Filter todos',
+      search: 'Search todos',
+      searchPlaceholder: 'Search todos or keys',
+      byPriority: 'Filter by priority',
+      allPriorities: 'All priorities',
+      byType: 'Filter by type',
+      allTypes: 'All types',
+      showing: (shown: string, total: string) => `Showing ${shown} of ${total}`,
+      clear: 'Clear filters',
+    },
+    quickCreate: {
+      label: 'Create todo',
+      placeholder: 'Create todo — type a title and press Enter',
+      hint: '{enter} to add',
+      created: (key: string) => `${key} created`,
+      failed: (title: string, reason: string) => `Couldn't create “${title}”. ${reason}`,
+    },
+    row: {
+      drag: (key: string) => (key ? `Drag ${key}` : 'Drag todo'),
+      /** The key cell of a quick-create row still saving: a glyph, and its spoken text. */
+      savingGlyph: '…',
+      saving: 'Saving',
+      moreLabels: (n: number) => `+${n}`,
+      /** The hidden labels, already joined with `labelSeparator`. */
+      moreLabelsSpoken: (labels: string) => ` more labels: ${labels}`,
+      labelSeparator: ', ',
+      menu: (key: string) => `${key} actions`,
+      actions: (key: string) => `Actions for ${key}`,
+      open: 'Open',
+      moveToTop: 'Move to top',
+      moveToBottom: 'Move to bottom',
+      moveTo: (name: string) => `Move to ${name}`,
+    },
+    moveHelp: 'Drag rows between groups, or focus a title and use {up} {down} to move it.',
+    /** The title buttons' description. */
+    rowHelp: 'Press Enter to open its details. Press the up and down arrow keys to move it.',
+    dragInstructions:
+      'To pick up a todo, press Space or Enter. Use the up and down arrow keys to move it, Space or Enter to drop it, Escape to cancel.',
+    dragOff: 'Drag and drop is off while filters are on. Clear the filters to reorder, or use ⋯ Move to.',
+    moves: {
+      moved: (key: string, name: string, position: string, total: string) =>
+        `${key} moved to ${name}, position ${position} of ${total}`,
+      movedToast: (key: string, name: string) => `${key} moved to ${name}`,
+      movedBack: (key: string, name: string) => `${key} moved back to ${name}`,
+      failed: (key: string, reason: string) => `Couldn't move ${key}. ${reason}`,
+      atTop: (key: string) => `${key} is already at the top`,
+      atBottom: (key: string) => `${key} is already at the bottom`,
+    },
+    sprint: {
+      start: 'Start sprint',
+      complete: 'Complete sprint',
+      blockedBy: (name: string) => `Complete ${name} first`,
+      menu: (name: string) => `${name} actions`,
+      actions: (name: string) => `Actions for ${name}`,
+      edit: 'Edit sprint',
+      delete: 'Delete sprint',
+    },
+    toast: {
+      sprintCreated: (name: string) => `${name} created · drag todos into it`,
+      sprintSaved: (name: string) => `${name} saved`,
+      startBlocked: (active: string, name: string) => `Complete ${active} before starting ${name}.`,
+      goToBoard: 'Go to board',
+      startEmpty: (name: string) => `Add todos to ${name} before starting it.`,
+      started: (name: string) => `${name} started`,
+      sprintDeleted: (name: string, todos: number) =>
+        todos > 0
+          ? `${name} deleted · ${count(todos, `${todos} todo`, `${todos} todos`)} moved to the backlog`
+          : `${name} deleted`,
+      sprintDeleteFailed: (name: string, reason: string) => `Couldn't delete ${name}. ${reason}`,
+    },
+    deleteSprint: {
+      title: (name: string) => `Delete ${name}?`,
+      fallbackName: 'sprint',
+      withTodos: (n: number) =>
+        count(
+          n,
+          'Its 1 todo goes back to the backlog; no todos are deleted.',
+          `Its ${n} todos go back to the backlog; no todos are deleted.`,
+        ),
+      empty: 'It has no todos. This can’t be undone.',
+    },
+  },
+
+  /** Create / edit sprint and Start sprint (SPR-1…3). Sprints history is R4. */
+  sprints: {
+    form: {
+      createTitle: 'Create sprint',
+      editTitle: (name: string) => `Edit ${name}`,
+      create: 'Create sprint',
+      save: 'Save sprint',
+      name: 'Sprint name',
+      startDate: 'Start date',
+      endDate: 'End date',
+      goal: 'Sprint goal',
+      goalHelp: (max: number) => `Optional · up to ${max} characters`,
+      goalPlaceholder: 'What should this sprint deliver?',
+    },
+    /** The hint under the dates: "2 weeks · Nov 16 – Nov 30". */
+    duration: {
+      bothDates: 'Add both dates to see the length',
+      optional: 'Dates are optional',
+      oneDay: (range: string) => `One day · ${range}`,
+      length: (length: string, range: string) => `${length} · ${range}`,
+    },
+    validation: {
+      nameRequired: 'Give the sprint a name',
+      nameMax: (n: number) => `Keep the name under ${n} characters`,
+      goalMax: (n: number) => `Keep the goal under ${n} characters`,
+      endBeforeStart: 'End date must be after start date',
+      startRequired: 'Pick a start date',
+      endRequired: 'Pick an end date',
+    },
+    start: {
+      title: (name: string) => `Start ${name}`,
+      /** "3 todos · 8 pts · Ship the board". */
+      summary: (counts: string, goal: string) => (goal ? `${counts} · ${goal}` : counts),
+      submit: 'Start sprint',
+      starting: 'Starting…',
+      note: 'Its todos move onto the Active Sprint board, where you can track them until you complete it.',
+      /** 409: another sprint is active (or this one isn't planned any more), given the server's text. */
+      conflict: asSent,
+    },
+    /** 404 on a sprint request (deleted meanwhile), given the server's text. */
+    notFound: asSent,
+  },
+
+  /** dnd-kit's screen-reader announcements, shared by the backlog and the board (lib/dnd). */
+  dnd: {
+    pickedUp: (key: string) => `Picked up ${key}.`,
+    over: (key: string, list: string) => `${key} is over ${list}.`,
+    cancelled: (key: string) => `Move cancelled. ${key} is back where it was.`,
+    fallbackKey: 'Todo',
+    fallbackList: 'the list',
+  },
+
   errors: {
     generic: GENERIC,
     /** Codes the client itself produces (api/client.ts). */
@@ -363,6 +628,17 @@ export const en = {
       password: asSent,
       key: asSent,
       description: asSent,
+      title: asSent,
+      goal: asSent,
+      startDate: asSent,
+      endDate: asSent,
+      labels: asSent,
+      dueDate: asSent,
+      storyPoints: asSent,
+      status: asSent,
+      type: asSent,
+      priority: asSent,
+      sprintId: asSent,
     } as Readonly<Record<string, (serverMessage: string) => string>>,
     /** A field not listed in `fields`. */
     field: asSent,
