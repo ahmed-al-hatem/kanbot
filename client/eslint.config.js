@@ -9,39 +9,6 @@ import tseslint from 'typescript-eslint';
 
 const HEX_COLOR = '^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$';
 
-/*
- * RTL & Arabic (plan §11): areas whose user-visible text already comes from src/i18n/messages.
- * In them `react/jsx-no-literals` is an error for JSX text *and* attributes (aria-label, title,
- * placeholder…). The list grows with each PR (R2 auth + shell + projects, R3 backlog + todo +
- * sprints, R4 board + history + AI + 404 + errors); R5 applies the rule to all of src/.
- */
-const I18N_MIGRATED = [
-  'src/i18n/**/*.{ts,tsx}',
-  // R2: auth, the shell, projects, and the shared pieces they render.
-  'src/features/auth/**/*.{ts,tsx}',
-  'src/features/shell/**/*.{ts,tsx}',
-  'src/features/projects/**/*.{ts,tsx}',
-  'src/components/**/*.{ts,tsx}',
-  'src/app/**/*.{ts,tsx}',
-  // R3: the backlog, Todo details, the sprint form / start dialogs and the shared DnD hooks.
-  'src/features/backlog/**/*.{ts,tsx}',
-  'src/features/todos/**/*.{ts,tsx}',
-  'src/lib/dnd/**/*.{ts,tsx}',
-  // R4: the board, Sprints history (with R3's sprint dialogs), the AI surfaces, 404 and the error
-  // boundaries, the router, and the hooks / lib files behind their toasts and titles.
-  'src/features/board/**/*.{ts,tsx}',
-  'src/features/sprints/**/*.{ts,tsx}',
-  'src/features/ai/**/*.{ts,tsx}',
-  'src/features/errors/**/*.{ts,tsx}',
-  'src/router.tsx',
-  'src/hooks/useAi.ts',
-  'src/hooks/useBoard.ts',
-  'src/hooks/useMoveTodo.ts',
-  'src/hooks/useSprints.ts',
-  'src/lib/documentTitle.ts',
-  'src/lib/routeHandle.ts',
-];
-
 /**
  * Attribute values (and the odd glyph) that are tokens, not text: the rule checks every string
  * attribute, so these are allowed by value. Never add words a user reads or hears here.
@@ -55,6 +22,8 @@ const NON_TEXT_LITERALS = [
   ...['_blank', 'noopener noreferrer'],
   // autocomplete / autocapitalize tokens.
   ...['name', 'current-password', 'new-password', 'off', 'characters'],
+  // Text direction (dir="ltr" on Latin-only inputs, dir="auto" on user and AI text).
+  ...['ltr', 'auto'],
   // Component variants, sizes, tones, layouts and alignments.
   ...['primary', 'subtle', 'danger', 'warning', 'ai', 'dashed', 'inline', 'sm', 'lg'],
   ...['gray', 'blue', 'xlarge', 'start', 'project', 'complete', 'todo'],
@@ -136,8 +105,16 @@ export default defineConfig([
     },
   },
   {
-    files: I18N_MIGRATED,
-    ignores: ['**/*.test.{ts,tsx}'],
+    /*
+     * RTL & Arabic (plan §11): every user-visible string comes from src/i18n/messages, so
+     * `react/jsx-no-literals` is an error for JSX text *and* attributes (aria-label, title,
+     * placeholder…) in all of src/ (global since R5). Left out, on purpose:
+     * - tests and src/test/**: fixtures and queries are written in the language under test;
+     * - src/dev/**: the `/__ui` component catalogue, a dev-only page (not routed in production)
+     *   whose specimen labels ("Primary", "Sara Ahmed") are samples, not UI text.
+     */
+    files: ['src/**/*.{ts,tsx}'],
+    ignores: ['**/*.test.{ts,tsx}', 'src/test/**', 'src/dev/**'],
     plugins: { react },
     settings: { react: { version: 'detect' } },
     rules: {

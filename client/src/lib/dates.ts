@@ -1,6 +1,6 @@
 /**
- * Date arithmetic on date-only `YYYY-MM-DD` values (no formatting, no locale): moved out of
- * lib/format.ts when formatting moved to i18n/format.ts (RTL & Arabic, PR R1).
+ * Date arithmetic on date-only `YYYY-MM-DD` values (no formatting, no locale). Formatting lives
+ * in i18n/format.ts (`useFormat()`).
  */
 
 export const MS_PER_DAY = 86_400_000;
