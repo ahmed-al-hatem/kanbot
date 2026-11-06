@@ -38,7 +38,7 @@ test('390px in Arabic: mobile nav and 85vw board columns from the right (NFR-4)'
           (r.width > 0 || r.height > 0) && (r.left < -0.5 || r.right > window.innerWidth + 0.5)
         );
       })
-      .map((el) => `${el.tagName}.${String(el.className)}`),
+      .map((el) => `${el.tagName}.${el.className}`),
   );
   expect(outside, 'elements past the viewport edges').toEqual([]);
 
