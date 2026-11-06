@@ -6,7 +6,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { useSession } from '@/stores/session';
 import { useShortcuts } from '@/stores/shortcuts';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -97,7 +97,9 @@ describe('shell in Arabic', () => {
 
     await user.click(screen.getByRole('button', { name: new RegExp(TEST_USER.name) }));
     const menu = await screen.findByRole('menu', { name: 'الحساب' });
-    expect(within(menu).getByText(`مسجّل الدخول باسم ${TEST_USER.email}`)).toBeInTheDocument();
+    expect(
+      within(menu).getByText(sentence(`مسجّل الدخول باسم ${TEST_USER.email}`)),
+    ).toBeInTheDocument();
     expect(within(menu).getByRole('menuitem', { name: 'تسجيل الخروج' })).toBeInTheDocument();
     await user.click(within(menu).getByRole('menuitem', { name: /اختصارات لوحة المفاتيح/ }));
 

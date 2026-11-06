@@ -6,7 +6,7 @@ import { queryClient } from '@/app/queryClient';
 import { qk } from '@/hooks/queryKeys';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { KANBOT, makeProject, PORTFOLIO, projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -74,7 +74,7 @@ describe('projects page in Arabic', () => {
     const { container } = renderApp('/projects');
 
     const kanbot = (await screen.findByRole('heading', { name: 'Kanbot App' })).closest('article')!;
-    expect(within(kanbot).getByText('Sprint 3 نشط')).toBeInTheDocument();
+    expect(within(kanbot).getByText(sentence('Sprint 3 نشط'))).toBeInTheDocument();
     expect(within(kanbot).getByText('12 بندًا في قائمة الانتظار')).toBeInTheDocument();
     expect(within(kanbot).getByRole('button', { name: 'إجراءات Kanbot App' })).toBeInTheDocument();
     await expectNoAxeViolations(container);
@@ -113,7 +113,7 @@ describe('projects page in Arabic', () => {
     expect(await within(dialog).findByText('امنح مشروعك اسمًا')).toBeInTheDocument();
 
     await user.type(within(dialog).getByLabelText(/اسم المشروع/), 'Mobile Banking');
-    expect(within(dialog).getByText('ستُرقَّم البنود MB-1')).toBeInTheDocument();
+    expect(within(dialog).getByText(sentence('ستُرقَّم البنود MB-1'))).toBeInTheDocument();
     await user.type(within(dialog).getByLabelText(/المفتاح/), 'mob');
     await user.click(within(dialog).getByRole('button', { name: 'إنشاء مشروع' }));
 
@@ -148,7 +148,7 @@ describe('projects page in Arabic', () => {
     await expectNoAxeViolations(confirm);
 
     await user.click(within(confirm).getByRole('button', { name: 'حذف المشروع' }));
-    expect(await screen.findByText('Kanbot App حُذف')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('Kanbot App حُذف'))).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'إغلاق الإشعار' })).toBeInTheDocument();
   });
 
@@ -171,7 +171,7 @@ describe('projects page in Arabic', () => {
     );
 
     expect(
-      await screen.findByText('تعذّر حذف Kanbot App. حدث خطأ من جهتنا. حاول مجددًا.'),
+      await screen.findByText(sentence('تعذّر حذف Kanbot App. حدث خطأ من جهتنا. حاول مجددًا.')),
     ).toBeInTheDocument();
     expect(screen.queryByText(/on our side/)).not.toBeInTheDocument();
   });

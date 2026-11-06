@@ -47,7 +47,9 @@ export function SprintList({ projectId, sprints, selectedId }: SprintListProps) 
                 aria-current={selected ? 'page' : undefined}
               >
                 <span className={styles.itemTop}>
-                  <span className={styles.itemName}>{sprint.name}</span>
+                  <span className={styles.itemName}>
+                    <bdi>{sprint.name}</bdi>
+                  </span>
                   <Lozenge tone={status.tone} live={status.live}>
                     {t.sprints.status[sprint.status]}
                   </Lozenge>

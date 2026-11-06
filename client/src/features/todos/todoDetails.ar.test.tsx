@@ -2,9 +2,10 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { stripIsolates } from '@/i18n/bidi';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
-import { switchToArabic } from '@/test/locale';
+import { sentence, switchToArabic } from '@/test/locale';
 import { projectHandlers } from '@/test/projects';
 import { errorBody, preloadPages, renderApp, TEST_USER } from '@/test/renderApp';
 import { apiUrl, server } from '@/test/server';
@@ -34,7 +35,8 @@ const dialog = () => screen.findByRole('dialog', { name: 'KAN-31' }, { timeout: 
 const options = (select: HTMLElement) =>
   within(select)
     .getAllByRole('option')
-    .map((option) => option.textContent);
+    // Sprint names are isolated in their option text (i18n/bidi.ts): compare what is read.
+    .map((option) => stripIsolates(option.textContent));
 
 describe('Todo details in Arabic', () => {
   it('every label, option and hint reads in Arabic, with axe', async () => {
@@ -124,7 +126,7 @@ describe('Todo details in Arabic', () => {
 
     expect(
       await details.findByText(
-        'تعذّر حفظ KAN-31. لم نعد نجد هذا البند، ربما حُذف. تعديلاتك ما زالت هنا.',
+        sentence('تعذّر حفظ KAN-31. لم نعد نجد هذا البند، ربما حُذف. تعديلاتك ما زالت هنا.'),
       ),
     ).toBeInTheDocument();
     expect(details.getByRole('button', { name: 'إعادة المحاولة' })).toBeInTheDocument();
@@ -171,7 +173,7 @@ describe('Todo details in Arabic', () => {
     await expectNoAxeViolations(confirm);
 
     await user.click(within(confirm).getByRole('button', { name: 'حذف البند' }));
-    expect(await screen.findByText('KAN-31 حُذف')).toBeInTheDocument();
+    expect(await screen.findByText(sentence('KAN-31 حُذف'))).toBeInTheDocument();
     expect(db.calls.remove).toEqual(['t2']);
   });
 
@@ -190,7 +192,7 @@ describe('Todo details in Arabic', () => {
     await user.click(within(confirm).getByRole('button', { name: 'حذف البند' }));
 
     expect(
-      await screen.findByText('تعذّر حذف KAN-31. لم نعد نجد هذا البند، ربما حُذف.'),
+      await screen.findByText(sentence('تعذّر حذف KAN-31. لم نعد نجد هذا البند، ربما حُذف.')),
     ).toBeInTheDocument();
     expect(screen.queryByText(/Todo not found/)).not.toBeInTheDocument();
   });

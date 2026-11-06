@@ -1,5 +1,6 @@
 import { memo, useRef, type CSSProperties } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { IconButton } from '@/components/Button/Button';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
 import { Menu, MenuItem, MenuSeparator } from '@/components/Menu/Menu';
@@ -57,7 +58,7 @@ export const ProjectTile = memo(function ProjectTile({
         <div className={styles.tileTitle}>
           <h2 className={styles.tileName}>
             <Link to={backlogPath} className={styles.stretch} data-project-focus={project.id}>
-              {project.name}
+              <bdi>{project.name}</bdi>
             </Link>
           </h2>
           <Lozenge className={styles.tileKey}>{project.key}</Lozenge>
@@ -111,6 +112,8 @@ export const ProjectTile = memo(function ProjectTile({
 
       <p
         className={cx(styles.tileDescription, !project.description && styles.tileDescriptionEmpty)}
+        // The description is the user's text: its own direction (an English one in Arabic too).
+        dir={project.description ? 'auto' : undefined}
       >
         {project.description || t.projects.tile.noDescription}
       </p>
@@ -119,7 +122,7 @@ export const ProjectTile = memo(function ProjectTile({
         <span>{t.count.backlogTodos(project.stats.backlogCount)}</span>
         {activeSprint ? (
           <Lozenge tone="blue" live>
-            {t.projects.tile.activeSprint(activeSprint.name)}
+            <BidiText>{t.projects.tile.activeSprint(activeSprint.name)}</BidiText>
           </Lozenge>
         ) : (
           <span>{t.projects.tile.noActiveSprint}</span>

@@ -45,8 +45,12 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
           <span className={styles.switcherText}>
             {/* The spaces keep name and key separate words for axe's visible text (a flex
                 container doesn't render whitespace-only text, so the layout is unchanged). */}
-            <span className={styles.switcherName}>{project.name}</span>{' '}
-            <span className={styles.switcherKey}>{project.key}</span>{' '}
+            <span className={styles.switcherName}>
+              <bdi>{project.name}</bdi>
+            </span>{' '}
+            <span className={styles.switcherKey}>
+              <bdi>{project.key}</bdi>
+            </span>{' '}
           </span>
         </>
       ) : projectId ? (
@@ -95,7 +99,9 @@ export function ProjectSwitcher({ projectId, section }: ProjectSwitcherProps) {
         >
           <span className={styles.menuProject}>
             <ProjectAvatar id={item.id} name={item.name} size={22} />
-            <span className={styles.menuProjectName}>{item.name}</span>
+            <span className={styles.menuProjectName}>
+              <bdi>{item.name}</bdi>
+            </span>
             {item.id === projectId && (
               <Icon
                 name="check-mark"

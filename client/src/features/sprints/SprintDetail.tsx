@@ -60,7 +60,7 @@ export function SprintDetail({ sprint, onOpenTodo, summary }: SprintDetailProps)
       <div className={styles.detailHead}>
         <div className={styles.detailTitleRow}>
           <h2 id="sprint-detail-title" className={styles.detailTitle}>
-            {sprint.name}
+            <bdi>{sprint.name}</bdi>
           </h2>
           <Lozenge tone={status.tone} live={status.live}>
             {t.sprints.status[sprint.status]}
@@ -72,7 +72,7 @@ export function SprintDetail({ sprint, onOpenTodo, summary }: SprintDetailProps)
         </p>
         {sprint.goal && (
           <p className={styles.detailGoal}>
-            <b>{t.sprints.goalLabel}</b> {sprint.goal}
+            <b>{t.sprints.goalLabel}</b> <bdi>{sprint.goal}</bdi>
           </p>
         )}
       </div>
@@ -143,7 +143,9 @@ const SprintTodoRow = memo(function SprintTodoRow({
   return (
     <li className={styles.todoRow}>
       <TypeIcon type={todo.type} />
-      <span className={styles.todoKey}>{todo.key}</span>
+      <span className={styles.todoKey}>
+        <bdi>{todo.key}</bdi>
+      </span>
       <button
         type="button"
         className={styles.todoTitle}
@@ -152,7 +154,7 @@ const SprintTodoRow = memo(function SprintTodoRow({
           onOpen(todo.id);
         }}
       >
-        {todo.title}
+        <bdi>{todo.title}</bdi>
       </button>
       <Lozenge tone={STATUS_TONE[todo.status]} className={styles.todoStatus}>
         {t.todos.status[todo.status]}

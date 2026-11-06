@@ -1,6 +1,7 @@
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useId, type ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { IconButton } from '@/components/Button/Button';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
 import type { BacklogGroup as Group } from '@/hooks/useBacklog';
@@ -72,13 +73,19 @@ export function BacklogGroup({
 
   const emptyLine =
     group.todos.length > 0 && filtering ? (
-      <p className={styles.groupMessage}>{copy.noMatch(group.name)}</p>
+      <p className={styles.groupMessage}>
+        <BidiText>{copy.noMatch(group.name)}</BidiText>
+      </p>
     ) : (
       (empty ??
       (filtering || group.kind === 'backlog' ? (
-        <p className={styles.groupMessage}>{copy.empty(group.name)}</p>
+        <p className={styles.groupMessage}>
+          <BidiText>{copy.empty(group.name)}</BidiText>
+        </p>
       ) : (
-        <p className={cx(styles.groupMessage, styles.dropHint)}>{copy.dropHint(group.name)}</p>
+        <p className={cx(styles.groupMessage, styles.dropHint)}>
+          <BidiText>{copy.dropHint(group.name)}</BidiText>
+        </p>
       )))
     );
 
@@ -101,7 +108,7 @@ export function BacklogGroup({
           }}
         />
         <h2 id={headingId} className={styles.groupTitle}>
-          {group.name}
+          <bdi>{group.name}</bdi>
         </h2>
         {group.kind === 'active' && (
           <Lozenge tone="blue" live>

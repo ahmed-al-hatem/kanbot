@@ -1,5 +1,6 @@
 import type { ComponentPropsWithRef, MouseEvent, ReactNode } from 'react';
 import { Link, type LinkProps } from 'react-router';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Icon, type IconName } from '@/components/Icon/Icon';
 import { Spinner } from '@/components/Spinner/Spinner';
 import { cx } from '@/lib/cx';
@@ -33,7 +34,7 @@ function Content({
   return (
     <>
       {leading && <Icon name={leading} className={styles.icon} />}
-      {children}
+      <BidiText>{children}</BidiText>
     </>
   );
 }

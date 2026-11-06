@@ -39,7 +39,8 @@ export function Chip({
   return (
     <span className={cx(styles.chip, styles[tone], className)}>
       {icon ? <Icon name={icon} size={12} /> : leading}
-      {children}
+      {/* Labels are user text: isolated, so «frontend» keeps its order in an Arabic row. */}
+      <bdi>{children}</bdi>
       {onRemove && (
         <button type="button" className={styles.remove} aria-label={removeLabel} onClick={onRemove}>
           <Icon name="cross" size={12} />

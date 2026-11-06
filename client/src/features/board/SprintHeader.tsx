@@ -24,7 +24,9 @@ export function SprintHeader({ sprint }: { sprint: Sprint }) {
   return (
     <div className={styles.sprintHeader}>
       <div className={styles.sprintTitleRow}>
-        <h2 className={styles.sprintName}>{sprint.name}</h2>
+        <h2 className={styles.sprintName}>
+          <bdi>{sprint.name}</bdi>
+        </h2>
         <Lozenge tone="blue" live>
           {t.sprints.status.active}
         </Lozenge>
@@ -37,7 +39,7 @@ export function SprintHeader({ sprint }: { sprint: Sprint }) {
       </div>
       {sprint.goal && (
         <p className={styles.sprintGoal} title={sprint.goal}>
-          <b>{t.sprints.goalLabel}</b> {sprint.goal}
+          <b>{t.sprints.goalLabel}</b> <bdi>{sprint.goal}</bdi>
         </p>
       )}
       <div className={styles.progressRows}>

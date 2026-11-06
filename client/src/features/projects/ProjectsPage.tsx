@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { isApiError } from '@/api/errors';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Button } from '@/components/Button/Button';
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog';
 import { EmptyState } from '@/components/EmptyState/EmptyState';
@@ -134,13 +135,11 @@ export function ProjectsPage() {
     // Plan §9.4: the starter backlog is Generate todos on the new backlog, pre-filled from the
     // description — the user reviews the drafts; nothing is added until they click Add.
     if (starter)
-      useAssistant
-        .getState()
-        .openDialog({
-          kind: 'generate',
-          projectId: saved.id,
-          prompt: starterPrompt(saved, getT()),
-        });
+      useAssistant.getState().openDialog({
+        kind: 'generate',
+        projectId: saved.id,
+        prompt: starterPrompt(saved, getT()),
+      });
     // PRJ-2: a new project opens on its backlog.
     void navigate(`/projects/${saved.id}/backlog`);
   };
@@ -307,7 +306,7 @@ export function ProjectsPage() {
           <>
             {t.projects.delete.before}
             <b>{deleting?.name}</b>
-            {t.projects.delete.after(deleting?.key ?? '', todoCount)}
+            <BidiText>{t.projects.delete.after(deleting?.key ?? '', todoCount)}</BidiText>
           </>
         }
         confirmLabel={t.projects.delete.confirm}

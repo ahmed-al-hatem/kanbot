@@ -7,7 +7,7 @@ export function ProjectMeta({ project }: { project: ProjectWithStats | undefined
   if (!project) return <Skeleton inlineSize={120} blockSize={14} />;
   return (
     <>
-      {project.name}
+      <bdi>{project.name}</bdi>
       <Lozenge>{project.key}</Lozenge>
     </>
   );

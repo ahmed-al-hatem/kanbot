@@ -1,8 +1,10 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getT } from '@/i18n';
 import { announce } from '@/stores/announcer';
 import { toast, useToast } from '@/stores/toast';
 import { expectNoAxeViolations } from '@/test/axe';
+import { switchToArabic } from '@/test/locale';
 import { LiveRegion } from './LiveRegion';
 import { Toaster } from './Toaster';
 
@@ -17,6 +19,20 @@ describe('Toaster (Flag)', () => {
       toast.success('KAN-12 created', { action: { label: 'Undo', onClick: () => undefined } });
     });
     await expectNoAxeViolations(container);
+  });
+
+  it('isolates a todo title inside an Arabic toast with <bdi>', async () => {
+    await switchToArabic();
+    render(<Toaster />);
+    act(() => {
+      toast.error(getT().backlog.quickCreate.failed('Fix login (v2)', 'حاول مجددًا.'));
+    });
+
+    const title = screen.getByText('Fix login (v2)');
+    expect(title.tagName).toBe('BDI');
+    expect(title.parentElement).toHaveTextContent('تعذّر إنشاء «Fix login (v2)». حاول مجددًا.');
+    // No stray isolation marks reach the page text: the <bdi> does the isolating.
+    expect(screen.getByRole('status').textContent).not.toMatch(/[\u2068\u2069]/);
   });
 
   it('announces the toast in an always-mounted status region and hides it after 3.2s', () => {

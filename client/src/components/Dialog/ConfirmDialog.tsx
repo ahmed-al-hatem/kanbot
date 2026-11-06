@@ -1,5 +1,6 @@
 import * as AlertDialog from '@radix-ui/react-alert-dialog';
 import type { ReactElement, ReactNode } from 'react';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Button } from '@/components/Button/Button';
 import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
@@ -66,9 +67,11 @@ export function ConfirmDialog({
             onOpenAutoFocus={returnFocus.capture}
             onCloseAutoFocus={returnFocus.restore}
           >
-            <AlertDialog.Title className={styles.title}>{title}</AlertDialog.Title>
+            <AlertDialog.Title className={styles.title}>
+              <BidiText>{title}</BidiText>
+            </AlertDialog.Title>
             <AlertDialog.Description className={styles.confirmText}>
-              {description}
+              <BidiText>{description}</BidiText>
             </AlertDialog.Description>
             <div className={styles.confirmActions}>
               <AlertDialog.Cancel asChild>

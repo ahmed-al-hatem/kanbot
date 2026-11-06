@@ -5,6 +5,7 @@ import { useBlocker, useParams, useSearchParams } from 'react-router';
 import { isApiError } from '@/api/errors';
 import { Banner } from '@/components/Banner/Banner';
 import { ConfirmBar } from '@/components/Banner/ConfirmBar';
+import { BidiText } from '@/components/BidiText/BidiText';
 import { Button } from '@/components/Button/Button';
 import { ConfirmDialog } from '@/components/Dialog/ConfirmDialog';
 import { Dialog } from '@/components/Dialog/Dialog';
@@ -321,7 +322,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
       title={
         <span className={styles.title}>
           <TypeIcon type={type} decorative />
-          {todo.key}
+          <bdi>{todo.key}</bdi>
         </span>
       }
       headerMeta={details.meta(t.todos.type[type], format.timestamp(todo.createdAt))}
@@ -346,7 +347,7 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
                   </Button>
                 }
               >
-                {saveErrorText(todo.key, saveError, t)}
+                <BidiText>{saveErrorText(todo.key, saveError, t)}</BidiText>
               </Banner>
             )}
             {confirming && (
@@ -548,8 +549,10 @@ function TodoEditor({ todo, sprints, open, onClose }: TodoEditorProps) {
         description={
           <>
             {t.todos.delete.before}
-            <b>{todo.key}</b>
-            {t.todos.delete.after(todo.title)}
+            <b>
+              <bdi>{todo.key}</bdi>
+            </b>
+            <BidiText>{t.todos.delete.after(todo.title)}</BidiText>
           </>
         }
         confirmLabel={t.todos.delete.confirm}

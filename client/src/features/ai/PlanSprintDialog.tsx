@@ -394,7 +394,7 @@ export function PlanSprintDialog({
                 <div className={styles.opinion}>
                   <h4 className={styles.sectionLabel}>{copy.reasoning}</h4>
                   {/* The model's text is data: shown as it came (internal ids stripped). */}
-                  <p>{suggestion.reasoning}</p>
+                  <p dir="auto">{suggestion.reasoning}</p>
                   <p className={styles.caveat}>{copy.caveat}</p>
                   {suggestion.mentionsOthers && (
                     <p className={styles.leftOut}>
@@ -441,8 +441,12 @@ function CandidateRow({ todo, index, checked, onToggle }: CandidateRowProps) {
           }}
         />
         <TypeIcon type={todo.type} />
-        <span className={styles.candidateKey}>{todo.key}</span>
-        <span className={styles.candidateTitle}>{todo.title}</span>
+        <span className={styles.candidateKey}>
+          <bdi>{todo.key}</bdi>
+        </span>
+        <span className={styles.candidateTitle}>
+          <bdi>{todo.title}</bdi>
+        </span>
         <PriorityLabel priority={todo.priority} className={styles.candidatePriority} />
         <PointsPill points={todo.storyPoints} />
       </label>
