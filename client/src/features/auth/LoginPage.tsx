@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useSearchParams } from 'react-router';
 import { isApiError } from '@/api/errors';
@@ -8,7 +8,9 @@ import { Button } from '@/components/Button/Button';
 import { Field } from '@/components/Field/Field';
 import { Input } from '@/components/Field/Input';
 import { useLogin } from '@/hooks/useAuth';
-import { applyServerErrors, onInvalidSubmit } from '@/lib/formErrors';
+import { useT, type Messages } from '@/i18n';
+import { errorMessage } from '@/i18n/errors';
+import { applyLocalizedServerErrors, onInvalidSubmit, useLocalizedErrors } from '@/lib/formErrors';
 import { useSession } from '@/stores/session';
 import { AuthHeading, AuthLayout } from './AuthLayout';
 import { withRedirect } from './redirect';
@@ -16,37 +18,40 @@ import { loginSchema } from './schemas';
 import styles from './AuthLayout.module.css';
 
 const BANNER_ID = 'login-error';
-const SESSION_EXPIRED_MESSAGE = 'Your session has expired. Please log in again.';
 
-interface FormError {
-  /** 401: wrong credentials, so the password field is marked invalid too (DESIGN §9 01). */
-  unauthorized: boolean;
-  message: string;
+/** 401: wrong credentials, so the password field is marked invalid too (DESIGN §9 01). */
+function isUnauthorized(error: unknown): boolean {
+  return isApiError(error) && error.status === 401;
 }
 
-function toFormError(error: unknown): FormError {
-  if (!isApiError(error)) return { unauthorized: false, message: 'Something went wrong. Please try again.' };
-  return { unauthorized: error.status === 401, message: error.message };
+/** The banner's text, read at render so it follows a language switch. */
+function bannerMessage(error: unknown, t: Messages): string {
+  return isUnauthorized(error) ? t.auth.login.invalidCredentials : errorMessage(error, t);
 }
 
 /** `/login` (AUTH-2). Success lands on `?redirect=` through the guest guard. */
 export function LoginPage() {
+  const t = useT();
   const [search] = useSearchParams();
   const sessionExpired = useSession((s) => s.sessionExpired);
   const login = useLogin();
-  const [formError, setFormError] = useState<FormError | null>(null);
+  /** The failed request behind the banner (null: no banner). */
+  const [formError, setFormError] = useState<unknown>(null);
+  const schema = useMemo(() => loginSchema(t), [t]);
 
   const {
     register,
     handleSubmit,
     setError,
     setFocus,
+    trigger,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(schema),
     mode: 'onTouched',
     defaultValues: { email: '', password: '' },
   });
+  const setServerError = useLocalizedErrors({ errors, setError, trigger });
 
   // The banner goes away as soon as either field is edited (DESIGN §9 01).
   const clearBanner = () => {
@@ -57,19 +62,18 @@ export function LoginPage() {
     setFormError(null);
     login.mutate(values, {
       onError: (error) => {
-        if (applyServerErrors(error, setError, ['email', 'password'])) return;
-        const next = toFormError(error);
-        setFormError(next);
-        if (next.unauthorized) setFocus('password');
+        if (applyLocalizedServerErrors(error, setServerError, ['email', 'password'])) return;
+        setFormError(error);
+        if (isUnauthorized(error)) setFocus('password');
       },
     });
   }, onInvalidSubmit);
 
-  const unauthorized = formError?.unauthorized ?? false;
+  const unauthorized = formError !== null && isUnauthorized(formError);
 
   return (
-    <AuthLayout title="Log in">
-      <AuthHeading title="Welcome back" subtitle="Log in to your sprint board" />
+    <AuthLayout title={t.auth.login.pageTitle}>
+      <AuthHeading title={t.auth.login.title} subtitle={t.auth.login.subtitle} />
 
       <form
         className={styles.form}
@@ -78,31 +82,31 @@ export function LoginPage() {
           void onSubmit(event);
         }}
       >
-        {formError ? (
+        {formError !== null ? (
           <div id={BANNER_ID}>
             <Banner tone="danger" layout="inline">
-              {formError.message}
+              {bannerMessage(formError, t)}
             </Banner>
           </div>
         ) : (
           sessionExpired && (
             <Banner tone="warning" layout="inline">
-              {SESSION_EXPIRED_MESSAGE}
+              {t.auth.login.sessionExpired}
             </Banner>
           )
         )}
 
-        <Field label="Email" error={errors.email?.message}>
+        <Field label={t.auth.email} error={errors.email?.message}>
           <Input
             type="email"
             autoComplete="email"
-            placeholder="you@example.com"
+            placeholder={t.auth.emailPlaceholder}
             {...register('email', { onChange: clearBanner })}
           />
         </Field>
 
         <div className={styles.passwordField}>
-          <Field label="Password" error={errors.password?.message}>
+          <Field label={t.auth.password} error={errors.password?.message}>
             <Input
               type="password"
               autoComplete="current-password"
@@ -112,7 +116,7 @@ export function LoginPage() {
             />
           </Field>
           <Link to={withRedirect('/forgot-password', search)} className={styles.forgotLink}>
-            Forgot password?
+            {t.auth.login.forgot}
           </Link>
         </div>
 
@@ -122,14 +126,14 @@ export function LoginPage() {
           size="lg"
           className={styles.submit}
           loading={login.isPending}
-          loadingText="Logging in…"
+          loadingText={t.auth.login.submitting}
         >
-          Log in
+          {t.auth.login.submit}
         </Button>
       </form>
 
       <p className={styles.switch}>
-        No account? <Link to={withRedirect('/register', search)}>Create one</Link>
+        {t.auth.login.noAccount} <Link to={withRedirect('/register', search)}>{t.auth.login.createOne}</Link>
       </p>
     </AuthLayout>
   );

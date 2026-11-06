@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { fetchMe, login, register } from '@/api/auth';
 import { queryClient } from '@/app/queryClient';
+import { getT } from '@/i18n';
 import { useSession } from '@/stores/session';
 import { toast } from '@/stores/toast';
 import type { AuthResponse } from '@/types/api';
@@ -41,7 +42,7 @@ export function useRegister() {
     onSuccess: (response) => {
       startSession(response);
       const firstName = response.user.name.trim().split(/\s+/)[0] ?? response.user.name;
-      toast.success(`Welcome to Kanbot, ${firstName}`);
+      toast.success(getT().auth.welcome(firstName));
     },
   });
 }

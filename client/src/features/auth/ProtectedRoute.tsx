@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, useLocation, useMatches } from 'react-router';
 import { FullPageLoader } from '@/components/FullPageLoader/FullPageLoader';
 import { useCurrentUser } from '@/hooks/useAuth';
+import { useT } from '@/i18n';
 import { isNotFoundMatch } from '@/lib/routeHandle';
 import { useSession } from '@/stores/session';
 import { loginPath } from './redirect';
@@ -36,6 +37,7 @@ const SignedOutNotFoundPage = lazy(async () => {
  * - session expired before the user ever loaded (stale token on startup) → straight to login.
  */
 export function ProtectedRoute() {
+  const t = useT();
   const location = useLocation();
   const token = useSession((s) => s.token);
   const sessionExpired = useSession((s) => s.sessionExpired);
@@ -75,7 +77,7 @@ export function ProtectedRoute() {
       <Suspense fallback={<FullPageLoader />}>
         <main id="main" tabIndex={-1} className={styles.page}>
           <PageError
-            page="your workspace"
+            page={t.auth.workspace}
             error={me.error}
             onRetry={() => {
               void me.refetch();

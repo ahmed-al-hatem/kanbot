@@ -2,13 +2,14 @@ import type { ReactNode } from 'react';
 import { IconButton } from '@/components/Button/Button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher/LanguageSwitcher';
 import { Logo } from '@/components/Logo/Logo';
+import { useT } from '@/i18n';
 import { cx } from '@/lib/cx';
 import { titleOf, useDocumentTitle } from '@/lib/documentTitle';
 import { useTheme } from '@/stores/theme';
 import styles from './AuthLayout.module.css';
 
 interface AuthLayoutProps {
-  /** Browser tab title, e.g. "Log in" → "Log in · Kanbot". */
+  /** Browser tab title in the UI language, e.g. "Log in" → "Log in · Kanbot". */
   title: string;
   children: ReactNode;
 }
@@ -19,6 +20,7 @@ interface AuthLayoutProps {
  * ع / EN switcher sits before the toggle (Arabic canvas auth top bar).
  */
 export function AuthLayout({ title, children }: AuthLayoutProps) {
+  const t = useT();
   const theme = useTheme((s) => s.theme);
   const toggle = useTheme((s) => s.toggle);
   useDocumentTitle(titleOf(title));
@@ -29,7 +31,7 @@ export function AuthLayout({ title, children }: AuthLayoutProps) {
         <LanguageSwitcher />
         <IconButton
           icon="theme"
-          aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+          aria-label={theme === 'dark' ? t.common.themeToLight : t.common.themeToDark}
           onClick={toggle}
         />
       </div>
@@ -39,7 +41,7 @@ export function AuthLayout({ title, children }: AuthLayoutProps) {
         </div>
         <div className={cx(styles.content, 'kb-page')}>{children}</div>
       </div>
-      <p className={styles.tagline}>Your sprint board with an AI teammate.</p>
+      <p className={styles.tagline}>{t.auth.tagline}</p>
     </main>
   );
 }

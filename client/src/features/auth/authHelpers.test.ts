@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { en } from '@/i18n/messages/en';
 import { passwordStrength } from './passwordStrength';
 import { loginPath, safeRedirect, withRedirect } from './redirect';
 import { registerSchema } from './schemas';
@@ -43,7 +44,7 @@ describe('passwordStrength()', () => {
     ['long-password-1', 'Strong'],
     ['longpassword12', 'Good'],
   ])('%s → %s', (password, label) => {
-    expect(passwordStrength(password).label).toBe(label);
+    expect(en.auth.register.strength[passwordStrength(password).key]).toBe(label);
   });
 });
 
@@ -51,20 +52,20 @@ describe('registerSchema', () => {
   const valid = { name: 'Sara', email: 'sara@example.com', password: 'password123', confirm: 'password123' };
 
   it('accepts valid values and trims name and email', () => {
-    expect(registerSchema.parse({ ...valid, name: '  Sara ', email: ' sara@example.com ' })).toMatchObject({
+    expect(registerSchema(en).parse({ ...valid, name: '  Sara ', email: ' sara@example.com ' })).toMatchObject({
       name: 'Sara',
       email: 'sara@example.com',
     });
   });
 
   it('reports a password mismatch even while other fields are invalid', () => {
-    const result = registerSchema.safeParse({ ...valid, name: '', confirm: 'password12' });
+    const result = registerSchema(en).safeParse({ ...valid, name: '', confirm: 'password12' });
     const paths = result.error?.issues.map((issue) => issue.path.join('.'));
     expect(paths).toEqual(expect.arrayContaining(['name', 'confirm']));
   });
 
   it('follows the server limits', () => {
-    const result = registerSchema.safeParse({ ...valid, name: 'x'.repeat(81), password: 'short', confirm: 'short' });
+    const result = registerSchema(en).safeParse({ ...valid, name: 'x'.repeat(81), password: 'short', confirm: 'short' });
     expect(result.error?.issues.map((issue) => issue.message)).toEqual(
       expect.arrayContaining(['Use 80 characters or fewer', 'Use at least 8 characters']),
     );
