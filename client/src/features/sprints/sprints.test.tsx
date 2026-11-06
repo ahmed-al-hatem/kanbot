@@ -2,7 +2,8 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { addDays, todayIso } from '@/lib/format';
+import { getFormat, getT } from '@/i18n';
+import { addDays, todayIso } from '@/lib/dates';
 import { useSession } from '@/stores/session';
 import { expectNoAxeViolations } from '@/test/axe';
 import { projectHandlers } from '@/test/projects';
@@ -44,9 +45,9 @@ describe('sprint form defaults (SPR-1, DESIGN §9 13)', () => {
     });
     // No dates anywhere: today.
     expect(createDefaults([SPRINT_4], '2026-11-04').startDate).toBe('2026-11-04');
-    expect(durationHint('2026-11-16', '2026-11-30')).toBe('2 weeks · Nov 16 – Nov 30');
-    expect(durationHint('2026-11-16', '2026-11-26')).toBe('10 days · Nov 16 – Nov 26');
-    expect(durationHint('2026-11-16', '2026-11-10')).toBeNull();
+    expect(durationHint('2026-11-16', '2026-11-30', getFormat(), getT())).toBe('2 weeks · Nov 16 – Nov 30');
+    expect(durationHint('2026-11-16', '2026-11-26', getFormat(), getT())).toBe('10 days · Nov 16 – Nov 26');
+    expect(durationHint('2026-11-16', '2026-11-10', getFormat(), getT())).toBeNull();
   });
 });
 
