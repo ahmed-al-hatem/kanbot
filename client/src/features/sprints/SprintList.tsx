@@ -2,8 +2,8 @@ import type { CSSProperties } from 'react';
 import { Link } from 'react-router';
 import { Lozenge } from '@/components/Lozenge/Lozenge';
 import { ProgressBar } from '@/components/ProgressBar/ProgressBar';
+import { useFormat, useT } from '@/i18n';
 import { cx } from '@/lib/cx';
-import { formatRange } from '@/lib/format';
 import type { Sprint } from '@/types/api';
 import { SPRINT_STATUS, sprintNumbers } from './sprintHistory';
 import styles from './Sprints.module.css';
@@ -20,41 +20,48 @@ interface SprintListProps {
  * sprint's page, so the selection lives in the URL; the selected one has `aria-current="page"`.
  */
 export function SprintList({ projectId, sprints, selectedId }: SprintListProps) {
+  const t = useT();
+  const format = useFormat();
+  const copy = t.sprints.history.list;
+  const { progress } = t.sprints;
   return (
     <nav className={styles.list} aria-labelledby="sprint-list-title">
       <h2 id="sprint-list-title" className={styles.listTitle}>
-        All sprints
+        {copy.title}
       </h2>
       <ul className={styles.items}>
         {sprints.map((sprint, index) => {
           const status = SPRINT_STATUS[sprint.status];
           const { donePoints, totalPoints } = sprintNumbers(sprint);
           const selected = sprint.id === selectedId;
+          const sprintPath = `/projects/${projectId}/sprints/${sprint.id}`;
           return (
-            <li key={sprint.id} className="kb-rise kb-stagger" style={{ '--i': index } as CSSProperties}>
+            <li
+              key={sprint.id}
+              className="kb-rise kb-stagger"
+              style={{ '--i': index } as CSSProperties}
+            >
               <Link
-                to={`/projects/${projectId}/sprints/${sprint.id}`}
+                to={sprintPath}
                 className={cx(styles.item, selected && styles.selected)}
                 aria-current={selected ? 'page' : undefined}
               >
                 <span className={styles.itemTop}>
                   <span className={styles.itemName}>{sprint.name}</span>
                   <Lozenge tone={status.tone} live={status.live}>
-                    {status.label}
+                    {t.sprints.status[sprint.status]}
                   </Lozenge>
                 </span>
                 <span className={styles.itemMeta}>
-                  <span>{formatRange(sprint.startDate, sprint.endDate) ?? 'No dates'}</span>
-                  <span className={styles.itemPoints}>
-                    {donePoints} / {totalPoints} pts
-                  </span>
+                  <span>{format.range(sprint.startDate, sprint.endDate) ?? copy.noDates}</span>
+                  <span className={styles.itemPoints}>{copy.points(donePoints, totalPoints)}</span>
                 </span>
                 <ProgressBar
                   height={4}
                   value={donePoints}
                   max={totalPoints}
-                  label={`${sprint.name} points done`}
-                  valueText={`${donePoints} of ${totalPoints} points done`}
+                  label={progress.pointsLabel(sprint.name)}
+                  valueText={progress.pointsValue(donePoints, totalPoints)}
                 />
               </Link>
             </li>
